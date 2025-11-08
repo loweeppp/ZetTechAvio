@@ -1,0 +1,55 @@
+@using Microsoft.AspNetCore.Components
+@rendermode @(new InteractiveServerRenderMode())
+
+@if (IsVisible)
+{
+    <div class="modal-overlay" @onclick="OnClose">
+        <div class="modal-box" @onclick:stopPropagation="true">
+            <h3>Регистрация</h3>
+            <input class="input" placeholder="Имя" @bind="FullName" />
+            <input class="input mt-2" placeholder="Email" @bind="Email" />
+            <input class="input mt-2" type="password" placeholder="Пароль" @bind="Password" />
+            <div class="mt-3">
+                <button type="button" class="btn btn-primary" @onclick="HandleRegister">Создать аккаунт</button>
+                <button type="button" class="btn btn-link" @onclick="OnClose">Отмена</button>
+            </div>
+            @if (!string.IsNullOrEmpty(ErrorMessage))
+            {
+                <div class="text-danger mt-2">@ErrorMessage</div>
+            }
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public bool IsVisible { get; set; }
+
+    [Parameter]
+    public EventCallback<bool> IsVisibleChanged { get; set; }
+
+    [Parameter]
+    public EventCallback OnRegister { get; set; }
+
+    private string FullName = "";
+    private string Email = "";
+    private string Password = "";
+    private string ErrorMessage = "";
+
+    private async Task OnClose()
+    {
+        await IsVisibleChanged.InvokeAsync(false);
+    }
+
+    private async Task HandleRegister()
+    {
+        if (string.IsNullOrWhiteSpace(Email) || string.IsNullOrWhiteSpace(Password))
+        {
+            ErrorMessage = "Поля не могут быть пустыми";
+            return;
+        }
+        
+        await OnRegister.InvokeAsync();
+        await OnClose();
+    }
+}

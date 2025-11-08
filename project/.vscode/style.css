@@ -1,0 +1,92 @@
+
+  :root{
+    --blue: #0A75FF;
+    --deep-blue: #0A5FCC;
+    --green: #28C07E;
+    --mint: #E9FFF4;
+    --gray-800: #1F2937;
+    --gray-500: #6B7280;
+    --white: #fff;
+    --shadow: 0 8px 24px rgba(10,23,54,0.06);
+    --radius: 12px;
+    --gap: 16px;
+  }
+  *{box-sizing:border-box}
+  body{
+    font-family: 'Inter', system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    margin:0; color:var(--gray-800); background:var(--white);
+  }
+  header{
+    background: linear-gradient(90deg,var(--deep-blue),var(--blue));
+    color:white; padding:14px 24px;
+  }
+  .container{max-width:1200px;margin:0 auto;padding:24px;}
+  .topbar{display:flex;align-items:center;justify-content:space-between}
+  .logo{font-weight:700;letter-spacing:0.2px}
+  .hero{display:grid;grid-template-columns:1fr 420px;gap:24px;align-items:start;padding:48px 0}
+  .hero-left h1{font-size:40px;margin:0 0 18px}
+  .search-card{
+    background:white;border-radius:var(--radius);box-shadow:var(--shadow);padding:18px;display:flex;gap:12px;align-items:center;
+  }
+  .search-row{display:flex;gap:12px;width:100%}
+  .input{
+    flex:1;padding:12px 14px;border-radius:10px;border:1px solid #E6E9EE;background:#FFF;font-size:15px;
+  }
+  .btn{
+    background:var(--blue);color:white;padding:12px 18px;border-radius:10px;border:none;font-weight:600;cursor:pointer;
+  }
+  .hero-right .map-card{
+    background:linear-gradient(180deg,var(--mint),#FFFFFF);padding:18px;border-radius:12px;box-shadow:var(--shadow);
+  }
+  main .results{padding:24px 0;display:grid;grid-template-columns:1fr 360px;gap:24px}
+  .cards{display:flex;flex-direction:column;gap:12px}
+  .card{background:white;border-radius:10px;padding:14px;box-shadow:var(--shadow);display:flex;justify-content:space-between;align-items:center}
+  .price{font-weight:700;color:var(--blue);font-size:20px}
+  /* responsive */
+  @media(max-width:900px){
+    .hero{grid-template-columns:1fr;gap:16px}
+    .hero-right{order:2}
+    .topbar{padding:8px}
+  }
+
+
+  /* Базовая карточка */
+.card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center; /* выровнять по вертикали */
+  gap: 16px;
+  background: #fff;
+  border-radius: 10px;
+  padding: 14px;
+  box-shadow: var(--shadow);
+}
+
+/* Левая часть: изображение + текст */
+.card-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Миниатюра (логотип или thumbnail) */
+.card-thumb {
+  width: 194px;        /* можно менять */
+  height: 94px;       /* можно менять */
+  border-radius: 8px; /* для сглаженных углов */
+  object-fit: cover;  /* важное, чтобы картинка корректно масштабировалась */
+  flex-shrink: 0;     /* не даёт изображению сжиматься */
+}
+
+/* Текст */
+.flight-title { font-weight: 600; }
+.flight-sub { color: var(--gray-500); font-size: 13px; }
+
+/* Правая колонка */
+.card-right { text-align: right; display:flex; flex-direction:column; gap:8px; align-items:flex-end; }
+.price { font-weight:700; color:var(--blue); font-size:18px; }
+
+/* Кнопка в карточке */
+.btn.buy { background: var(--green); color: #fff; padding:8px 10px; border-radius:8px; border:none; cursor:pointer; }
+
+.btn2.buy { background: var(--blue); color: #fff; padding:8px 10px; border-radius:8px; border:none; cursor:pointer; }

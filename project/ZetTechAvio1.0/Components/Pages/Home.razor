@@ -1,0 +1,308 @@
+﻿@page "/"
+@using System.Collections.Generic
+
+
+<div class="page-container">
+    <!-- Header -->
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Hero Section -->
+        <section class="hero-section">
+            <div class="grid-container">
+                <!-- Search Form -->
+                <div class="search-column">
+                    <div class="search-card">
+                        <h1 class="title">Найди свой рейс быстро<br/>удобно – и без заморочек</h1>
+                        
+                        <div class="form-container">
+                            <div class="form-grid">
+                                <div class="input-wrapper">
+                                    <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                                        <circle cx="12" cy="10" r="3"/>
+                                    </svg>
+                                    <input class="input" placeholder="Откуда" @bind="From" />
+                                </div>
+                                
+                                <div class="input-wrapper">
+                                    <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                                        <circle cx="12" cy="10" r="3"/>
+                                    </svg>
+                                    <input class="input" placeholder="Куда" @bind="To" />
+                                </div>
+                                
+                                <div class="input-wrapper">
+                                    <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                                        <line x1="16" y1="2" x2="16" y2="6"/>
+                                        <line x1="8" y1="2" x2="8" y2="6"/>
+                                        <line x1="3" y1="10" x2="21" y2="10"/>
+                                    </svg>
+                                    <input type="date" class="input input-date" @bind="Date" />
+                                </div>
+                                
+                                <div class="input-wrapper">
+                                    <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                                        <circle cx="9" cy="7" r="4"/>
+                                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                                        <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                                    </svg>
+                                    <select class="input" @bind="Passengers">
+                                        <option value="1">1 пассажир</option>
+                                        <option value="2">2 пассажира</option>
+                                        <option value="3">3 пассажира</option>
+                                        <option value="4">4 пассажира</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <button class="btn-search" @onclick="SearchFlights">Найти</button>
+                            
+                            <p class="hint-text">Начните поиск — затем сможете выбрать места и оформить покупку (требуется вход).</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recommended Flight -->
+                <div class="recommended-column">
+                    <div class="recommended-card">
+                        <h3 class="card-title">Рекомендуемый рейс</h3>
+                        
+                        <div class="map-preview">
+                            <svg class="map-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                                <circle cx="8.5" cy="8.5" r="1.5"/>
+                                <polyline points="21 15 16 10 5 21"/>
+                            </svg>
+                        </div>
+                        
+                        <div class="flight-info">
+                            <div>
+                                <div class="flight-route">DME → LED</div>
+                                <div class="flight-time">12 мая • 09:40 — 11:10</div>
+                            </div>
+                            <div class="flight-price">4 299 ₽</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Flights List -->
+        <section class="flights-section">
+            <h2 class="section-title">Рейсы</h2>
+            <div class="flights-list">
+                @foreach (var flight in Flights)
+                {
+                    <div class="flight-card">
+                        <div class="flight-card-left">
+                            <h3 class="flight-title">@flight.FlightNumber • @flight.Route</h3>
+                            <div class="flight-subtitle">
+                                @flight.Type • @flight.Duration
+                                @if (!string.IsNullOrEmpty(flight.Baggage))
+                                {
+                                    <span> • @flight.Baggage</span>
+                                }
+                            </div>
+                        </div>
+                        <div class="flight-card-right">
+                            <div class="price">@flight.Price.ToString("N0") ₽</div>
+                            <button class="btn-buy">Купить</button>
+                        </div>
+                    </div>
+                }
+            </div>
+        </section>
+
+        <!-- Additional Recommendations -->
+        <section class="recommendations-section">
+            <h2 class="section-title">Рекомендуемый рейс</h2>
+            <div class="recommendations-grid">
+                @for (int i = 0; i < 3; i++)
+                {
+                    <div class="recommendation-card">
+                        <div class="map-preview">
+                            <svg class="map-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                                <circle cx="8.5" cy="8.5" r="1.5"/>
+                                <polyline points="21 15 16 10 5 21"/>
+                            </svg>
+                        </div>
+                        <div class="flight-info">
+                            <div>
+                                <div class="flight-route">DME → LED</div>
+                                <div class="flight-time">12 мая • 09:40 — 11:10</div>
+                            </div>
+                            <div class="flight-price-small">4 210 ₽</div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-grid">
+                <div class="footer-column">
+                    <div class="footer-logo">
+                        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                          <img class="imagelogo" src="routing-2.png" width=”100″ height=”100″/>
+                        </svg>
+                        <span>ZetTechAvio</span>
+                    </div>
+                    <h3 class="footer-title">ИНФОРМАЦИЯ</h3>
+                    <p class="footer-text">
+                        Веб-сервис для поиска и покупки авиабилетов. Форма поиска представляет формы
+                        поиска по городу отправления/прибытия и дате, позволяет сразу рейсов, оформить покупку и
+                        получить электронный билет.
+                    </p>
+                </div>
+                
+                <div class="footer-column">
+                    <h3 class="footer-title">НАВИГАЦИЯ</h3>
+                    <ul class="footer-links">
+                        <li><a href="#">Домашняя</a></li>
+                        <li><a href="#">Services</a></li>
+                        <li><a href="#">Project</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-column">
+                    <h3 class="footer-title">СВЯЗАТЬСЯ С НАМИ</h3>
+                    <div class="footer-contacts">
+                        <div class="contact-item">
+                            <svg class="icon-tiny" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                                <polyline points="22,6 12,13 2,6"/>
+                            </svg>
+                            <span>Lumbung.tidap@esi.Java</span>
+                        </div>
+                        <div class="contact-item">
+                            <svg class="icon-tiny" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+                            </svg>
+                            <span>Hallo@moto.com</span>
+                        </div>
+                    </div>
+                    <div class="footer-subscribe">
+                        <input type="email" class="input-footer" placeholder="Email Address" />
+                        <button class="btn-subscribe">SUBSCRIBE</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="footer-bottom">
+                <div>© 2025 ZetTechAvio. Все права защищены.</div>
+                <div class="footer-legal">
+                    <a href="#">DISCLAIMER</a>
+                    <a href="#">ПОЛЬЗОВАТЕЛЬСКОЕ СОГЛАШЕНИЕ</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+</div>
+
+
+@code {
+
+
+    // Поля формы поиска
+    private string From = "";
+    private string To = "";
+    // Используем DateTime? для привязки к <input type="date" />
+    private DateTime? Date = DateTime.Today;
+    private int Passengers = 1;
+
+    // Класс для рейса
+    public class Flight
+    {
+        public int Id { get; set; }
+        public string FlightNumber { get; set; } = "";
+        public string Route { get; set; } = "";
+        public string Type { get; set; } = "";
+        public string Duration { get; set; } = "";
+        public string Baggage { get; set; } = "";
+        public int Price { get; set; }
+    }
+
+    // Список рейсов (мок данные)
+    private List<Flight> Flights = new List<Flight>
+    {
+        new Flight
+        {
+            Id = 1,
+            FlightNumber = "SU 112",
+            Route = "Москва → Санкт-Петербург",
+            Type = "Прямой",
+            Duration = "1 ч 25 мин",
+            Baggage = "багаж включён",
+            Price = 2459
+        },
+        new Flight
+        {
+            Id = 2,
+            FlightNumber = "UT 328",
+            Route = "Москва → Казань",
+            Type = "С пересадкой",
+            Duration = "3 ч 40 мин",
+            Baggage = "",
+            Price = 3199
+        },
+        new Flight
+        {
+            Id = 3,
+            FlightNumber = "UT 128",
+            Route = "Москва → Краснодар",
+            Type = "Прямой",
+            Duration = "2 ч 50 мин",
+            Baggage = "багаж включён",
+            Price = 2499
+        },
+        new Flight
+        {
+            Id = 4,
+            FlightNumber = "SU 115",
+            Route = "Москва → Владивосток",
+            Type = "С пересадкой",
+            Duration = "9 ч 40 мин",
+            Baggage = "багаж включён",
+            Price = 7999
+        },
+        new Flight
+        {
+            Id = 5,
+            FlightNumber = "SU 112",
+            Route = "Москва → Краснодар",
+            Type = "Прямой",
+            Duration = "1 ч 40 мин",
+            Baggage = "багаж включён",
+            Price = 1999
+        },
+        new Flight
+        {
+            Id = 6,
+            FlightNumber = "UT 438",
+            Route = "Москва → Саратов",
+            Type = "Прямой",
+            Duration = "4 ч 40 мин",
+            Baggage = "",
+            Price = 4100
+        }
+    };
+
+    // Обработка поиска
+    private void SearchFlights()
+    {
+        // форматируем дату аккуратно, учитывая nullable
+        var dateText = Date.HasValue ? Date.Value.ToString("dd.MM.yyyy") : "(не указана)";
+        Console.WriteLine($"Поиск: {From} → {To}, Дата: {dateText}, Пассажиры: {Passengers}");
+        // Здесь будет логика поиска рейсов через API
+    }
+}
+
+}
