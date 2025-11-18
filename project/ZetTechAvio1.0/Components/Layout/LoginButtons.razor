@@ -1,42 +1,102 @@
 @using Microsoft.AspNetCore.Components.Web
 @using ZetTechAvio1._0.Components.Shared
+@using ZetTechAvio1._0.Services
 @using Microsoft.AspNetCore.Components
+
 @inject IJSRuntime JSRuntime
+@inject IAuthStateService AuthStateService
+@inject NavigationManager Navigation
 @rendermode @(new InteractiveServerRenderMode())
+@implements IAsyncDisposable
 
-<div class="header-actions">
-    <button type="button" class="btn-login" @onclick="Test1" @onclick:preventDefault id="loginButton">
-        <svg class="icon-small" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/>
-            <circle cx="12" cy="7" r="4"/>
-        </svg>
-        Войти 
-    </button> 
-    <button type="button" class="btn-menu">
-        <svg class="icon-small" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="12" cy="12" r="1"/>
-            <circle cx="12" cy="5" r="1"/>
-            <circle cx="12" cy="19" r="1"/>
-        </svg>
-    </button>
-</div>
+@if (AuthStateService.IsAuthenticated && CurrentUser != null)
+{
+    <div class="header-actions">
+        <span class="user-info">
+            👤 @CurrentUser.FullName
+        </span>
+        <button type="button" class="btn-profile" @onclick="OpenProfile" title="Открыть профиль">
+            <svg class="icon-small" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/>
+                <circle cx="12" cy="7" r="4"/>
+            </svg>
+            Профиль
+        </button>
+        <button type="button" class="btn-menu">
+            <svg class="icon-small" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="1"/>
+                <circle cx="12" cy="5" r="1"/>
+                <circle cx="12" cy="19" r="1"/>
+            </svg>
+        </button>
+    </div>
 
+    <ProfileModal @bind-IsVisible="showProfileModal" User="CurrentUser" OnLogout="HandleLogoutFromProfile" />
+}
+else
+{
+    <div class="header-actions">
+        <button type="button" class="btn-login" @onclick="Test1" @onclick:preventDefault id="loginButton">
+            <svg class="icon-small" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/>
+                <circle cx="12" cy="7" r="4"/>
+            </svg>
+            Войти 
+        </button> 
+        <button type="button" class="btn-menu">
+            <svg class="icon-small" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="1"/>
+                <circle cx="12" cy="5" r="1"/>
+                <circle cx="12" cy="19" r="1"/>
+            </svg>
+        </button>
+    </div>
+}
 <RegisterModal @bind-IsVisible="showRegisterModal" OnRegister="RegisterUser" />
 
 @code {
     private bool showRegisterModal = false;
+    private bool showProfileModal = false;
+    private Models.User? CurrentUser;
+
+    protected override void OnInitialized()
+    {
+        CurrentUser = AuthStateService.CurrentUser;
+        AuthStateService.OnStateChanged += StateHasChanged;
+    }
 
     private void Test1()
     {
-        Console.WriteLine("Test1 called from C#");
         showRegisterModal = true;
         StateHasChanged();
+
     }
 
     private void RegisterUser()
     {
-        // Handle registration
+        CurrentUser = AuthStateService.CurrentUser;
         showRegisterModal = false;
         StateHasChanged();
     }
+
+    private void OpenProfile()
+    {
+        showProfileModal = true;
+        StateHasChanged();
+    }
+
+    private async Task HandleLogoutFromProfile()
+    {
+        await AuthStateService.ClearUserAsync();
+        CurrentUser = null;
+        showProfileModal = false;
+        StateHasChanged();
+        
+    }
+    async ValueTask IAsyncDisposable.DisposeAsync()
+    {
+        AuthStateService.OnStateChanged -= StateHasChanged;
+        await ValueTask.CompletedTask;
+    }
+    
 }

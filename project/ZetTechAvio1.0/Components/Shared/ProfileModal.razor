@@ -1,0 +1,104 @@
+@using Microsoft.AspNetCore.Components
+@using ZetTechAvio1._0.Models
+@rendermode @(new InteractiveServerRenderMode())
+@inject NavigationManager Navigation
+
+@if (IsVisible && User != null)
+{
+    <div class="modal-overlay" @onclick="OnClose">
+        <div class="modal-box" @onclick:stopPropagation="true">
+            <div class="profile-header">
+                <h3 class="profile-title">Мой профиль</h3>
+                <button type="button" class="btn-close" @onclick="OnClose">✕</button>
+            </div>
+
+            <div class="profile-content">
+                <div class="profile-item">
+                    <label>Имя:</label>
+                    <p>@User.FullName</p>
+                </div>
+
+                <div class="profile-item">
+                    <label>Email:</label>
+                    <p>@User.Email</p>
+                </div>
+
+                @if (!string.IsNullOrEmpty(User.Phone))
+                {
+                    <div class="profile-item">
+                        <label>Телефон:</label>
+                        <p>@User.Phone</p>
+                    </div>
+                }
+
+                <div class="profile-item">
+                    <label>Роль:</label>
+                    <p>@GetRoleDisplay(User.Role)</p>
+                </div>
+
+                <div class="profile-item">
+                    <label>Дата регистрации:</label>
+                    <p>@User.CreatedAt.ToString("dd.MM.yyyy HH:mm")</p>
+                </div>
+            </div>
+
+            <div class="profile-actions">
+                <button type="button" class="btn btn-danger" @onclick="HandleLogout">
+                    Выход
+                </button>
+                <button type="button" class="btn btn-secondary" @onclick="OnClose">
+                    Закрыть
+                </button>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public bool IsVisible { get; set; }
+
+    [Parameter]
+    public EventCallback<bool> IsVisibleChanged { get; set; }
+
+    [Parameter]
+    public User? User { get; set; }
+
+    [Parameter]
+    public EventCallback OnLogout { get; set; }
+
+    private async Task OnClose()
+    {
+        await IsVisibleChanged.InvokeAsync(false);
+    }
+
+    private async Task HandleLogout()
+    {
+        try
+        {
+            using var handler = new HttpClientHandler();
+            using var client = new HttpClient(handler)
+            {
+                BaseAddress = new Uri(Navigation.BaseUri)
+            };
+
+            await client.PostAsync("/api/auth/logout", null);
+            await OnLogout.InvokeAsync();
+            await OnClose();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Logout error: {ex.Message}");
+        }
+    }
+
+    private string GetRoleDisplay(UserRole role)
+    {
+        return role switch
+        {
+            UserRole.Admin => "Администратор",
+            UserRole.Manager => "Менеджер",
+            _ => "Пользователь"
+        };
+    }
+}

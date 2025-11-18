@@ -61,7 +61,11 @@
                             
                             <button class="btn-search" @onclick="SearchFlights">Найти</button>
                             
-                            <p class="hint-text">Начните поиск — затем сможете выбрать места и оформить покупку (требуется вход).</p>
+                    <span class="hint-text" >
+                    Начните поиск — затем сможете выбрать места и оформить покупку (
+                    <a class="linkPolitica" href="/privacy-policy" target="_blank" rel="noopener noreferrer">требуется вход.</a>
+                    )
+                    </span>
                         </div>
                     </div>
                 </div>
@@ -200,7 +204,7 @@
                 <div>© 2025 ZetTechAvio. Все права защищены.</div>
                 <div class="footer-legal">
                     <a href="#">DISCLAIMER</a>
-                    <a href="#">ПОЛЬЗОВАТЕЛЬСКОЕ СОГЛАШЕНИЕ</a>
+                    <a href="/privacy-policy" target="_blank" rel="noopener noreferrer">ПОЛЬЗОВАТЕЛЬСКОЕ СОГЛАШЕНИЕ</a>
                 </div>
             </div>
         </div>
@@ -303,6 +307,4 @@
         Console.WriteLine($"Поиск: {From} → {To}, Дата: {dateText}, Пассажиры: {Passengers}");
         // Здесь будет логика поиска рейсов через API
     }
-}
-
 }

@@ -3,10 +3,9 @@
 /* Основной контейнер - */
 .page-container {
     min-height: 100vh;
-    background-color: #f3f4f6;  /* Серый фон */
+    background-color: #f3f4f6;  
 }
 
-/* Main Content - белый блок 1440px по центру */
 .main-content {
     max-width: 87%;
     margin: 0 auto;
@@ -14,7 +13,6 @@
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
-/* Hero Section - БЕЗ max-width, наследует от main-content */
 .hero-section {
     padding: 3rem;
 }

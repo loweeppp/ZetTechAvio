@@ -11,6 +11,12 @@
     z-index: 1000;
 }
 
+.LayoutReg {
+    font-size: 1.25rem; 
+    font-weight: 600;
+    color:#0052cc
+}
+
 .modal-box {
     background: white;
     padding: 2rem;
@@ -65,4 +71,42 @@
 
 .text-danger {
     color: #dc3545;
+}
+
+.labelReg {
+    background-color: #f3f4f6;  
+}
+
+.checkboxReg {
+    color: #0052cc;
+
+}
+
+.linkPolitica{
+    color: #0052cc;
+}
+
+.spanPolitica{
+    font-size: 11px;
+    line-height: 14px;
+    
+}
+
+.hint-text {
+    color: #6b7280;
+    font-size: 0.875rem;
+    margin: 0;
+}
+
+.text-center {
+    text-align: left;
+}
+
+.text-muted {
+    color: #6b7280;
+    font-size: 0.875rem;
+}
+
+.text-success {
+    color: #10b981;
 }

@@ -6,31 +6,20 @@
 }
 
 
-/* Header Content - контент ограничен 1440px */
 .header-content[b-xbuwuvuhwq] {
-    max-width: 87%;        /* Ограничение ширины */
-    margin: 0 auto;           /* Центрирование */
+    max-width: 87%;      
+    margin: 0 auto;           
     padding: 1rem 1.5rem;
     display: flex;
     align-items: center;
     justify-content: space-between;
 }
 
-/* Header - фон на всю ширину */
 .header[b-xbuwuvuhwq] {
     background-color: #0066FF;
-    color: white;
-    width: 100%;              /* На всю ширину экрана */
+    width: 100%;            
 }
 
-.header-content[b-xbuwuvuhwq] {
-    max-width: 1440px;
-    margin: 0 auto;
-    padding: 1rem 1.5rem;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-}
 
 .logo[b-xbuwuvuhwq] {
     display: flex;
@@ -41,6 +30,7 @@
 .logo-text[b-xbuwuvuhwq] {
     font-size: 1.25rem;
     font-weight: 600;
+    color: white
 }
 
 .icon[b-xbuwuvuhwq] {
@@ -113,40 +103,4 @@
 }
 
 
-/* ===== Модальное окно ===== */
-.modal-overlay[b-xbuwuvuhwq] {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.45);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 9999;
-}
-.modal-box[b-xbuwuvuhwq] {
-  background: white;
-  padding: 22px;
-  border-radius: 10px;
-  width: 360px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-}
-.input[b-xbuwuvuhwq] {
-  width: 100%;
-  padding: 10px;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-}
-.btn[b-xbuwuvuhwq] {
-  padding: 8px 12px;
-  border-radius: 6px;
-  border: none;
-}
-.btn-primary[b-xbuwuvuhwq] {
-  background: #0A75FF;
-  color: white;
-}
-.btn-link[b-xbuwuvuhwq] {
-  background: transparent;
-  color: #0A75FF;
-  border: none;
-}
+

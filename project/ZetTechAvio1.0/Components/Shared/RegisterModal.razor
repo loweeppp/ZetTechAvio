@@ -1,21 +1,77 @@
 @using Microsoft.AspNetCore.Components
+@using System.Net.Http.Json
+@using ZetTechAvio1._0.Services
+@using ZetTechAvio1._0.Models
 @rendermode @(new InteractiveServerRenderMode())
+@inject NavigationManager Navigation
+@inject IAuthStateService AuthStateService
 
 @if (IsVisible)
 {
     <div class="modal-overlay" @onclick="OnClose">
         <div class="modal-box" @onclick:stopPropagation="true">
-            <h3>Регистрация</h3>
-            <input class="input" placeholder="Имя" @bind="FullName" />
-            <input class="input mt-2" placeholder="Email" @bind="Email" />
-            <input class="input mt-2" type="password" placeholder="Пароль" @bind="Password" />
-            <div class="mt-3">
-                <button type="button" class="btn btn-primary" @onclick="HandleRegister">Создать аккаунт</button>
-                <button type="button" class="btn btn-link" @onclick="OnClose">Отмена</button>
-            </div>
-            @if (!string.IsNullOrEmpty(ErrorMessage))
+            @if (IsLoginMode)
             {
-                <div class="text-danger mt-2">@ErrorMessage</div>
+                <!-- LOGIN MODE -->
+                <h3 class="LayoutReg">Вход в аккаунт</h3>
+                <input class="input" placeholder="Email" @bind="LoginEmail" />
+                <input class="input mt-2" type="password" placeholder="Пароль" @bind="LoginPassword" />
+                
+
+                <div class="mt-3 text-center">
+                    <span class="text-muted">Нет аккаунта? </span>
+                    <button type="button" class="btn btn-link" @onclick="SwitchToRegister">Создать</button>
+                </div>
+
+                <div class="mt-3">
+                    <button type="button" class="btn btn-primary" @onclick="HandleLogin" disabled="@IsLoading">
+                        @if (IsLoading) { <span>Загрузка...</span> } else { <span>Войти</span> }
+                    </button>
+                    <button type="button" class="btn btn-link" @onclick="OnClose" disabled="@IsLoading">Отмена</button>
+                </div>
+
+                @if (!string.IsNullOrEmpty(ErrorMessage))
+                {
+                    <div class="text-danger mt-2">@ErrorMessage</div>
+                }
+
+            }
+            else
+            {
+                <!-- REGISTER MODE -->
+                <h3 class="LayoutReg">Регистрация</h3>
+                <input class="input" placeholder="Имя" @bind="FullName" />
+                <input class="input mt-2" placeholder="Email" @bind="Email" />
+                <input class="input mt-2" type="phone" placeholder="Телефон" @bind="Phone" />
+                <input class="input mt-2" type="password" placeholder="Пароль" @bind="Password" />
+                
+                <div class="mt-3">
+                    <label class="labelReg">
+                        <input class="checkboxReg" type="checkbox" @bind="AgreeToPolicy" />
+                        <span class="spanPolitica" >
+                        Авторизуясь, вы соглашаетесь с 
+                        <a class="linkPolitica" href="/privacy-policy" target="_blank" rel="noopener noreferrer">Политикой конфидециальности</a>
+                        </span>
+                    </label>
+                </div>
+                
+                <div class="mt-3">
+                    <button type="button" class="btn btn-primary" @onclick="HandleRegister" disabled="@IsLoading">
+                        @if (IsLoading) { <span>Загрузка...</span> } else { <span>Создать аккаунт</span> }
+                    </button>
+                    <button type="button" class="btn btn-link" @onclick="OnClose" disabled="@IsLoading">Отмена</button>
+                </div>
+
+                @if (!string.IsNullOrEmpty(ErrorMessage))
+                {
+                    <div class="text-danger mt-2">@ErrorMessage</div>
+                }
+
+
+                @if (!string.IsNullOrEmpty(SuccessMessage))
+                {
+                    <div class="text-success mt-2">@SuccessMessage</div>
+                }
             }
         </div>
     </div>
@@ -31,25 +87,238 @@
     [Parameter]
     public EventCallback OnRegister { get; set; }
 
+    // Login fields
+    private string LoginEmail = "";
+    private string LoginPassword = "";
+
+    // Register fields
     private string FullName = "";
     private string Email = "";
+    private string Phone = "";
     private string Password = "";
+    private bool AgreeToPolicy = false;
+
+    // State
     private string ErrorMessage = "";
+    private string SuccessMessage = "";
+    private bool IsLoading = false;
+    private bool IsLoginMode = true;
+
+    private void SwitchToRegister()
+    {
+        IsLoginMode = false;
+        ErrorMessage = "";
+        SuccessMessage = "";
+        ClearLoginFields();
+    }
+
+    private void SwitchToLogin()
+    {
+        IsLoginMode = true;
+        ErrorMessage = "";
+        SuccessMessage = "";
+        ClearRegisterFields();
+    }
+
+    private void ClearLoginFields()
+    {
+        LoginEmail = "";
+        LoginPassword = "";
+    }
+
+    private void ClearRegisterFields()
+    {
+        FullName = "";
+        Email = "";
+        Phone = "";
+        Password = "";
+        AgreeToPolicy = false;
+    }
 
     private async Task OnClose()
     {
         await IsVisibleChanged.InvokeAsync(false);
+        IsLoginMode = true;
+        ErrorMessage = "";
+        SuccessMessage = "";
+        ClearLoginFields();
+        ClearRegisterFields();
+    }
+
+    private async Task HandleLogin()
+    {
+        ErrorMessage = "";
+
+        // Validation
+        if (string.IsNullOrWhiteSpace(LoginEmail) || string.IsNullOrWhiteSpace(LoginPassword))
+        {
+            ErrorMessage = "Email и пароль обязательны";
+            return;
+        }
+
+        IsLoading = true;
+        try
+        {
+            var result = await LoginUser();
+            
+            if (result.Success)
+            {
+                SuccessMessage = "Успешный вход!";
+                await Task.Delay(1000);
+                await OnRegister.InvokeAsync();
+                await OnClose();
+            }
+            else
+            {
+                ErrorMessage = result.Message ?? "Ошибка входа";
+            }
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Ошибка: {ex.Message}";
+        }
+        finally
+        {
+            IsLoading = false;
+        }
     }
 
     private async Task HandleRegister()
     {
+        ErrorMessage = "";
+        SuccessMessage = "";
+
+        // Client-side validation
         if (string.IsNullOrWhiteSpace(Email) || string.IsNullOrWhiteSpace(Password))
         {
             ErrorMessage = "Поля не могут быть пустыми";
             return;
         }
         
-        await OnRegister.InvokeAsync();
-        await OnClose();
+        if (!AgreeToPolicy)
+        {
+            ErrorMessage = "Вы должны согласиться с политикой конфидециальности";
+            return;
+        }
+
+        if (Password.Length < 6)
+        {
+            ErrorMessage = "Пароль должен быть не менее 6 символов";
+            return;
+        }
+
+        IsLoading = true;
+        try
+        {
+            var result = await RegisterUser();
+            
+            if (result.Success)
+            {
+                SuccessMessage = "Регистрация успешна!";
+                await Task.Delay(1500);
+                await OnRegister.InvokeAsync();
+                await OnClose();
+            }
+            else
+            {
+                ErrorMessage = result.Message ?? "Ошибка регистрации";
+            }
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Ошибка: {ex.Message}";
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    private async Task<(bool Success, string? Message)> LoginUser()
+    {
+        try
+        {
+            using var handler = new HttpClientHandler();
+            using var client = new HttpClient(handler)
+            {
+                BaseAddress = new Uri(Navigation.BaseUri)
+            };
+
+            var request = new
+            {
+                email = LoginEmail,
+                password = LoginPassword
+            };
+
+            var response = await client.PostAsJsonAsync("/api/auth/login", request);
+            
+            if (response.IsSuccessStatusCode)
+            {
+                var json = await response.Content.ReadAsStringAsync();
+                var options = new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+                var result = System.Text.Json.JsonSerializer.Deserialize<LoginResponse>(json, options);
+                
+                if (result?.User != null)
+                {
+                    await AuthStateService.SetUserAsync(result.User);
+                }
+                
+                return (true, "Вход успешен");
+            }
+            
+            return (false, "Неверный email или пароль");
+        }
+        catch (Exception ex)
+        {
+            return (false, $"Ошибка подключения: {ex.Message}");
+        }
+    }
+
+    private async Task<(bool Success, string? Message)> RegisterUser()
+    {
+        try
+        {
+            using var handler = new HttpClientHandler();
+            using var client = new HttpClient(handler)
+            {
+                BaseAddress = new Uri(Navigation.BaseUri)
+            };
+
+            var request = new
+            {
+                email = Email,
+                password = Password,
+                fullName = FullName,
+                phone = Phone
+            };
+
+            var response = await client.PostAsJsonAsync("/api/auth/register", request);
+            
+            if (response.IsSuccessStatusCode)
+            {
+                var json = await response.Content.ReadAsStringAsync();
+                var options = new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+                var result = System.Text.Json.JsonSerializer.Deserialize<LoginResponse>(json, options);
+                
+                if (result?.User != null)
+                {
+                    await AuthStateService.SetUserAsync(result.User);
+                }
+                
+                return (true, "Регистрация успешна");
+            }
+            
+            return (false, "Ошибка при регистрации. Проверьте данные.");
+        }
+        catch (Exception ex)
+        {
+            return (false, $"Ошибка подключения: {ex.Message}");
+        }
+    }
+
+    private class LoginResponse
+    {
+        public string? Message { get; set; }
+        public User? User { get; set; }
     }
 }

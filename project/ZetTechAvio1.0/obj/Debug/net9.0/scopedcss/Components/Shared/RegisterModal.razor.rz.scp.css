@@ -11,6 +11,12 @@
     z-index: 1000;
 }
 
+.LayoutReg[b-ysz4zmhe26] {
+    font-size: 1.25rem; 
+    font-weight: 600;
+    color:#0052cc
+}
+
 .modal-box[b-ysz4zmhe26] {
     background: white;
     padding: 2rem;
@@ -65,4 +71,42 @@
 
 .text-danger[b-ysz4zmhe26] {
     color: #dc3545;
+}
+
+.labelReg[b-ysz4zmhe26] {
+    background-color: #f3f4f6;  
+}
+
+.checkboxReg[b-ysz4zmhe26] {
+    color: #0052cc;
+
+}
+
+.linkPolitica[b-ysz4zmhe26]{
+    color: #0052cc;
+}
+
+.spanPolitica[b-ysz4zmhe26]{
+    font-size: 11px;
+    line-height: 14px;
+    
+}
+
+.hint-text[b-ysz4zmhe26] {
+    color: #6b7280;
+    font-size: 0.875rem;
+    margin: 0;
+}
+
+.text-center[b-ysz4zmhe26] {
+    text-align: left;
+}
+
+.text-muted[b-ysz4zmhe26] {
+    color: #6b7280;
+    font-size: 0.875rem;
+}
+
+.text-success[b-ysz4zmhe26] {
+    color: #10b981;
 }

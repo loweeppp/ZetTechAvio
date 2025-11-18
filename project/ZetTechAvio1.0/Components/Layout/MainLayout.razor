@@ -1,8 +1,9 @@
 ﻿@using ZetTechAvio1._0.Components.Shared
 @using ZetTechAvio1._0.Components.Layout
+@using ZetTechAvio1._0.Services
 @using Microsoft.AspNetCore.Components.Web
 @inherits LayoutComponentBase
-
+@inject IAuthStateService AuthStateService
 
 <div class="page">
     <header class="header">
@@ -17,5 +18,13 @@
     @Body
 </div>
 
-
-
+@code {
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await AuthStateService.InitializeAsync();
+        }
+        await base.OnAfterRenderAsync(firstRender);
+    }
+}
