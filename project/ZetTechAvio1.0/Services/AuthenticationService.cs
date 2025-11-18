@@ -24,7 +24,7 @@ namespace ZetTechAvio1._0.Services
             _passwordService = passwordService;
             _validationService = validationService;
         }
-
+    
         public async Task<(bool Success, string? Message, User? User)> RegisterAsync(
             string email, string password, string fullName, string phone)
         {

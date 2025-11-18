@@ -19,12 +19,4 @@
 </div>
 
 @code {
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        if (firstRender)
-        {
-            await AuthStateService.InitializeAsync();
-        }
-        await base.OnAfterRenderAsync(firstRender);
-    }
 }

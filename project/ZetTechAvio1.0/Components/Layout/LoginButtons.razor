@@ -55,14 +55,21 @@ else
 <RegisterModal @bind-IsVisible="showRegisterModal" OnRegister="RegisterUser" />
 
 @code {
+    [Parameter]
+    public EventCallback OnLoginInitialized { get; set; }
+
     private bool showRegisterModal = false;
     private bool showProfileModal = false;
     private Models.User? CurrentUser;
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
+        // Initialize auth state from localStorage
+        await AuthStateService.InitializeAsync();
+        
         CurrentUser = AuthStateService.CurrentUser;
         AuthStateService.OnStateChanged += StateHasChanged;
+        await OnLoginInitialized.InvokeAsync();
     }
 
     private void Test1()
