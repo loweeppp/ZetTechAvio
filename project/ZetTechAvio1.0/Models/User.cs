@@ -20,11 +20,13 @@ namespace ZetTechAvio1._0.Models
         [StringLength(512)]
         public string PasswordHash { get; set; } = "";
 
+        [Required]
         [StringLength(255)]
-        public string? FullName { get; set; }
+        public string FullName { get; set; }
 
+        [Required]
         [StringLength(20)]
-        public string? Phone { get; set; }
+        public string Phone { get; set; }
 
         [Required]
         public UserRole Role { get; set; } = UserRole.User;
