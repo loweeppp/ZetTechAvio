@@ -19,6 +19,8 @@ builder.Services.AddScoped<IUserValidationService, UserValidationService>();
 builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
 builder.Services.AddScoped<IAuthStateService, AuthStateService>();
 
+builder.Services.AddScoped<IFlightsService, FlightsService>();
+
 // Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
