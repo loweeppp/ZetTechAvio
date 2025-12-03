@@ -16,6 +16,14 @@ namespace ZetTechAvio1._0.Controllers
             _flightsService = flightsService;
         }
 
+        [HttpGet]
+        public async Task<IActionResult> GetAllFlights()
+        {
+        var flights = await _flightsService.GetAllFlightsAsync();
+        
+        return Ok(flights);
+        }
+
 
     }
 }

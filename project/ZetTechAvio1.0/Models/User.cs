@@ -22,11 +22,11 @@ namespace ZetTechAvio1._0.Models
 
         [Required]
         [StringLength(255)]
-        public string FullName { get; set; }
+        public required string FullName { get; set; }
 
         [Required]
         [StringLength(20)]
-        public string Phone { get; set; }
+        public required string Phone { get; set; }
 
         [Required]
         public UserRole Role { get; set; } = UserRole.User;

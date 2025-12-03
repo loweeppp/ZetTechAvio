@@ -20,7 +20,7 @@ namespace ZetTechAvio1._0.Models
         public string Name { get; set; } = "";
 
         [StringLength(500)]
-        public string LogoUrl { get; set; } = "";
+        public string? LogoUrl { get; set; } = null;
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
 

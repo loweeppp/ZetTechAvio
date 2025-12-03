@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using ZetTechAvio1._0.Data;
 using ZetTechAvio1._0.Models;
 
@@ -23,7 +24,10 @@ namespace ZetTechAvio1._0.Services
 
         public async Task<List<Flight>> GetAllFlightsAsync()
         {
-            return await _dbContext.Flights.ToListAsync();
+            return await _dbContext.Flights   
+            .Include(f => f.OriginAirport)
+            .Include(f => f.DestAirport).ToListAsync();
+            
         }
 
         public async Task<Flight?> GetFlightByIdAsync(int id)

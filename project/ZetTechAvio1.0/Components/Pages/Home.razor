@@ -1,4 +1,5 @@
 ﻿@page "/"
+@inject HttpClient Http 
 @using System.Collections.Generic
 
 
@@ -69,6 +70,7 @@
                         </div>
                     </div>
                 </div>
+                
 
                 <!-- Recommended Flight -->
                 <div class="recommended-column">
@@ -95,7 +97,7 @@
             </div>
         </section>
 
-        <!-- Flights List -->
+        <!-- Flights List Список Рейсов -->
         <section class="flights-section">
             <h2 class="section-title">Рейсы</h2>
             <div class="flights-list">
@@ -103,9 +105,9 @@
                 {
                     <div class="flight-card">
                         <div class="flight-card-left">
-                            <h3 class="flight-title">@flight.FlightNumber • @flight.Route</h3>
+                            <h3 class="flight-title">@flight.FlightNumber • @flight.OriginAirport?.Name → @flight.DestAirport.Name</h3>
                             <div class="flight-subtitle">
-                                @flight.Type • @flight.Duration
+                                • @FormatDuration(flight.DurationMinutes)
                                 @if (!string.IsNullOrEmpty(flight.Baggage))
                                 {
                                     <span> • @flight.Baggage</span>
@@ -222,82 +224,56 @@
     private DateTime? Date = DateTime.Today;
     private int Passengers = 1;
 
-    // Класс для рейса
-    public class Flight
+    // Aэропорты
+    public class Airport
     {
-        public int Id { get; set; }
-        public string FlightNumber { get; set; } = "";
-        public string Route { get; set; } = "";
-        public string Type { get; set; } = "";
-        public string Duration { get; set; } = "";
-        public string Baggage { get; set; } = "";
-        public int Price { get; set; }
+    public int Id { get; set; }
+    public string Iata { get; set; }
+    public string Name { get; set; }
+    public string City { get; set; }
     }
 
-    // Список рейсов (мок данные)
-    private List<Flight> Flights = new List<Flight>
+    // Класс для рейса
+    public class Flight
+    {           
+        public int Id { get; set; }
+        public string FlightNumber { get; set; } = "";        
+
+        @* Duration = "1 ч 25 мин", *@
+        public int DurationMinutes { get; set; }
+
+        @* Baggage = "багаж включён", *@
+        public string Baggage { get; set; } = "";
+        
+        public int Price { get; set; }
+
+        public int AircraftId { get; set; }
+        public int AirlineId { get; set; }
+        public Airport OriginAirport { get; set; }
+        public Airport DestAirport { get; set; }
+
+        @* public int Status { get; set; } *@
+        public DateTime DepartureDt { get; set; }
+        public DateTime ArrivalDt { get; set; }
+        public DateTime CreatedAt { get; set; }
+    }
+
+    // Список рейсов
+    // Загрузка рейсов из API при инициализации компонента
+    private List<Flight> Flights = new List<Flight>();
+    protected override async Task OnInitializedAsync()
     {
-        new Flight
-        {
-            Id = 1,
-            FlightNumber = "SU 112",
-            Route = "Москва → Санкт-Петербург",
-            Type = "Прямой",
-            Duration = "1 ч 25 мин",
-            Baggage = "багаж включён",
-            Price = 2459
-        },
-        new Flight
-        {
-            Id = 2,
-            FlightNumber = "UT 328",
-            Route = "Москва → Казань",
-            Type = "С пересадкой",
-            Duration = "3 ч 40 мин",
-            Baggage = "",
-            Price = 3199
-        },
-        new Flight
-        {
-            Id = 3,
-            FlightNumber = "UT 128",
-            Route = "Москва → Краснодар",
-            Type = "Прямой",
-            Duration = "2 ч 50 мин",
-            Baggage = "багаж включён",
-            Price = 2499
-        },
-        new Flight
-        {
-            Id = 4,
-            FlightNumber = "SU 115",
-            Route = "Москва → Владивосток",
-            Type = "С пересадкой",
-            Duration = "9 ч 40 мин",
-            Baggage = "багаж включён",
-            Price = 7999
-        },
-        new Flight
-        {
-            Id = 5,
-            FlightNumber = "SU 112",
-            Route = "Москва → Краснодар",
-            Type = "Прямой",
-            Duration = "1 ч 40 мин",
-            Baggage = "багаж включён",
-            Price = 1999
-        },
-        new Flight
-        {
-            Id = 6,
-            FlightNumber = "UT 438",
-            Route = "Москва → Саратов",
-            Type = "Прямой",
-            Duration = "4 ч 40 мин",
-            Baggage = "",
-            Price = 4100
-        }
-    };
+        Flights = await Http.GetFromJsonAsync<List<Flight>>("api/flights") ?? new List<Flight>();
+        
+    }
+
+    public string FormatDuration(int DurationMinutes)
+    {
+        int hours = DurationMinutes / 60;
+        int minutes = DurationMinutes % 60;
+        return $"{hours} ч {minutes} мин";
+    }
+
 
     // Обработка поиска
     private void SearchFlights()
