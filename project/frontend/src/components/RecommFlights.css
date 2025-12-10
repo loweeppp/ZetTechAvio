@@ -1,0 +1,60 @@
+/* Recommended Flight */
+.recommended-card {
+    background: white;
+    border-radius: 1rem;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    padding: 2.3rem;
+}
+
+.card-title {
+    font-weight: 600;
+    color: #111827;
+    margin-bottom: 1rem;
+    font-size: 1rem;
+}
+
+.map-preview {
+    height: 12rem;
+    background: linear-gradient(to bottom right, #d1fae5, #ecfdf5);
+    border-radius: 0.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1rem;
+}
+
+.map-icon {
+    width: 4rem;
+    height: 4rem;
+    color: #6ee7b7;
+}
+
+.flight-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.flight-route {
+    font-weight: 700;
+    font-size: 1.125rem;
+    color: #111827;
+}
+
+.flight-time {
+    color: #6b7280;
+    font-size: 0.875rem;
+}
+
+.flight-price {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #111827;
+}
+
+.flight-price-small {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #111827;
+}

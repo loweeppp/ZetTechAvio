@@ -47,6 +47,17 @@ builder.Services.AddRazorComponents()
 
 builder.Services.AddControllers();
 
+// Настройка CORS для разрешения запросов с React-приложения
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowReact", policy =>
+    {
+        policy.WithOrigins("http://localhost:3000")
+              .AllowAnyMethod()
+              .AllowAnyHeader();
+    });
+});
+
 var app = builder.Build();
 
 // Настройка конвейера обработки HTTP-запросов
@@ -56,6 +67,13 @@ if (!app.Environment.IsDevelopment())
     // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
+
+//Перенаправление HTTP на HTTPS
+app.UseHttpsRedirection();
+//Разрешает кросс-доменные запросы
+app.UseCors("AllowReact");
+//Аутентификация
+app.UseAuthentication();
 
 app.MapControllers();
 

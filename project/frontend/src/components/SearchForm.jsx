@@ -1,0 +1,84 @@
+import { useState } from 'react';
+import './SearchForm.css';
+
+export default function SearchForm() {
+  const [from, setFrom] = useState('');
+  const [to, setTo] = useState('');
+  const [date, setDate] = useState('');
+  const [passengers, setPassengers] = useState(1);
+
+  const handleSearch = () => {
+    console.log(`Поиск: ${from} → ${to}, Дата: ${date}, Пассажиры: ${passengers}`);
+    // Логика поиска
+  };
+
+  return (
+    <div className="search-column">
+      <div className="search-card">
+        <h1 class="title">Найди свой рейс быстро<br />удобно – и без заморочек</h1>
+
+        <div className="form-container">
+          <div className="form-grid">
+
+            {/* Откуда */}
+            <div className='input-wrapper'>
+              <svg className="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" >
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                <circle cx="12" cy="10" r="3" />
+              </svg>
+              <input className="input" placeholder="Откуда" value={from} onChange={(e) => setFrom(e.target.value)} />
+            </div>
+
+            {/* Куда */}
+            <div className='input-wrapper'>
+              <svg className="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" >
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                <circle cx="12" cy="10" r="3" />
+              </svg>
+              <input className="input" placeholder="Куда" value={to} onChange={(e) => setTo(e.target.value)} />
+            </div>
+
+            {/* Дата */}
+            <div className='input-wrapper'>
+              <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                <line x1="16" y1="2" x2="16" y2="6" />
+                <line x1="8" y1="2" x2="8" y2="6" />
+                <line x1="3" y1="10" x2="21" y2="10" />
+              </svg>
+              <input className="input input-date" type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+            </div>
+
+            {/* Пассажиры */}
+            <div className='input-wrapper'>
+              <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                <circle cx="9" cy="7" r="4" />
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+              </svg>
+              <select className="input" value={passengers} onChange={(e) => setPassengers(e.target.value)}>
+                <option value="1">1 пассажир</option>
+                <option value="2">2 пассажира</option>
+                <option value="3">3 пассажира</option>
+                <option value="4">4 пассажира</option>
+              </select>
+            </div>
+
+          </div>
+
+          {/* Найти */}
+          <button class="btn-search" onClick={handleSearch}>Найти</button>
+          <span class="hint-text" >
+            Начните поиск — затем сможете выбрать места и оформить покупку (
+            <a class="linkPolitica" href="/privacy-policy" target="_blank" rel="noopener noreferrer">требуется вход.</a>
+            )
+          </span>
+        </div>
+      </div>
+
+
+    </div>
+
+  );
+}

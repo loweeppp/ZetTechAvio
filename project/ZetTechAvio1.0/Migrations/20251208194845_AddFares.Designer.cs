@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using ZetTechAvio1._0.Data;
 
@@ -11,9 +12,11 @@ using ZetTechAvio1._0.Data;
 namespace ZetTechAvio1._0.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251208194845_AddFares")]
+    partial class AddFares
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -153,9 +156,8 @@ namespace ZetTechAvio1._0.Migrations
                     b.Property<int>("BaggageWeightKg")
                         .HasColumnType("int");
 
-                    b.Property<string>("Class")
-                        .IsRequired()
-                        .HasColumnType("varchar(255)");
+                    b.Property<int>("Class")
+                        .HasColumnType("int");
 
                     b.Property<string>("Currency")
                         .IsRequired()
@@ -166,7 +168,7 @@ namespace ZetTechAvio1._0.Migrations
                         .HasColumnType("int");
 
                     b.Property<decimal>("Price")
-                        .HasColumnType("decimal(12,2)");
+                        .HasColumnType("decimal(65,30)");
 
                     b.Property<bool>("Refundable")
                         .HasColumnType("tinyint(1)");
@@ -175,12 +177,6 @@ namespace ZetTechAvio1._0.Migrations
                         .HasColumnType("int");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("Class")
-                        .HasDatabaseName("idx_class");
-
-                    b.HasIndex("FlightId")
-                        .HasDatabaseName("idx_flight_id");
 
                     b.ToTable("Fares");
                 });
@@ -298,15 +294,6 @@ namespace ZetTechAvio1._0.Migrations
                         .HasDatabaseName("idx_role");
 
                     b.ToTable("Users");
-                });
-
-            modelBuilder.Entity("ZetTechAvio1._0.Models.Fares", b =>
-                {
-                    b.HasOne("ZetTechAvio1._0.Models.Flight", null)
-                        .WithMany()
-                        .HasForeignKey("FlightId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
                 });
 
             modelBuilder.Entity("ZetTechAvio1._0.Models.Flight", b =>

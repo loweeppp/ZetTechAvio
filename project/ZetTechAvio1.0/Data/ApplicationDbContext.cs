@@ -15,6 +15,7 @@ namespace ZetTechAvio1._0.Data
         public DbSet<Airline> Airlines { get; set; }
         public DbSet<Aircraft> Aircrafts { get; set; }
         public DbSet<Flight> Flights { get; set; }
+        public DbSet<Fares> Fares { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -212,6 +213,49 @@ namespace ZetTechAvio1._0.Data
                 entity.HasIndex(e => new { e.OriginAirportId, e.DestAirportId }).HasDatabaseName("idx_route");
                 entity.HasIndex(e => e.AirlineId).HasDatabaseName("idx_airline");
                 entity.HasIndex(e => e.Status).HasDatabaseName("idx_status");
+
+
+
+            });
+
+//          -- ============================================
+//          -- 6. Тарифы        
+//          -- ============================================
+            modelBuilder.Entity<Fares>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+
+                entity.Property(e => e.FlightId)
+                    .IsRequired();
+
+                entity.Property(e => e.Currency)
+                    .IsRequired()
+                    .HasMaxLength(3);
+
+                entity.Property(e => e.Price)
+                    .IsRequired()
+                    .HasColumnType("decimal(12,2)");
+
+                entity.Property(e => e.SeatsAvailable)
+                    .IsRequired();
+
+                entity.Property(e => e.BaggageIncluded);
+
+                entity.Property(e => e.BaggageWeightKg);
+
+                entity.Property(e => e.Refundable);
+
+                entity.Property(e => e.Class)
+                    .IsRequired()
+                    .HasConversion<string>();
+
+                entity.HasOne<Flight>()
+                    .WithMany()
+                    .HasForeignKey(f => f.FlightId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasIndex(e => e.FlightId).HasDatabaseName("idx_flight_id");
+                entity.HasIndex(e => e.Class).HasDatabaseName("idx_class");
             });
         }
     }
