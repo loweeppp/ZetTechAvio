@@ -5,7 +5,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace ZetTechAvio1._0.Models
 {
     [Table("Fares")]
-    public class Fares
+    public class Fare
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]

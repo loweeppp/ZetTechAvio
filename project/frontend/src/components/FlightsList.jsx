@@ -4,6 +4,7 @@ import './FlightsList.css';
 export default function FlightsList() {
   const [flights, setFlights] = useState([]);
   const [loading, setLoading] = useState(true);
+  
 
   useEffect(() => {
     fetch('http://localhost:5151/api/flights')

@@ -15,7 +15,7 @@ namespace ZetTechAvio1._0.Data
         public DbSet<Airline> Airlines { get; set; }
         public DbSet<Aircraft> Aircrafts { get; set; }
         public DbSet<Flight> Flights { get; set; }
-        public DbSet<Fares> Fares { get; set; }
+        public DbSet<Fare> Fares { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -221,7 +221,7 @@ namespace ZetTechAvio1._0.Data
 //          -- ============================================
 //          -- 6. Тарифы        
 //          -- ============================================
-            modelBuilder.Entity<Fares>(entity =>
+            modelBuilder.Entity<Fare>(entity =>
             {
                 entity.HasKey(e => e.Id);
 

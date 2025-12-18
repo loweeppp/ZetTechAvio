@@ -13,11 +13,12 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseMySql(connectionString, 
         ServerVersion.AutoDetect(connectionString)));
 
-// Регистрация сервисов для работы с пользователями и аутентификацией
+// Регистрация сервисов
 builder.Services.AddScoped<IPasswordHashingService, PasswordHashingService>();
 builder.Services.AddScoped<IUserValidationService, UserValidationService>();
 builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
 builder.Services.AddScoped<IAuthStateService, AuthStateService>();
+builder.Services.AddScoped<IFaresService, FaresService>();
 
 
 // Конфигурация HttpClient
