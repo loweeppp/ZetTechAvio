@@ -1,14 +1,27 @@
 import { useState, useEffect } from 'react';
 import './FlightsList.css';
 
-export default function FlightsList() {
+export default function FlightsList({ searchParams }) {
   const [flights, setFlights] = useState([]);
   const [loading, setLoading] = useState(true);
-  
+
 
   useEffect(() => {
-    fetch('http://localhost:5151/api/flights')
-      .then(r => r.json())
+    let url = 'http://localhost:5151/api/flights';
+
+    if (searchParams) {
+      const params = new URLSearchParams();
+      if (searchParams.from && searchParams.from.trim()) params.append('from', searchParams.from);
+      if (searchParams.to && searchParams.to.trim()) params.append('to', searchParams.to);
+      if (searchParams.date && searchParams.date.trim()) params.append('date', searchParams.date);
+      url += '/search?' + params.toString();
+    }
+
+    fetch(url)
+      .then(r => {
+        if (!r.ok) throw new Error('Ошибка сети');
+        return r.json();
+      })
       .then(data => {
         setFlights(data);
         setLoading(false);
@@ -17,7 +30,7 @@ export default function FlightsList() {
         console.error(err);
         setLoading(false);
       });
-  }, []);
+  }, [searchParams]);
 
   if (loading) return <p>Загрузка рейсов...</p>;
   if (flights.length === 0) return <p>Рейсы не найдены</p>;

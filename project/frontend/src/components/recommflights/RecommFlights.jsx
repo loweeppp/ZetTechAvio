@@ -27,8 +27,8 @@ export default function RecommendedFlights() {
                 <div className="recommended-card">
                     <h3 className="card-title">Рекомендуем рейс</h3>
 
-                    <div class="map-preview">
-                        <svg class="map-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <div className="map-preview">
+                        <svg className="map-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                             <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
                             <circle cx="8.5" cy="8.5" r="1.5" />
                             <polyline points="21 15 16 10 5 21" />
@@ -38,12 +38,12 @@ export default function RecommendedFlights() {
                     {/* {flights.map(flight => (
                         <div key={flight.id}> */}
                         
-                            <div class="flight-info">
+                            <div className="flight-info">
                                 <div>
-                                    <div class="flight-route">DME → EMT</div>
-                                    <div class="flight-time">12 мая • 09:40 — 11:10</div>
+                                    <div className="flight-route">DME → EMT</div>
+                                    <div className="flight-time">12 мая • 09:40 — 11:10</div>
                                 </div>
-                                <div class="flight-price">4 299 ₽</div>
+                                <div className="flight-price">4 299 ₽</div>
                             </div>
                         </div>
                     {/* ))} */}
