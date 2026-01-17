@@ -20,6 +20,19 @@
     width: 100%;            
 }
 
+.btn-profile {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: linear-gradient(135deg, #0066FF, #0052cc);
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-weight: 500;
+}
 
 .logo {
     display: flex;

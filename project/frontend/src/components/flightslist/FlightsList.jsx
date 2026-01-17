@@ -37,7 +37,7 @@ export default function FlightsList({ searchParams }) {
 
   return (
     <section className="flights-section">
-      <div className="flights-list">
+      <div className="flights-list" >
         <h2 className="section-title">Рейсы</h2>
         {flights.map(flight => (
           <div key={flight.id} className="flight-card">

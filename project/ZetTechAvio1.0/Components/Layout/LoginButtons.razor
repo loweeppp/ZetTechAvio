@@ -64,7 +64,7 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        // Initialize auth state from localStorage
+        // Инициализация состояния аутентификации при загрузке компонента
         await AuthStateService.InitializeAsync();
         
         CurrentUser = AuthStateService.CurrentUser;
