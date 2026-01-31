@@ -7,6 +7,7 @@ namespace ZetTechAvio1._0.Services
     public interface IUserValidationService
     {
         Task<(bool IsValid, string? ErrorMessage)> ValidateRegistrationAsync(string email, string password, string fullName, string phone);
+        Task<(bool IsValid, string? ErrorMessage)> ValidateUpdateAsync(string email, string password, string fullName, string phone, int userId);
         Task<bool> EmailExistsAsync(string email);
     }
 
@@ -66,6 +67,51 @@ namespace ZetTechAvio1._0.Services
             return await Task.Run(() => 
                 _context.Users.Any(u => u.Email == email.ToLower())
             );
+        }
+
+        public async Task<(bool IsValid, string? ErrorMessage)> ValidateUpdateAsync(
+            string email, string password, string fullName, string phone, int userId)
+        {
+            // Validate email
+            if (string.IsNullOrWhiteSpace(email))
+                return (false, "Email is required");
+
+            if (email.Length > 255)
+                return (false, "Email is too long");
+
+            var emailValidator = new EmailAddressAttribute();
+            if (!emailValidator.IsValid(email))
+                return (false, "Email format is invalid");
+
+            // Check if email already exists (but exclude current user)
+            var emailExists = await Task.Run(() => 
+                _context.Users.Any(u => u.Email == email.ToLower() && u.Id != userId)
+            );
+            if (emailExists)
+                return (false, "This email is already registered");
+
+            // Validate password (optional for update)
+            if (!string.IsNullOrWhiteSpace(password))
+            {
+                if (password.Length < 6)
+                    return (false, "Password must be at least 6 characters long");
+
+                if (password.Length > 128)
+                    return (false, "Password is too long");
+            }
+
+            // Validate full name
+            if (string.IsNullOrWhiteSpace(fullName))
+                return (false, "Full name is required");
+
+            if (fullName.Length > 255)
+                return (false, "Full name is too long");
+
+            // Validate phone
+            if (!string.IsNullOrWhiteSpace(phone) && phone.Length > 20)
+                return (false, "Phone number is too long");
+
+            return (true, null);
         }
     }
 }

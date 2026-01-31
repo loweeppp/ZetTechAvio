@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using ZetTechAvio1._0.Data;
 
@@ -11,9 +12,11 @@ using ZetTechAvio1._0.Data;
 namespace ZetTechAvio1._0.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260130161424_FaresInFlights2")]
+    partial class FaresInFlights2
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -51,7 +54,7 @@ namespace ZetTechAvio1._0.Migrations
                     b.HasIndex("Model")
                         .HasDatabaseName("idx_model");
 
-                    b.ToTable("Aircraft", (string)null);
+                    b.ToTable("Aircraft");
                 });
 
             modelBuilder.Entity("ZetTechAvio1._0.Models.Airline", b =>
@@ -85,7 +88,7 @@ namespace ZetTechAvio1._0.Migrations
                         .IsUnique()
                         .HasDatabaseName("idx_iata");
 
-                    b.ToTable("Airlines", (string)null);
+                    b.ToTable("Airlines");
                 });
 
             modelBuilder.Entity("ZetTechAvio1._0.Models.Airport", b =>
@@ -136,7 +139,7 @@ namespace ZetTechAvio1._0.Migrations
                     b.HasIndex("Iata")
                         .HasDatabaseName("idx_iata");
 
-                    b.ToTable("Airports", (string)null);
+                    b.ToTable("Airports");
                 });
 
             modelBuilder.Entity("ZetTechAvio1._0.Models.Fare", b =>
@@ -187,7 +190,7 @@ namespace ZetTechAvio1._0.Migrations
 
                     b.HasIndex("FlightId1");
 
-                    b.ToTable("Fares", (string)null);
+                    b.ToTable("Fares");
                 });
 
             modelBuilder.Entity("ZetTechAvio1._0.Models.Flight", b =>
@@ -252,7 +255,7 @@ namespace ZetTechAvio1._0.Migrations
                     b.HasIndex("OriginAirportId", "DestAirportId")
                         .HasDatabaseName("idx_route");
 
-                    b.ToTable("Flights", (string)null);
+                    b.ToTable("Flights");
                 });
 
             modelBuilder.Entity("ZetTechAvio1._0.Models.User", b =>
@@ -302,7 +305,7 @@ namespace ZetTechAvio1._0.Migrations
                     b.HasIndex("Role")
                         .HasDatabaseName("idx_role");
 
-                    b.ToTable("Users", (string)null);
+                    b.ToTable("Users");
                 });
 
             modelBuilder.Entity("ZetTechAvio1._0.Models.Fare", b =>

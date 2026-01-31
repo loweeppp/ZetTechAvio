@@ -14,6 +14,9 @@ namespace ZetTechAvio1._0.Models
         [Required]
         public int FlightId { get; set; }
 
+        [ForeignKey("FlightId")]
+        public required Flight Flight { get; set; }
+
         [Required]
         [StringLength(3)]
         public string Currency { get; set; } = "RUB";

@@ -2,13 +2,14 @@ import { useState } from 'react';
 import './AuthModal.css';
 
 export default function AuthModal({ isOpen, onClose, onLoginSuccess }) {
+
   const [isLoginMode, setIsLoginMode] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   
   // Поля для входа
   const [loginEmail, setLoginEmail] = useState('');
-  const [loginPassword, setLoginPassword] = useState('');
+  // const [loginPassword, setLoginPassword] = useState('');
   
   // Поля для регистрации
   const [fullName, setFullName] = useState('');
@@ -17,15 +18,17 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess }) {
   const [password, setPassword] = useState('');
   const [agreeToPolicy, setAgreeToPolicy] = useState(false);
 
+  //Переключение на режим входа
   const handleLogin = async (e) => {
     e.preventDefault();
     setError('');
     
-    if (!loginEmail || !loginPassword) {
+    if (!loginEmail || !password) {
       setError('Email и пароль обязательны');
       return;
     }
 
+    // Выполнение запроса на вход
     setLoading(true);
     try {
       const response = await fetch('http://localhost:5151/api/auth/login', {
@@ -33,10 +36,11 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           email: loginEmail,
-          password: loginPassword
+          password: password
         })
       });
 
+      
       if (response.ok) {
         const data = await response.json();
         onLoginSuccess(data.user);
@@ -51,6 +55,7 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess }) {
     }
   };
 
+  //Переключение на режим регистрации
   const handleRegister = async (e) => {
     e.preventDefault();
     setError('');
@@ -59,11 +64,33 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess }) {
       setError('Поля не могут быть пустыми');
       return;
     }
-    
+
+    function isvalidateEmail(e) {
+      return /\S+@\S+\.\S+/.test(e);
+    }
+    if (!isvalidateEmail(email)) {
+      setError('Неверный формат email');
+      return;
+    }
+
+    function isvalidatePhone(p) {
+      return /^\+?[0-9]{10,15}$/.test(p);
+    } 
+    if (phone && !isvalidatePhone(phone)) {
+      setError('Неверный формат телефона');
+      return;
+    }
+
     if (!agreeToPolicy) {
       setError('Вы должны согласиться с политикой');
       return;
     }
+
+    if(!fullName.length < 19){
+      setError('Неверный формат имени, не больше 19 символов');
+      return;
+    }
+    
     
     if (password.length < 6) {
       setError('Пароль должен быть не менее 6 символов');
@@ -97,11 +124,13 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess }) {
     }
   };
 
+
+  //
   if (!isOpen) return null;
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-box" onClick={(e) => e.stopPropagation()}>
+      <div className="modal-box-register" onClick={(e) => e.stopPropagation()}>
         {isLoginMode ? (
           // РЕЖИМ ВХОДА
           <form onSubmit={handleLogin}>
@@ -117,8 +146,8 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess }) {
               className="input mt-2"
               type="password"
               placeholder="Пароль"
-              value={loginPassword}
-              onChange={(e) => setLoginPassword(e.target.value)}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
             />
             
             {error && <div className="text-danger mt-2">{error}</div>}

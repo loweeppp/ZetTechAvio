@@ -46,7 +46,7 @@ export default function FlightsList({ searchParams }) {
               <p className="flight-subtitle">•{formatDuration(flight.durationMinutes)}</p>
             </div>
             <div className="flight-card-right">
-              <div className="price">{flight.price || '—'}₽</div>
+              <div className="price">{flight.minPrice ? `${flight.minPrice}₽` : '—'}</div>
               <button className="btn-buy">Купить</button>
             </div>
           </div>

@@ -19,11 +19,17 @@ export function useAuth() {
     setCurrentUser(user);
   };
 
+  // Функция для изменения данных пользователя
+  const changeUser = (user) => {
+    localStorage.setItem('user', JSON.stringify(user));
+    setCurrentUser(user);
+  }
+
   // Функция для очистки (выход)
   const logout = () => {
     localStorage.removeItem('user');
     setCurrentUser(null);
   };
 
-  return { currentUser, setCurrentUser, isLoading, login, logout };
+  return { currentUser, setCurrentUser, isLoading, login, logout, changeUser };
 }

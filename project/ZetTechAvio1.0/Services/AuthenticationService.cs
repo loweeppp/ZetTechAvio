@@ -1,5 +1,7 @@
+using ZetTechAvio1._0.Components.Pages;
 using ZetTechAvio1._0.Data;
 using ZetTechAvio1._0.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace ZetTechAvio1._0.Services
 {
@@ -7,6 +9,7 @@ namespace ZetTechAvio1._0.Services
     {
         Task<(bool Success, string? Message, User? User)> RegisterAsync(string email, string password, string fullName, string phone);
         Task<(bool Success, string? Message, User? User)> LoginAsync(string email, string password);
+        Task<(bool Success, string? Message, User? User)> ChangeAsync(string email, string password, string fullName, string phone, int Id);
     }
 
     public class AuthenticationService : IAuthenticationService
@@ -24,7 +27,50 @@ namespace ZetTechAvio1._0.Services
             _passwordService = passwordService;
             _validationService = validationService;
         }
+
+        public async Task<(bool Success, string? Message, User? User)> ChangeAsync(
+            string email, string password, string fullName, string phone, int Id)
+        {
+            try
+            {
+                //Validate input
+                var (isValid, errorMessage) = await _validationService.ValidateUpdateAsync(
+                    email, password, fullName, phone, Id);
+
+                if (!isValid)
+                    return (false, errorMessage, null);
+
+                var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == Id);
     
+                if (user == null)
+                    return (false, "User not found", null);
+
+                var passwordHash = _passwordService.HashPassword(password);
+
+                // Update user details
+                user.FullName = fullName;
+                user.Phone = phone;
+                user.PasswordHash = passwordHash;
+                user.Email = email.ToLower();
+
+                // Update password if provided
+                if (!string.IsNullOrWhiteSpace(password))
+                {
+                    user.PasswordHash = _passwordService.HashPassword(password);
+                }
+
+                user.UpdatedAt = DateTime.UtcNow;
+
+                await _context.SaveChangesAsync();
+
+                return (true, "User updated successfully", user);
+            }
+            catch (Exception ex)
+            {
+                return (false, $"Update error: {ex.Message}", null);
+            }
+        }
+
         public async Task<(bool Success, string? Message, User? User)> RegisterAsync(
             string email, string password, string fullName, string phone)
         {
@@ -64,7 +110,8 @@ namespace ZetTechAvio1._0.Services
             }
         }
 
-        public async Task<(bool Success, string? Message, User? User)> LoginAsync(string email, string password)
+        public async Task<(bool Success, string? Message, User? User)> LoginAsync(
+            string email, string password)
         {
             try
             {
@@ -72,7 +119,7 @@ namespace ZetTechAvio1._0.Services
                     return (false, "Email and password are required", null);
 
                 // Find user by email
-                var user = await Task.Run(() => 
+                var user = await Task.Run(() =>
                     _context.Users.FirstOrDefault(u => u.Email == email.ToLower())
                 );
 

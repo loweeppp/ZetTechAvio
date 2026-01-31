@@ -5,9 +5,13 @@ import ProfileModal from '../../auth/ProfileModal';
 import './Header.css';
 
 export default function Header() {
-  const { currentUser, isLoading, login, logout } = useAuth();
+  const { currentUser, isLoading, login, logout, changeUser } = useAuth();
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+
+  const handleProfileChange = (updatedUser) => {
+    changeUser(updatedUser);  // ← Обновляет и state, и localStorage
+  };
 
   const handleLoginSuccess = (user) => {
     login(user);
@@ -34,13 +38,13 @@ export default function Header() {
             {currentUser ? (
               // Если авторизован
               <>
-                <span className="user-info"> {currentUser.fullName} </span>
+
                 <button className="btn-profile" onClick={() => setIsProfileModalOpen(true)}>
                   <svg className="icon-small" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
                     <circle cx="12" cy="7" r="4" />
                   </svg>
-                  Профиль
+                  <span className="user-info"> {currentUser.fullName} </span>
                 </button>
               </>
             ) : (
@@ -75,6 +79,7 @@ export default function Header() {
         onClose={() => setIsProfileModalOpen(false)}
         user={currentUser}
         onLogout={handleLogout}
+        onChange={handleProfileChange}
       />
     </>
   );

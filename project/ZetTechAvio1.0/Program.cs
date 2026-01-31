@@ -46,7 +46,11 @@ builder.Services.AddScoped<IFlightsService, FlightsService>();
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
+    });
 
 // Настройка CORS для разрешения запросов с React-приложения
 builder.Services.AddCors(options =>

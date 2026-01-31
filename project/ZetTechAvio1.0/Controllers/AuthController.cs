@@ -32,6 +32,22 @@ namespace ZetTechAvio1._0.Controllers
             return Ok(new { message, user });
         }
 
+        [HttpPost("change")]
+        public async Task<IActionResult> Change([FromBody] ChangeRequest request)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var (success, message, user) = await _authService.ChangeAsync(
+                request.Email, request.Password, request.FullName, request.Phone, request.Id);
+
+            if (!success)
+                return BadRequest(new { message });
+
+            await _authStateService.SetUserAsync(user);
+            return Ok(new { message, user });
+        }
+
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginRequest request)
         {
@@ -46,6 +62,8 @@ namespace ZetTechAvio1._0.Controllers
             await _authStateService.SetUserAsync(user);
             return Ok(new { message, user });
         }
+
+
 
         [HttpPost("logout")]
         public async Task<IActionResult> Logout()
@@ -77,5 +95,14 @@ namespace ZetTechAvio1._0.Controllers
     {
         public string Email { get; set; } = "";
         public string Password { get; set; } = "";
+    }
+
+    public class ChangeRequest
+    {
+        public string Email { get; set; } = "";
+        public string Password { get; set; } = "";
+        public string FullName { get; set; } = "";
+        public string Phone { get; set; } = "";
+        public int Id { get; set; }
     }
 }

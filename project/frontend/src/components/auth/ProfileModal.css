@@ -11,13 +11,28 @@
   z-index: 1000;
 }
 
+
+
 .modal-box {
-  background: white;
-  padding: 30px;
-  border-radius: 8px;
-  max-width: 400px;
-  width: 90%;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    background: white;
+    padding: 2rem;
+    border-radius: 8px;
+    width: 100%;
+    max-width: 500px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
+.modal-box-register {
+    background: white;
+    padding: 2rem;
+    border-radius: 8px;
+    width: 100%;
+    max-width: 400px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    max-height: 80vh;
+    overflow-y: auto;
 }
 
 .profile-header {
@@ -51,21 +66,44 @@
 }
 
 .profile-item {
-  margin-bottom: 15px;
+    margin-bottom: 1.5rem;
 }
 
+
+
 .profile-item label {
-  display: block;
-  font-weight: bold;
-  color: #666;
-  font-size: 14px;
-  margin-bottom: 5px;
+    display: block;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 0.5rem;
+    font-size: 0.95rem;
+}
+
+.profile-item-input {
+    margin: 0;
+    padding: 0.75rem;
+    background-color: #f9f9f9;
+    border-radius: 4px;
+    color: #666;
+    border-left: 3px solid #0066FF;
+}
+
+.profile-item-change  {
+    margin: 0;
+    padding: 0.75rem;
+    background-color: #f9f9f9;
+    border-radius: 4px;
+    color: #666;
+    border-left: 3px solid #ff0000;
 }
 
 .profile-item p {
-  margin: 0;
-  font-size: 16px;
-  color: #333;
+    margin: 0;
+    padding: 0.75rem;
+    background-color: #f9f9f9;
+    border-radius: 4px;
+    color: #666;
+    border-left: 3px solid #0066FF;
 }
 
 .profile-actions {
@@ -86,6 +124,7 @@
 .btn-danger {
   background: #dc3545;
   color: white;
+  flex: 1;
 }
 
 .btn-danger:hover {
@@ -99,4 +138,9 @@
 
 .btn-secondary:hover {
   background: #5a6268;
+}
+
+.btn-change {
+    background: #0066FF;
+    color: white;
 }

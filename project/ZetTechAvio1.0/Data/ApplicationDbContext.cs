@@ -249,8 +249,8 @@ namespace ZetTechAvio1._0.Data
                     .IsRequired()
                     .HasConversion<string>();
 
-                entity.HasOne<Flight>()
-                    .WithMany()
+                entity.HasOne(f => f.Flight)
+                    .WithMany(fl => fl.Fares)
                     .HasForeignKey(f => f.FlightId)
                     .OnDelete(DeleteBehavior.Cascade);
 

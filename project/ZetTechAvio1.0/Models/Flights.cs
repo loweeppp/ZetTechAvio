@@ -11,6 +11,8 @@ namespace ZetTechAvio1._0.Models
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
 
+        public ICollection<Fare> Fares { get; set; } = new List<Fare>(); 
+
         [Required]
         [StringLength(50)]
         public string FlightNumber { get; set; } = "";
@@ -19,7 +21,7 @@ namespace ZetTechAvio1._0.Models
         public int AirlineId { get; set; }
 
         [Required]
-        public int AircraftId { get; set; }  
+        public int AircraftId { get; set; }
 
         [Required]
         public int OriginAirportId { get; set; }
@@ -52,5 +54,5 @@ namespace ZetTechAvio1._0.Models
         Cancelled,
         Completed
     }
-    
+
 }

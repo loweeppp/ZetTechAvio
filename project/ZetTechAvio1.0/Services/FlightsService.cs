@@ -6,8 +6,8 @@ namespace ZetTechAvio1._0.Services
 {
     public interface IFlightsService
     {
-        Task<List<Flight>> GetAllFlightsAsync();
-        Task<List<Flight>> SearchFlightsAsync(string from, string to, string date);
+        Task<List<FlightDto>> GetAllFlightsAsync();
+        Task<List<FlightDto>> SearchFlightsAsync(string from, string to, string date);
         Task<Flight?> GetFlightByIdAsync(int id);
         Task<Flight> CreateFlightAsync(Flight flight);
         Task<Flight?> UpdateFlightAsync(int id, Flight updatedFlight);
@@ -23,35 +23,53 @@ namespace ZetTechAvio1._0.Services
             _dbContext = dbContext;
         }
 
-        public async Task<List<Flight>> GetAllFlightsAsync()
+        public async Task<List<FlightDto>> GetAllFlightsAsync()
         {
-            return await _dbContext.Flights   
-            .Include(f => f.OriginAirport)
-            .Include(f => f.DestAirport).ToListAsync();
-        }
+            var flights = await _dbContext.Flights
+                .Include(f => f.OriginAirport)
+                .Include(f => f.DestAirport)
+                .Include(f => f.Fares)
+                .ToListAsync();
 
-        public async Task<List<Flight>> SearchFlightsAsync(string from, string to, string date)
+            return flights.Select(MapToDto).ToList();
+        }
+        private FlightDto MapToDto(Flight flight)
+        {
+            return new FlightDto
+            {
+                Id = flight.Id,
+                FlightNumber = flight.FlightNumber,
+                DurationMinutes = flight.DurationMinutes,
+                DepartureDt = flight.DepartureDt,
+                ArrivalDt = flight.ArrivalDt,
+                MinPrice = flight.Fares.Any() ? flight.Fares.Min(f => f.Price) : 0,
+                OriginAirport = flight.OriginAirport,
+                DestAirport = flight.DestAirport
+            };
+        }
+        public async Task<List<FlightDto>> SearchFlightsAsync(string from, string to, string date)
         {
             try
             {
                 var query = _dbContext.Flights
                     .Include(f => f.OriginAirport)
-                    .Include(f => f.DestAirport);
+                    .Include(f => f.DestAirport)
+                    .Include(f => f.Fares);
 
                 var flights = await query.ToListAsync();
 
                 if (!string.IsNullOrEmpty(from))
                 {
-                    flights = flights.Where(f => 
-                        (f.OriginAirport?.Iata?.ToLower().Contains(from.ToLower()) ?? false) || 
+                    flights = flights.Where(f =>
+                        (f.OriginAirport?.Iata?.ToLower().Contains(from.ToLower()) ?? false) ||
                         (f.OriginAirport?.City?.ToLower().Contains(from.ToLower()) ?? false))
                         .ToList();
                 }
 
                 if (!string.IsNullOrEmpty(to))
                 {
-                    flights = flights.Where(f => 
-                        (f.DestAirport?.Iata?.ToLower().Contains(to.ToLower()) ?? false) || 
+                    flights = flights.Where(f =>
+                        (f.DestAirport?.Iata?.ToLower().Contains(to.ToLower()) ?? false) ||
                         (f.DestAirport?.City?.ToLower().Contains(to.ToLower()) ?? false))
                         .ToList();
                 }
@@ -61,15 +79,15 @@ namespace ZetTechAvio1._0.Services
                     flights = flights.Where(f => f.DepartureDt.Date == parsedDate.Date).ToList();
                 }
 
-                return flights;
+                return flights.Select(MapToDto).ToList();
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"SearchFlightsAsync error: {ex.Message}");
-                return new List<Flight>();
+                return new List<FlightDto>();
             }
         }
-        
+
 
         public async Task<Flight?> GetFlightByIdAsync(int id)
         {
