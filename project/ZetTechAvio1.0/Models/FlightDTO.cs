@@ -11,6 +11,7 @@ public class FlightDto
     public DateTime DepartureDt { get; set; }
     public DateTime ArrivalDt { get; set; }
     public decimal MinPrice { get; set; }  // ← Минимальная цена
+    public required string BaggageInfo { get; set; }  // ← Информация о включенном багаже
     public required Airport OriginAirport { get; set; }
     public required Airport DestAirport { get; set; }
 }

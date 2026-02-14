@@ -5,11 +5,14 @@
     padding: 2rem;
 
 }
+
 .section-title {
     font-size: 1.875rem;
     font-weight: 700;
     color: #111827;
-    margin-bottom: 2rem;
+    /* margin-bottom: 2rem; */
+    margin-left: 30px;
+    margin-top: 30px;
 }
 
 
@@ -23,17 +26,11 @@
     flex: 1;
 }
 
-.flight-title {
-    font-size: 1.125rem;
-    font-weight: 600;
-    color: #111827;
-    margin-bottom: 0.5rem;
-}
-
-.flight-subtitle {
-    color: #6b7280;
-    font-size: 0.875rem;
-    text-align: left;
+.flight-card-center {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-left: 2rem;
 }
 
 .flight-card-right {
@@ -42,26 +39,68 @@
     gap: 1.5rem;
 }
 
+.flight-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #111827;
+    margin-bottom: 0.5rem;
+}
+
+.flight-title-hours {
+    font-size: 2rem;
+    font-weight: 600;
+    color: #111827;
+    margin-bottom: 0.5rem;
+}
+
+.flight-subtitle-bold {
+    color: #111827;
+    font-size: 1.125rem;
+    text-align: left;
+    font-weight: 600;
+}
+
+.flight-subtitle {
+    color: #6b7280;
+    font-size: 0.875rem;
+}
+
+.flight-subtitle-card {
+    color: #6b7280;
+    margin-top: 8px;
+    font-size: 1.125rem;
+}
+
+
+
 .price {
     font-size: 1.5rem;
     font-weight: 700;
     color: #111827;
 }
 
+.price-card {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #111827;
+    margin-top: -80px;
+    margin-right: -110px;
+}
+
 .btn-buy {
-    background: #00D4AA;
+    background: #0066FF;
     color: white;
     border: none;
     padding: 0.75rem 2rem;
     border-radius: 0.5rem;
     font-weight: 500;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: all 1s;
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
 .btn-buy:hover {
-    background: #00BF99;
+    background: #0066FF;
     transform: translateY(-1px);
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
@@ -86,7 +125,8 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    transition: all 0.3s;
+    transition: all 2s;
+    margin-top: 10px;
 }
 
 .flight-card:hover {
@@ -98,44 +138,54 @@
     flex: 1;
 }
 
-.flight-title {
-    font-size: 1.125rem;
-    font-weight: 600;
-    color: #111827;
-    margin-bottom: 0.5rem;
-}
-
-.flight-subtitle {
-    color: #6b7280;
-    font-size: 0.875rem;
-}
-
-.flight-card-right {
-    display: flex;
-    align-items: center;
-    gap: 1.5rem;
-}
-
-.price {
-    font-size: 1.5rem;
-    font-weight: 700;
-    color: #111827;
-}
-
-.btn-buy {
-    background: #00D4AA;
-    color: white;
-    border: none;
-    padding: 0.75rem 2rem;
-    border-radius: 0.5rem;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.2s;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-}
-
 .btn-buy:hover {
-    background: #00BF99;
+    background: #0066FF;
     transform: translateY(-1px);
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.divider {
+    width: 1px;
+    height: 100%;
+    min-height: 80px;
+    stroke: #e0e0e0;
+}
+
+
+
+/* Скролл бар для списка рейсов */
+
+
+.flights-list {
+    overflow-y: scroll;
+    max-height: 400px;
+    /* или нужную вам высоту */
+
+}
+
+/* Кастомный скролл-бар для Chrome, Edge, Safari */
+.flights-list::-webkit-scrollbar {
+    width: 80px;
+
+}
+
+.flights-list::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+.flights-list::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 10px;
+}
+
+.flights-list::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
+/* Для Firefox */
+.flights-list {
+    scrollbar-color: #888 #f1f1f1;
+    scrollbar-width: bold;
+
 }

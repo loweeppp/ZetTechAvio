@@ -42,7 +42,10 @@ namespace ZetTechAvio1._0.Services
                 DurationMinutes = flight.DurationMinutes,
                 DepartureDt = flight.DepartureDt,
                 ArrivalDt = flight.ArrivalDt,
-                MinPrice = flight.Fares.Any() ? flight.Fares.Min(f => f.Price) : 0,
+                MinPrice = flight.Fares != null && flight.Fares.Any() ? flight.Fares.Min(f => f.Price) : 0,
+                // если есть тариф с багажом то выводить "Багаж включен", если нет то "Багаж не включен"
+                BaggageInfo = flight.Fares != null && flight.Fares.Any(f => f.BaggageIncluded) ? "Багаж включен" : "Багаж не включен",
+
                 OriginAirport = flight.OriginAirport,
                 DestAirport = flight.DestAirport
             };
@@ -55,6 +58,7 @@ namespace ZetTechAvio1._0.Services
                     .Include(f => f.OriginAirport)
                     .Include(f => f.DestAirport)
                     .Include(f => f.Fares);
+
 
                 var flights = await query.ToListAsync();
 

@@ -11,7 +11,7 @@ namespace ZetTechAvio1._0.Models
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
 
-        public ICollection<Fare> Fares { get; set; } = new List<Fare>(); 
+        public ICollection<Fare> Fares { get; set; } = new List<Fare>();
 
         [Required]
         [StringLength(50)]

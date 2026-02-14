@@ -8,11 +8,11 @@
 }
 
 .card-title {
-    font-weight: 600;
     color: #111827;
     margin-bottom: 1rem;
-    font-size: 1rem;
+    font-size: 1.5rem;
 }
+
 
 .map-preview {
     height: 12rem;
