@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using ZetTechAvio1._0.Data;
 
@@ -11,9 +12,11 @@ using ZetTechAvio1._0.Data;
 namespace ZetTechAvio1._0.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260227163318_AddBookingsSeatsTicketsV2")]
+    partial class AddBookingsSeatsTicketsV2
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -380,16 +383,6 @@ namespace ZetTechAvio1._0.Migrations
                     b.Property<string>("PassengerType")
                         .IsRequired()
                         .HasColumnType("longtext");
-
-                    b.Property<string>("PassportNumber")
-                        .IsRequired()
-                        .HasMaxLength(6)
-                        .HasColumnType("varchar(6)");
-
-                    b.Property<string>("PassportSeries")
-                        .IsRequired()
-                        .HasMaxLength(4)
-                        .HasColumnType("varchar(4)");
 
                     b.Property<decimal>("Price")
                         .HasColumnType("decimal(10,2)");

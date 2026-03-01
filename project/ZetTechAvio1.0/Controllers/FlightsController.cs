@@ -31,5 +31,14 @@ namespace ZetTechAvio1._0.Controllers
             var flights = await _flightsService.SearchFlightsAsync(from, to, date);
             return Ok(flights);
         }
+
+        [HttpGet("{id}/fares")]
+        public async Task<IActionResult> GetFlightFares(int id)
+        {
+            var fares = await _flightsService.GetFlightFaresAsync(id);
+            if (fares == null || fares.Count == 0)
+                return NotFound("Тарифы не найдены");
+            return Ok(fares);
+        }
     }
 }

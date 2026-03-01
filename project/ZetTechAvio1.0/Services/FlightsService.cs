@@ -12,6 +12,7 @@ namespace ZetTechAvio1._0.Services
         Task<Flight> CreateFlightAsync(Flight flight);
         Task<Flight?> UpdateFlightAsync(int id, Flight updatedFlight);
         Task<bool> DeleteFlightAsync(int id);
+        Task<List<Fare>> GetFlightFaresAsync(int flightId);
     }
 
     public class FlightsService : IFlightsService
@@ -134,6 +135,14 @@ namespace ZetTechAvio1._0.Services
             _dbContext.Flights.Remove(flight);
             await _dbContext.SaveChangesAsync();
             return true;
+        }
+
+        public async Task<List<Fare>> GetFlightFaresAsync(int flightId)
+        {
+            var fares = await _dbContext.Fares
+                .Where(f => f.FlightId == flightId)
+                .ToListAsync();
+            return fares;
         }
     }
 }

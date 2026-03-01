@@ -19,6 +19,8 @@ builder.Services.AddScoped<IUserValidationService, UserValidationService>();
 builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
 builder.Services.AddScoped<IAuthStateService, AuthStateService>();
 builder.Services.AddScoped<IFaresService, FaresService>();
+builder.Services.AddScoped<IFlightsService, FlightsService>();
+builder.Services.AddScoped<IBookingsService, BookingsService>();
 
 
 // Конфигурация HttpClient
@@ -39,8 +41,6 @@ else
         new HttpClient { BaseAddress = new Uri(builder.Configuration["HttpClient:BaseAddress"] ?? "http://localhost:5151") }
     );
 }
-
-builder.Services.AddScoped<IFlightsService, FlightsService>();
 
 // Поддержка Razor Components
 builder.Services.AddRazorComponents()

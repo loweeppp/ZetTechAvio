@@ -1,0 +1,293 @@
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: white;
+  border-radius: 12px;
+  padding: 30px;
+  max-width: 700px;
+  width: 90%;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  position: relative;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.modal-close {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: #666;
+  transition: color 0.2s;
+}
+
+.modal-close:hover {
+  color: #333;
+}
+
+.modal-content h2 {
+  margin: 0 0 20px 0;
+  font-size: 24px;
+  color: #333;
+}
+
+.flight-info {
+  background: #f5f5f5;
+  padding: 15px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+.flight-info p {
+  margin: 5px 0;
+  color: #555;
+  font-size: 14px;
+}
+
+.flight-info strong {
+  color: #333;
+}
+
+.flight-time {
+  font-size: 16px !important;
+  color: #0066cc !important;
+  font-weight: 600;
+}
+
+.booking-section {
+  margin-bottom: 25px;
+}
+
+.booking-section label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 10px;
+  color: #333;
+  font-size: 14px;
+}
+
+/* Выбор класса */
+.class-selector {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.class-btn {
+  border: 2px solid #ddd;
+  border-radius: 8px;
+  padding: 12px;
+  background: white;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: center;
+}
+
+.class-btn:hover {
+  border-color: #0066cc;
+  background: #f0f7ff;
+}
+
+.class-btn.active {
+  border-color: #0066cc;
+  background: #0066cc;
+  color: white;
+}
+
+.class-name {
+  font-weight: 600;
+  font-size: 14px;
+  margin-bottom: 5px;
+}
+
+.class-price {
+  color: #0066cc;
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 5px;
+}
+
+.class-btn.active .class-price {
+  color: white;
+}
+
+.seats-info {
+  font-size: 12px;
+  color: #999;
+}
+
+.class-btn.active .seats-info {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+/* Выбор количества */
+.quantity-selector {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.quantity-selector button {
+  width: 40px;
+  height: 40px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background: white;
+  cursor: pointer;
+  font-size: 18px;
+  font-weight: 600;
+  color: #0066cc;
+  transition: all 0.2s;
+}
+
+.quantity-selector button:hover:not(:disabled) {
+  background: #f0f7ff;
+  border-color: #0066cc;
+}
+
+.quantity-selector button:disabled {
+  color: #ccc;
+  cursor: not-allowed;
+}
+
+.quantity-selector input {
+  flex: 1;
+  height: 40px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  text-align: center;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.error {
+  color: #d32f2f;
+  font-size: 12px;
+  margin-top: 8px;
+}
+
+/* Итоговая информация */
+.booking-total {
+  background: #f9f9f9;
+  padding: 15px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  border-left: 4px solid #0066cc;
+}
+
+.booking-total p {
+  margin: 5px 0;
+  font-size: 14px;
+  color: #555;
+}
+
+.booking-total .total {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 10px;
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+  border-top: 1px solid #ddd;
+  padding-top: 10px;
+}
+
+.booking-total .price {
+  color: #0066cc;
+}
+
+/* Кнопка бронирования */
+.btn-book-confirm {
+  width: 100%;
+  padding: 12px;
+  background: #0066cc;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.btn-book-confirm:hover:not(:disabled) {
+  background: #0052a3;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 102, 204, 0.3);
+}
+
+.btn-book-confirm:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+/* Форма пассажиров */
+.passengers-list {
+  max-height: 300px;
+  overflow-y: auto;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 10px;
+  background: #fafafa;
+}
+
+.passenger-form {
+  background: white;
+  padding: 12px;
+  margin-bottom: 10px;
+  border-radius: 6px;
+  border-left: 4px solid #0066cc;
+}
+
+.passenger-form h4 {
+  margin: 0 0 10px 0;
+  font-size: 14px;
+  color: #333;
+}
+
+.passenger-form input,
+.passenger-form select {
+  width: 100%;
+  padding: 8px;
+  margin-bottom: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+  font-family: inherit;
+}
+
+.passenger-form input:focus,
+.passenger-form select:focus {
+  outline: none;
+  border-color: #0066cc;
+  box-shadow: 0 0 4px rgba(0, 102, 204, 0.2);
+}
+
+.passenger-form input:last-child,
+.passenger-form select:last-child {
+  margin-bottom: 0;
+}
+
+@media (max-width: 600px) {
+  .modal-content {
+    padding: 20px;
+  }
+
+  .class-selector {
+    grid-template-columns: 1fr;
+  }
+}

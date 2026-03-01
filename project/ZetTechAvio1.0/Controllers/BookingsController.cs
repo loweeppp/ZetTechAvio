@@ -1,0 +1,105 @@
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
+using ZetTechAvio1._0.Models;
+using ZetTechAvio1._0.Services;
+
+namespace ZetTechAvio1._0.Controllers
+{
+    [ApiController]
+    [Route("api/[controller]")]
+    public class BookingsController : ControllerBase
+    {
+        private readonly IBookingsService _bookingsService;
+        private readonly ILogger<BookingsController> _logger;
+
+        public BookingsController(IBookingsService bookingsService, ILogger<BookingsController> logger)
+        {
+            _bookingsService = bookingsService;
+            _logger = logger;
+        }
+
+        [HttpPost]
+        [Authorize]
+        public async Task<IActionResult> CreateBooking([FromBody] CreateBookingRequest request)
+        {
+            try
+            {
+                // Получаем userId из токена
+                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+                if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out int userId))
+                    return Unauthorized("Пользователь не идентифицирован");
+
+                if (!ModelState.IsValid)
+                    return BadRequest(ModelState);
+
+                var booking = await _bookingsService.CreateBookingAsync(userId, request);
+                if (booking == null)
+                    return NotFound("Рейс или тариф не найден");
+
+                return Ok(booking);
+            }
+            catch (InvalidOperationException ex)
+            {
+                _logger.LogError($"Ошибка при создании бронирования: {ex.Message}");
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Неожиданная ошибка: {ex.Message}");
+                return StatusCode(500, new { message = "Внутренняя ошибка сервера" });
+            }
+        }
+
+        [HttpGet("{userId}")]
+        [Authorize]
+        public async Task<IActionResult> GetUserBookings(int userId)
+        {
+            try
+            {
+                // Проверяем, что пользователь запрашивает только свои бронирования
+                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+                if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out int currentUserId))
+                    return Unauthorized();
+
+                if (currentUserId != userId)
+                    return Forbid("Вы можете просматривать только свои бронирования");
+
+                var bookings = await _bookingsService.GetUserBookingsAsync(userId);
+                return Ok(bookings);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Ошибка при получении бронирований: {ex.Message}");
+                return StatusCode(500, new { message = "Внутренняя ошибка сервера" });
+            }
+        }
+
+        [HttpGet("booking/{bookingId}")]
+        [Authorize]
+        public async Task<IActionResult> GetBooking(int bookingId)
+        {
+            try
+            {
+                var booking = await _bookingsService.GetBookingAsync(bookingId);
+                if (booking == null)
+                    return NotFound("Бронирование не найдено");
+
+                // Проверяем доступ
+                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+                if (userIdClaim != null && int.TryParse(userIdClaim.Value, out int userId))
+                {
+                    // Здесь нужно добавить проверку, что бронирование принадлежит текущему пользователю
+                    // TODO: Вернуть информацию о пользователе вместе с бронированием
+                }
+
+                return Ok(booking);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Ошибка при получении бронирования: {ex.Message}");
+                return StatusCode(500, new { message = "Внутренняя ошибка сервера" });
+            }
+        }
+    }
+}

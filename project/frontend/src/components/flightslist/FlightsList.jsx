@@ -1,5 +1,6 @@
 import { useState, useEffect, } from 'react';
 import './FlightsList.css';
+import BookingModal from '../booking/BookingModal';
 
 export default function FlightsList({ searchParams }) {
 
@@ -11,6 +12,8 @@ export default function FlightsList({ searchParams }) {
 
   const [flights, setFlights] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedFlight, setSelectedFlight] = useState(null);
 
 
   useEffect(() => {
@@ -41,6 +44,23 @@ export default function FlightsList({ searchParams }) {
 
   if (loading) return <p>Загрузка рейсов...</p>;
   if (flights.length === 0) return <p>Рейсы не найдены</p>;
+
+  const handleBuyClick = (flight) => {
+    setSelectedFlight(flight);
+    setIsModalOpen(true);
+  };
+
+  const handleBook = async (bookingData) => {
+    try {
+      // Здесь будет отправка бронирования на бэк
+      console.log('Бронирование:', bookingData);
+      // TODO: POST /api/bookings
+      alert(`Забронировано ${bookingData.quantity} билетов на сумму ${bookingData.totalPrice}₽`);
+      setIsModalOpen(false);
+    } catch (err) {
+      console.error('Ошибка бронирования:', err);
+    }
+  };
 
 
 
@@ -76,7 +96,7 @@ export default function FlightsList({ searchParams }) {
 
                   <div className="flight-card-right">
                     <div className="price-card">{flight.minPrice ? `${flight.minPrice}₽` : '—'}</div>
-                    <button className="btn-buy">Купить</button>
+                    <button className="btn-buy" onClick={() => handleBuyClick(flight)}>Купить</button>
                   </div>
                 </div>
 
@@ -93,12 +113,21 @@ export default function FlightsList({ searchParams }) {
               : (
                 <div className="flight-card-right">
                   <div className="price">{flight.minPrice ? `${flight.minPrice}₽` : '—'}</div>
-                  <button className="btn-buy">Купить</button>
+                  <button className="btn-buy" onClick={() => handleBuyClick(flight)}>Купить</button>
                 </div>)}
           </div>
 
         ))}
       </div>
+      
+      {selectedFlight && (
+        <BookingModal 
+          flight={selectedFlight} 
+          isOpen={isModalOpen} 
+          onClose={() => setIsModalOpen(false)}
+          onBook={handleBook}
+        />
+      )}
     </section>
   );
 }

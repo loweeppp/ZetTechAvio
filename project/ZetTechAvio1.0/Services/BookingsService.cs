@@ -1,0 +1,142 @@
+using Microsoft.EntityFrameworkCore;
+using ZetTechAvio1._0.Data;
+using ZetTechAvio1._0.Models;
+
+namespace ZetTechAvio1._0.Services
+{
+    public interface IBookingsService
+    {
+        Task<BookingResponse?> CreateBookingAsync(int userId, CreateBookingRequest request);
+        Task<List<BookingResponse>> GetUserBookingsAsync(int userId);
+        Task<BookingResponse?> GetBookingAsync(int bookingId);
+    }
+
+    public class BookingsService : IBookingsService
+    {
+        private readonly ApplicationDbContext _dbContext;
+
+        public BookingsService(ApplicationDbContext dbContext)
+        {
+            _dbContext = dbContext;
+        }
+
+        public async Task<BookingResponse?> CreateBookingAsync(int userId, CreateBookingRequest request)
+        {
+            try
+            {
+                // Получаем тариф и рейс
+                var fare = await _dbContext.Fares.FirstOrDefaultAsync(f => f.Id == request.FareId && f.FlightId == request.FlightId);
+                if (fare == null)
+                    return null;
+
+                if (fare.SeatsAvailable < request.Quantity)
+                    throw new InvalidOperationException("Недостаточно мест");
+
+                // Создаём бронирование
+                var booking = new Booking
+                {
+                    UserId = userId,
+                    BookingReference = GenerateBookingReference(),
+                    Status = BookingStatus.Created,
+                    Tickets = new List<Ticket>()
+                };
+
+                // Создаём билеты для каждого пассажира
+                decimal totalPrice = 0;
+                for (int i = 0; i < request.Quantity; i++)
+                {
+                    if (i >= request.Passengers.Count)
+                        throw new InvalidOperationException("Недостаточно информации о пассажирах");
+
+                    var passenger = request.Passengers[i];
+                    var ticket = new Ticket
+                    {
+                        FlightId = request.FlightId,
+                        FareId = request.FareId,
+                        TicketNumber = GenerateTicketNumber(booking.BookingReference, i + 1),
+                        PassengerName = passenger.FullName,
+                        PassengerType = (PassengerType)Enum.Parse(typeof(PassengerType), passenger.PassengerType),
+                        PassportSeries = passenger.PassportSeries,
+                        PassportNumber = passenger.PassportNumber,
+                        Price = fare.Price,
+                        Status = TicketStatus.Active
+                    };
+
+                    booking.Tickets.Add(ticket);
+                    totalPrice += fare.Price;
+                }
+
+                booking.TotalAmount = totalPrice;
+
+                // Сохраняем в БД
+                _dbContext.Bookings.Add(booking);
+                await _dbContext.SaveChangesAsync();
+
+                // Обновляем количество доступных мест
+                fare.SeatsAvailable -= request.Quantity;
+                await _dbContext.SaveChangesAsync();
+
+                return MapToResponse(booking);
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidOperationException($"Ошибка при создании бронирования: {ex.Message}");
+            }
+        }
+
+        public async Task<List<BookingResponse>> GetUserBookingsAsync(int userId)
+        {
+            var bookings = await _dbContext.Bookings
+                .Include(b => b.Tickets)
+                .Where(b => b.UserId == userId)
+                .OrderByDescending(b => b.CreatedAt)
+                .ToListAsync();
+
+            return bookings.Select(MapToResponse).ToList();
+        }
+
+        public async Task<BookingResponse?> GetBookingAsync(int bookingId)
+        {
+            var booking = await _dbContext.Bookings
+                .Include(b => b.Tickets)
+                .FirstOrDefaultAsync(b => b.Id == bookingId);
+
+            return booking == null ? null : MapToResponse(booking);
+        }
+
+        private BookingResponse MapToResponse(Booking booking)
+        {
+            return new BookingResponse
+            {
+                Id = booking.Id,
+                BookingReference = booking.BookingReference,
+                TotalAmount = booking.TotalAmount,
+                Status = booking.Status.ToString(),
+                CreatedAt = booking.CreatedAt,
+                Tickets = booking.Tickets.Select(t => new TicketResponse
+                {
+                    Id = t.Id,
+                    TicketNumber = t.TicketNumber,
+                    PassengerName = t.PassengerName,
+                    Price = t.Price,
+                    Status = t.Status.ToString()
+                }).ToList()
+            };
+        }
+
+        private string GenerateBookingReference()
+        {
+            const string chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+            var random = new Random();
+            var result = new char[6];
+            for (int i = 0; i < 6; i++)
+                result[i] = chars[random.Next(chars.Length)];
+            return new string(result);
+        }
+
+        private string GenerateTicketNumber(string bookingRef, int sequence)
+        {
+            return $"{bookingRef}-{sequence:D3}";
+        }
+    }
+}
