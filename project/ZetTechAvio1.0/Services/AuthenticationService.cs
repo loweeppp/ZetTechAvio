@@ -124,16 +124,27 @@ namespace ZetTechAvio1._0.Services
                 );
 
                 if (user == null)
+                {
+                    Console.WriteLine($"[LOGIN] User not found: {email}");
                     return (false, "Invalid email or password", null);
+                }
+
+                // Console.WriteLine($"[LOGIN] User found: {user.Email}");
+                // Console.WriteLine($"[LOGIN] PasswordHash exists: {!string.IsNullOrEmpty(user.PasswordHash)}");
 
                 // Verify password
-                if (!_passwordService.VerifyPassword(password, user.PasswordHash))
+                bool passwordValid = _passwordService.VerifyPassword(password, user.PasswordHash);
+                // Console.WriteLine($"[LOGIN] Password verification result: {passwordValid}");
+
+                if (!passwordValid)
                     return (false, "Invalid email or password", null);
 
+                Console.WriteLine($"[LOGIN] Login successful!");
                 return (true, "Login successful", user);
             }
             catch (Exception ex)
             {
+                Console.WriteLine($"[LOGIN] Exception: {ex.Message}\n{ex.StackTrace}");
                 return (false, $"Login error: {ex.Message}", null);
             }
         }

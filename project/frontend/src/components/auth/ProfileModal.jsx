@@ -6,10 +6,11 @@ export default function ProfileModal({ isOpen, onClose, user, onLogout, onChange
   const [changeMode, setChangeMode] = useState(false);
   const [error, setError] = useState('');
 
-  const [fullName, setFullName] = useState(user ? user.fullName : '');
-  const [phone, setPhone] = useState(user ? user.phone : '');
-  const [email, setEmail] = useState(user ? user.email : '');
-  const [password, setPassword] = useState(user ? user.password : '')
+  const [fullName, setFullName] = useState(user?.fullName || '');
+  const [phone, setPhone] = useState(user?.phone || '');
+  const [email, setEmail] = useState(user?.email || '');
+  const [password, setPassword] = useState(user?.password || '')
+
 
   const handleLogout = async () => {
     setError('');
@@ -21,6 +22,8 @@ export default function ProfileModal({ isOpen, onClose, user, onLogout, onChange
       if (response.ok) {
         onLogout();
         onClose();
+        setTimeout(() => window.location.reload(), 100);
+
       } else {
         setError('Ошибка при выходе');
       }
@@ -48,6 +51,7 @@ export default function ProfileModal({ isOpen, onClose, user, onLogout, onChange
         const data = await response.json();
         onChange(data.user);
         setChangeMode(false);
+        setTimeout(() => window.location.reload(), 100);
 
       } else {
         setError(response.message || "Ошибка при изменении профиля");

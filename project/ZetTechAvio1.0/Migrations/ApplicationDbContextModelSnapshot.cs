@@ -190,6 +190,44 @@ namespace ZetTechAvio1._0.Migrations
                     b.ToTable("Bookings");
                 });
 
+            modelBuilder.Entity("ZetTechAvio1._0.Models.ConfirmationCode", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("BookingId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(6)
+                        .HasColumnType("varchar(6)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("varchar(255)");
+
+                    b.Property<DateTime>("Expiration")
+                        .HasColumnType("datetime(6)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedAt")
+                        .HasDatabaseName("idx_confirmation_created");
+
+                    b.HasIndex("Email")
+                        .HasDatabaseName("idx_confirmation_email");
+
+                    b.ToTable("ConfirmationCodes");
+                });
+
             modelBuilder.Entity("ZetTechAvio1._0.Models.Fare", b =>
                 {
                     b.Property<int>("Id")

@@ -1,12 +1,13 @@
 import { useState, useEffect, } from 'react';
 import './FlightsList.css';
+import { useAuth } from '../../hooks/useAuth';
 import BookingModal from '../booking/BookingModal';
 
 export default function FlightsList({ searchParams }) {
 
 
+  const { currentUser } = useAuth();
   const [hoveredFlightId, setHoveredFlightId] = useState(null)
-
   const isHovered = (flightId) => hoveredFlightId === flightId;
 
 
@@ -73,9 +74,9 @@ export default function FlightsList({ searchParams }) {
 
         {flights.map(flight => (
           // карточка полета
-          <div key={flight.id} className="flight-card" onMouseEnter={() => setHoveredFlightId(flight.id)} onMouseLeave={() => setHoveredFlightId(null)}>
+          <div key={flight.id} className="flight-card" >
 
-            <div className="flight-card-left">
+            <div className="flight-card-left" onMouseEnter={() => setHoveredFlightId(flight.id)} onMouseLeave={() => setHoveredFlightId(null)}>
               <h3 className="flight-title">{flight.flightNumber} • {flight.originAirport?.city} → {flight.destAirport?.city}</h3>
 
               {isHovered(flight.id) ? (
@@ -122,8 +123,10 @@ export default function FlightsList({ searchParams }) {
       
       {selectedFlight && (
         <BookingModal 
+          user = {currentUser}
           flight={selectedFlight} 
           isOpen={isModalOpen} 
+          code=""
           onClose={() => setIsModalOpen(false)}
           onBook={handleBook}
         />

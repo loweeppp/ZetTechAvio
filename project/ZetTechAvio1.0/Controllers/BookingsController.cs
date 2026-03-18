@@ -12,11 +12,13 @@ namespace ZetTechAvio1._0.Controllers
     {
         private readonly IBookingsService _bookingsService;
         private readonly ILogger<BookingsController> _logger;
+        private readonly IConfirmationService _confirmationService;
 
-        public BookingsController(IBookingsService bookingsService, ILogger<BookingsController> logger)
+        public BookingsController(IBookingsService bookingsService, ILogger<BookingsController> logger, IConfirmationService confirmationService)
         {
             _bookingsService = bookingsService;
             _logger = logger;
+            _confirmationService = confirmationService;
         }
 
         [HttpPost]
@@ -75,6 +77,37 @@ namespace ZetTechAvio1._0.Controllers
             }
         }
 
+        [HttpPost("request-confirmation")]
+        public async Task<IActionResult> RequestConfirmation([FromBody] RequestConfirmationRequest request)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            if (string.IsNullOrEmpty(request.Email))
+                return BadRequest(new { message = "Email обязателен" });
+
+            await _confirmationService.GenerateCodeAsync(request.Email);
+            return Ok(new { success = true, message = "Код подтверждения отправлен на email" });
+        }
+
+        [HttpPost("verify-code")]
+        public async Task<IActionResult> VerifyConfirmationCode([FromBody] VerifyCodeRequest request)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            // Здесь должна быть логика проверки кода подтверждения
+            if (string.IsNullOrEmpty(request.Code))
+                return BadRequest(new { message = "Код подтверждения обязателен" });
+
+            bool isValid = await _confirmationService.VerifyCodeAsync(request.Email, request.Code);
+            if (!isValid)
+                return BadRequest(new { success = false, message = "Неверный код подтверждения" });
+
+
+            return Ok(new { success = true, message = "Код подтверждения верный" });
+        }
+
         [HttpGet("booking/{bookingId}")]
         [Authorize]
         public async Task<IActionResult> GetBooking(int bookingId)
@@ -100,6 +133,17 @@ namespace ZetTechAvio1._0.Controllers
                 _logger.LogError($"Ошибка при получении бронирования: {ex.Message}");
                 return StatusCode(500, new { message = "Внутренняя ошибка сервера" });
             }
+        }
+
+        public class RequestConfirmationRequest
+        {
+            public string Email { get; set; } = string.Empty;
+        }
+
+        public class VerifyCodeRequest
+        {
+            public string Code { get; set; } = string.Empty;
+            public string Email { get; set; } = string.Empty;
         }
     }
 }

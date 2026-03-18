@@ -21,6 +21,9 @@ builder.Services.AddScoped<IAuthStateService, AuthStateService>();
 builder.Services.AddScoped<IFaresService, FaresService>();
 builder.Services.AddScoped<IFlightsService, FlightsService>();
 builder.Services.AddScoped<IBookingsService, BookingsService>();
+builder.Services.AddScoped<IConfirmationService, ConfirmationService>();
+builder.Services.AddScoped<IConfirmationService>(sp => 
+    new ConfirmationService(sp.GetRequiredService<ApplicationDbContext>(), builder.Configuration));
 
 
 // Конфигурация HttpClient
@@ -59,9 +62,16 @@ builder.Services.AddCors(options =>
     {
         policy.WithOrigins("http://localhost:3000")
               .AllowAnyMethod()
-              .AllowAnyHeader();
+              .AllowAnyHeader()
+              .AllowCredentials();
     });
 });
+
+// Добавляем базовую схему аутентификации
+builder.Services.AddAuthentication()
+    .AddCookie("Identity.Application");
+
+builder.Services.AddAuthorization();
 
 var app = builder.Build();
 
@@ -79,6 +89,7 @@ app.UseHttpsRedirection();
 app.UseCors("AllowReact");
 //Аутентификация
 app.UseAuthentication();
+app.UseAuthorization();
 
 app.MapControllers();
 

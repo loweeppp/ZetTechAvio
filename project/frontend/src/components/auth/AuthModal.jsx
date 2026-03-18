@@ -1,16 +1,17 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import './AuthModal.css';
+import { hover } from '@testing-library/user-event/dist/hover';
 
 export default function AuthModal({ isOpen, onClose, onLoginSuccess }) {
 
   const [isLoginMode, setIsLoginMode] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  
+
   // Поля для входа
   const [loginEmail, setLoginEmail] = useState('');
   // const [loginPassword, setLoginPassword] = useState('');
-  
+
   // Поля для регистрации
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
@@ -18,11 +19,111 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess }) {
   const [password, setPassword] = useState('');
   const [agreeToPolicy, setAgreeToPolicy] = useState(false);
 
+  const [code, setCode] = useState('');
+  const [codeStage, setCodeStage] = useState('email');
+  const [hovered, isHovered] = useState(false);
+
+  useEffect(() => {
+    setCodeStage('email');
+    setError('');
+  }, [email]);
+
+  const validateRegistration = () => {
+
+    if (!fullName || !email || !password) {
+      setError('Поля не могут быть пустыми');
+      return false;
+    }
+
+    function isvalidateEmail(e) {
+      return /\S+@\S+\.\S+/.test(e);
+    }
+    if (!isvalidateEmail(email)) {
+      setError('Неверный формат email');
+      return false;
+    }
+
+    function isvalidatePhone(p) {
+      return /^\+?[0-9]{10,12}$/.test(p);
+    }
+    if (phone && !isvalidatePhone(phone)) {
+      setError('Неверный формат телефона');
+      return false;
+    }
+
+    if (!agreeToPolicy) {
+      setError('Вы должны согласиться с политикой');
+      return false;
+    }
+
+    if (fullName.length > 19) {
+      setError('Неверный формат имени, не больше 19 символов');
+      return false;
+    }
+
+
+    if (password.length < 6) {
+      setError('Пароль должен быть не менее 6 символов');
+      return false;
+    }
+
+    return true;
+  };
+
+  const сonfirmEmail = async (email) => {
+    if (!validateRegistration()) return;
+    setError('');
+
+    try {
+      const response = await fetch('http://localhost:5151/api/bookings/request-confirmation', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email })
+      });
+      const result = await response.json();
+      if (!response.ok) {
+        setError(result.message || 'Ошибка подтверждения email');
+        return;
+      }
+
+      setCodeStage('code')
+      isHovered(true);
+
+    }
+    catch (error) {
+      setError('Ошибка подключения');
+    }
+  };
+
+  const confirmCode = async (email, code) => {
+    if(!validateRegistration()) return;
+    setError('');
+    try {
+      const response = await fetch('http://localhost:5151/api/bookings/verify-code', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, code })
+      });
+      const result = await response.json();
+      if (!response.ok) {
+        setError(result.message || 'Ошибка подтверждения кода');
+      }
+
+      if (response.ok) {
+        setCodeStage('confirmed');
+      }
+
+    } catch (err) {
+      console.error('Ошибка при подтверждении кода:', err);
+      setError('Ошибка при подтверждении кода');
+    }
+  };
+
   //Переключение на режим входа
   const handleLogin = async (e) => {
     e.preventDefault();
     setError('');
-    
+
     if (!loginEmail || !password) {
       setError('Email и пароль обязательны');
       return;
@@ -40,11 +141,12 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess }) {
         })
       });
 
-      
+
       if (response.ok) {
         const data = await response.json();
         onLoginSuccess(data.user);
         onClose();
+        setTimeout(() => window.location.reload(), 100);
       } else {
         setError('Неверный email или пароль');
       }
@@ -57,45 +159,8 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess }) {
 
   //Переключение на режим регистрации
   const handleRegister = async (e) => {
-    e.preventDefault();
+    if(!validateRegistration()) return;
     setError('');
-    
-    if (!fullName || !email || !password) {
-      setError('Поля не могут быть пустыми');
-      return;
-    }
-
-    function isvalidateEmail(e) {
-      return /\S+@\S+\.\S+/.test(e);
-    }
-    if (!isvalidateEmail(email)) {
-      setError('Неверный формат email');
-      return;
-    }
-
-    function isvalidatePhone(p) {
-      return /^\+?[0-9]{10,15}$/.test(p);
-    } 
-    if (phone && !isvalidatePhone(phone)) {
-      setError('Неверный формат телефона');
-      return;
-    }
-
-    if (!agreeToPolicy) {
-      setError('Вы должны согласиться с политикой');
-      return;
-    }
-
-    if(!fullName.length < 19){
-      setError('Неверный формат имени, не больше 19 символов');
-      return;
-    }
-    
-    
-    if (password.length < 6) {
-      setError('Пароль должен быть не менее 6 символов');
-      return;
-    }
 
     setLoading(true);
     try {
@@ -114,6 +179,7 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess }) {
         const data = await response.json();
         onLoginSuccess(data.user);
         onClose();
+        setTimeout(() => window.location.reload(), 100);
       } else {
         setError('Ошибка при регистрации');
       }
@@ -149,9 +215,9 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess }) {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
-            
+
             {error && <div className="text-danger mt-2">{error}</div>}
-            
+
             <div className="mt-3">
               <button type="submit" className="btn btn-primary" disabled={loading}>
                 {loading ? 'Загрузка...' : 'Войти'}
@@ -160,7 +226,7 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess }) {
                 Отмена
               </button>
             </div>
-            
+
             <div className="mt-3 text-center">
               <span>Нет аккаунта? </span>
               <button type="button" className="btn btn-link" onClick={() => setIsLoginMode(false)}>
@@ -184,6 +250,7 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess }) {
               type="email"
               placeholder="Email"
               value={email}
+              codeStage={email}
               onChange={(e) => setEmail(e.target.value)}
             />
             <input
@@ -191,7 +258,10 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess }) {
               type="tel"
               placeholder="Телефон"
               value={phone}
-              onChange={(e) => setPhone(e.target.value)}
+              onChange={(e) => {
+                const value = e.target.value.replace(/\D/g, ''); // Удаляем все нецифровые символы
+                setPhone(value)}}
+              maxLength={12}
             />
             <input
               className="input mt-2"
@@ -200,7 +270,20 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess }) {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
-            
+            {hovered !== false && (
+              <input
+                className="input mt-2"
+                type="code"
+                placeholder="Код подтверждения"
+                value={code}
+                maxLength={6}
+                onChange={(e) => {
+                  const value = e.target.value.replace(/\D/g, ''); // Удаляем все нецифровые символы
+                  setCode(value)}}
+              />
+            )}
+
+
             <label className="mt-2">
               <input
                 type="checkbox"
@@ -209,18 +292,36 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess }) {
               />
               <span> Я согласен с политикой конфиденциальности</span>
             </label>
-            
+
             {error && <div className="text-danger mt-2">{error}</div>}
-            
+
             <div className="mt-3">
-              <button type="submit" className="btn btn-primary" disabled={loading}>
-                {loading ? 'Загрузка...' : 'Создать аккаунт'}
-              </button>
+              {/* Кнопка отправить код*/}
+              {codeStage === 'email' && (
+                <button onClick={() => сonfirmEmail(email)} type="button" className="btn btn-primary" disabled={loading}>
+                  {loading ? 'Загрузка...' : 'Подтвердить код'}
+                </button>
+              )}
+
+              {/* Кнопка подтвердить код*/}
+              {codeStage === 'code' && (
+                <button onClick={() => confirmCode(email, code)} type="button" className="btn btn-primary" disabled={loading}>
+                  {loading ? 'Загрузка...' : 'Подтвердить код'}
+                </button>
+              )}
+
+              {/* Кнопка Создать аккаунт*/}
+              {codeStage === 'confirmed' && (
+                <button onClick={() => handleRegister()} type="button" className="btn btn-primary" disabled={loading}>
+                  {loading ? 'Загрузка...' : 'Создать аккаунт'}
+                </button>
+              )}
+
               <button type="button" className="btn btn-link" onClick={onClose} disabled={loading}>
                 Отмена
               </button>
             </div>
-            
+
             <div className="mt-3 text-center">
               <button type="button" className="btn btn-link" onClick={() => setIsLoginMode(true)}>
                 Вернуться к входу

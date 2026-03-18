@@ -127,6 +127,21 @@
     align-items: center;
     transition: all 2s;
     margin-top: 10px;
+    animation: slideDown 0.3s ease-out;
+
+}
+
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        max-height: 0;
+    }
+
+    to {
+        opacity: 1;
+        max-height: 200px;
+    }
 }
 
 .flight-card:hover {

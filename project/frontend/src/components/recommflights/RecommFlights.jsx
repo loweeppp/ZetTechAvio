@@ -41,7 +41,7 @@ export default function RecommendedFlights() {
                             <div className="flight-info">
                                 <div>
                                     <div className="flight-route">DME → EMT</div>
-                                    <div className="flight-time">12 мая • 09:40 — 11:10</div>
+                                    <div className=".flight-time-header">12 мая • 09:40 — 11:10</div>
                                 </div>
                                 <div className="flight-price">4 299 ₽</div>
                             </div>

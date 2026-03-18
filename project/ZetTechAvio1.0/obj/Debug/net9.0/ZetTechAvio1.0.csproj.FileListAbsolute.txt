@@ -177,3 +177,4 @@ D:\WORK FILES\HOME WORK\4 Курс\1 Семестр\ZetTechAvio\project\ZetTechA
 D:\WORK FILES\HOME WORK\4 Курс\1 Семестр\ZetTechAvio\project\ZetTechAvio1.0\obj\Debug\net9.0\compressed\gacl3e4cbk-ncai9q732x.gz
 D:\WORK FILES\HOME WORK\4 Курс\1 Семестр\ZetTechAvio\project\ZetTechAvio1.0\obj\Debug\net9.0\compressed\x05bxuj2k5-u3rce108zy.gz
 D:\WORK FILES\HOME WORK\4 Курс\1 Семестр\ZetTechAvio\project\ZetTechAvio1.0\obj\Debug\net9.0\compressed\225kvak6d3-u3rce108zy.gz
+D:\WORK FILES\HOME WORK\4 Курс\1 Семестр\ZetTechAvio\project\ZetTechAvio1.0\obj\Debug\net9.0\compressed\bky5w2p4k8-ukpld493k6.gz

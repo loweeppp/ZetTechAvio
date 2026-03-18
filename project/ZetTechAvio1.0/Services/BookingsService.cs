@@ -1,6 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using ZetTechAvio1._0.Data;
 using ZetTechAvio1._0.Models;
+using System.Net;
+using System.Net.Mail;
 
 namespace ZetTechAvio1._0.Services
 {
@@ -9,6 +11,103 @@ namespace ZetTechAvio1._0.Services
         Task<BookingResponse?> CreateBookingAsync(int userId, CreateBookingRequest request);
         Task<List<BookingResponse>> GetUserBookingsAsync(int userId);
         Task<BookingResponse?> GetBookingAsync(int bookingId);
+
+    }
+    public interface IConfirmationService
+    {
+        Task<bool> GenerateCodeAsync(string email);
+        Task<bool> VerifyCodeAsync(string email, string code);
+    }
+
+    public class ConfirmationService : IConfirmationService
+    {
+        private readonly ApplicationDbContext _dbContext;
+        private readonly IConfiguration _config;
+
+        public ConfirmationService(ApplicationDbContext dbContext, IConfiguration config)
+        {
+            _dbContext = dbContext;
+            _config = config;
+        }
+
+        public async Task<bool> GenerateCodeAsync(string email)
+        {
+            // Генерация 6-значного кода
+            string code = new Random().Next(100000, 999999).ToString();
+
+            // Сохранение кода в базе данных
+            var confirmation = new ConfirmationCode
+            {
+                Email = email,
+                Code = code,
+                Expiration = DateTime.UtcNow.AddMinutes(10)
+            };
+
+            _dbContext.ConfirmationCodes.Add(confirmation);
+            await _dbContext.SaveChangesAsync();
+
+            // Отправка письма
+            try
+            {
+                var smtpHost = _config["SmtpSettings:Host"];
+                var smtpPort = int.Parse(_config["SmtpSettings:Port"]);
+                var senderEmail = _config["SmtpSettings:Email"];
+                var senderPassword = _config["SmtpSettings:Password"];
+
+                using (var smtp = new SmtpClient(smtpHost, smtpPort))
+                {
+                    smtp.Credentials = new NetworkCredential(senderEmail, senderPassword);
+                    smtp.EnableSsl = true;
+
+                    var mail = new MailMessage
+                    {
+                        From = new MailAddress(senderEmail),
+                        Subject = "Код подтверждения ZetTechAvio",
+                        Body = $"Ваш код подтверждения: {code}\nКод действителен 10 минут.",
+                        IsBodyHtml = false
+                    };
+                    mail.To.Add(email);
+                    
+                    await smtp.SendMailAsync(mail);
+                }
+            }
+            catch (Exception ex)
+            {
+                // Логирование ошибки
+                Console.WriteLine($"Ошибка отправки письма: {ex.Message}");
+            }
+
+            return true;
+        }
+
+        public async Task CleanupExpiredCodesAsync()
+        {
+            // Удалить все истекшие коды
+            await _dbContext.ConfirmationCodes
+                .Where(c => c.Expiration < DateTime.UtcNow)
+                .ExecuteDeleteAsync();
+        }
+        public async Task<bool> VerifyCodeAsync(string email, string code)
+        {
+
+            await CleanupExpiredCodesAsync();
+
+            var confirmation = await _dbContext.ConfirmationCodes.FirstOrDefaultAsync(c => c.Email == email && c.Code == code);
+            if (confirmation == null)
+                return false;
+
+            if (confirmation.Expiration < DateTime.UtcNow)
+            {
+                _dbContext.ConfirmationCodes.Remove(confirmation);
+                await _dbContext.SaveChangesAsync();
+                return false;
+            }
+
+            _dbContext.ConfirmationCodes.Remove(confirmation);
+            await _dbContext.SaveChangesAsync();
+
+            return true;
+        }
     }
 
     public class BookingsService : IBookingsService
@@ -104,6 +203,8 @@ namespace ZetTechAvio1._0.Services
             return booking == null ? null : MapToResponse(booking);
         }
 
+
+
         private BookingResponse MapToResponse(Booking booking)
         {
             return new BookingResponse
@@ -138,5 +239,8 @@ namespace ZetTechAvio1._0.Services
         {
             return $"{bookingRef}-{sequence:D3}";
         }
+
+
     }
+
 }
