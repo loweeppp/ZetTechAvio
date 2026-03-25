@@ -15,36 +15,40 @@ namespace ZetTechAvio1._0.Services
     }
     public interface IConfirmationService
     {
-        Task<bool> GenerateCodeAsync(string email);
-        Task<bool> VerifyCodeAsync(string email, string code);
+        Task<bool> GenerateCodeAsync(string email, HttpResponse response);
+        Task<bool> VerifyCodeAsync(string email, string code, HttpRequest request, HttpResponse response);
     }
 
     public class ConfirmationService : IConfirmationService
     {
         private readonly ApplicationDbContext _dbContext;
         private readonly IConfiguration _config;
+        private readonly IWebHostEnvironment _env;
 
-        public ConfirmationService(ApplicationDbContext dbContext, IConfiguration config)
+        public ConfirmationService(ApplicationDbContext dbContext, IConfiguration config, IWebHostEnvironment env)
         {
             _dbContext = dbContext;
             _config = config;
+            _env = env;
         }
 
-        public async Task<bool> GenerateCodeAsync(string email)
+        public async Task<bool> GenerateCodeAsync(string email, HttpResponse response)
         {
             // Генерация 6-значного кода
             string code = new Random().Next(100000, 999999).ToString();
 
-            // Сохранение кода в базе данных
-            var confirmation = new ConfirmationCode
-            {
-                Email = email,
-                Code = code,
-                Expiration = DateTime.UtcNow.AddMinutes(10)
-            };
+            // Заменяем мешающие символы @ и . на подчёркивание
+            var safeCookieName = $"ConfirmationCode_{email.Replace("@", "_").Replace(".", "_")}";
 
-            _dbContext.ConfirmationCodes.Add(confirmation);
-            await _dbContext.SaveChangesAsync();
+            response.Cookies.Append(safeCookieName, code,
+            new CookieOptions
+            {
+                Secure = !_env.IsDevelopment(),
+                HttpOnly = true,
+                SameSite = SameSiteMode.Strict,
+                Expires = DateTimeOffset.UtcNow.AddMinutes(10)
+            });
+
 
             // Отправка письма
             try
@@ -67,7 +71,7 @@ namespace ZetTechAvio1._0.Services
                         IsBodyHtml = false
                     };
                     mail.To.Add(email);
-                    
+
                     await smtp.SendMailAsync(mail);
                 }
             }
@@ -80,31 +84,19 @@ namespace ZetTechAvio1._0.Services
             return true;
         }
 
-        public async Task CleanupExpiredCodesAsync()
+        public async Task<bool> VerifyCodeAsync(string email, string code, HttpRequest request, HttpResponse response)
         {
-            // Удалить все истекшие коды
-            await _dbContext.ConfirmationCodes
-                .Where(c => c.Expiration < DateTime.UtcNow)
-                .ExecuteDeleteAsync();
-        }
-        public async Task<bool> VerifyCodeAsync(string email, string code)
-        {
+            // Пытаемся получить куки
+            var safeCookieName = $"ConfirmationCode_{email.Replace("@", "_").Replace(".", "_")}";
+            
+            if (!request.Cookies.TryGetValue(safeCookieName, out var storedCode))
+                return false;  // куки не найдена или истекла
 
-            await CleanupExpiredCodesAsync();
+            if (storedCode != code)
+                return false;  // коды не совпадают
 
-            var confirmation = await _dbContext.ConfirmationCodes.FirstOrDefaultAsync(c => c.Email == email && c.Code == code);
-            if (confirmation == null)
-                return false;
-
-            if (confirmation.Expiration < DateTime.UtcNow)
-            {
-                _dbContext.ConfirmationCodes.Remove(confirmation);
-                await _dbContext.SaveChangesAsync();
-                return false;
-            }
-
-            _dbContext.ConfirmationCodes.Remove(confirmation);
-            await _dbContext.SaveChangesAsync();
+            // Удаляем куки после успешной проверки
+            response.Cookies.Delete(safeCookieName);
 
             return true;
         }

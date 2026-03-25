@@ -96,6 +96,7 @@ export default function BookingModal({ flight, isOpen, onClose, onBook, user }) 
       const response = await fetch('http://localhost:5151/api/bookings/request-confirmation', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',  // отправляем и получаем cookies
         body: JSON.stringify({ email })
       });
       const result = await response.json();
@@ -118,6 +119,7 @@ export default function BookingModal({ flight, isOpen, onClose, onBook, user }) 
       const response = await fetch('http://localhost:5151/api/bookings/verify-code', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',  // отправляем и получаем cookies
         body: JSON.stringify({ email, code })
       });
       const result = await response.json();

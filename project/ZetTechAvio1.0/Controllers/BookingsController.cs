@@ -86,8 +86,8 @@ namespace ZetTechAvio1._0.Controllers
             if (string.IsNullOrEmpty(request.Email))
                 return BadRequest(new { message = "Email обязателен" });
 
-            await _confirmationService.GenerateCodeAsync(request.Email);
-            return Ok(new { success = true, message = "Код подтверждения отправлен на email" });
+            await _confirmationService.GenerateCodeAsync(request.Email, Response);
+            return Ok(new { success = true, message = "Код подтверждения отправлен на почту" });
         }
 
         [HttpPost("verify-code")]
@@ -96,14 +96,13 @@ namespace ZetTechAvio1._0.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            // Здесь должна быть логика проверки кода подтверждения
             if (string.IsNullOrEmpty(request.Code))
                 return BadRequest(new { message = "Код подтверждения обязателен" });
 
-            bool isValid = await _confirmationService.VerifyCodeAsync(request.Email, request.Code);
-            if (!isValid)
-                return BadRequest(new { success = false, message = "Неверный код подтверждения" });
+            var isValid = await _confirmationService.VerifyCodeAsync(request.Email, request.Code, Request, Response);
 
+            if (!isValid)
+                return BadRequest(new { message = "Неверный или истекший код" });
 
             return Ok(new { success = true, message = "Код подтверждения верный" });
         }

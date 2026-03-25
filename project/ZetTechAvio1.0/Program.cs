@@ -23,7 +23,11 @@ builder.Services.AddScoped<IFlightsService, FlightsService>();
 builder.Services.AddScoped<IBookingsService, BookingsService>();
 builder.Services.AddScoped<IConfirmationService, ConfirmationService>();
 builder.Services.AddScoped<IConfirmationService>(sp => 
-    new ConfirmationService(sp.GetRequiredService<ApplicationDbContext>(), builder.Configuration));
+    new ConfirmationService(
+    sp.GetRequiredService<ApplicationDbContext>(),
+    sp.GetRequiredService<IConfiguration>(),
+    sp.GetRequiredService<IWebHostEnvironment>()));
+        //  builder.Configuration));
 
 
 // Конфигурация HttpClient
@@ -83,17 +87,20 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
-//Перенаправление HTTP на HTTPS
-app.UseHttpsRedirection();
-//Разрешает кросс-доменные запросы
+// Разрешает кросс-доменные запросы
 app.UseCors("AllowReact");
-//Аутентификация
+
+// Перенаправление HTTP на HTTPS (только для Production)
+if (!app.Environment.IsDevelopment())
+{
+    app.UseHttpsRedirection();
+}
+
+// Аутентификация
 app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
-
-app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseAntiforgery();
 
