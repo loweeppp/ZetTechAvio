@@ -51,6 +51,8 @@ Thumbs.db
 # Environment files
 .env
 .env.local
+.env.example
+.env.production
 appsettings.Development.json
 
 # Node dependencies (if any Node files in workspace)

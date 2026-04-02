@@ -1,0 +1,70 @@
+
+
+services:
+  mysql:
+    image: mysql:5.7
+    container_name: zettechavio-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-12344%&J}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-ZetTechAvioDB}
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - zettechavio-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+
+  backend:
+    image: ghcr.io/loweappp/zettechavio-backend:latest
+    container_name: zettechavio-backend
+    environment:
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Production}
+      ConnectionStrings__DefaultConnection: "Server=mysql;Database=${MYSQL_DATABASE:-ZetTechAvioDB};User=root;Password=${DB_PASSWORD:-12344%&J};SslMode=none;"
+      HttpClient__BaseAddress: ${HttpClient__BaseAddress:-https://api.zettechavio.ru}
+      Cors__AllowedOrigins: ${Cors__AllowedOrigins:-https://zettechavio.ru;https://www.zettechavio.ru}
+      Urls: ${Urls:-http://0.0.0.0:5151}
+    depends_on:
+      mysql:
+        condition: service_healthy
+    ports:
+      - "5151:5151"
+    networks:
+      - zettechavio-network
+    restart: unless-stopped
+
+  frontend:
+    image: ghcr.io/loweappp/zettechavio-frontend:latest
+    container_name: zettechavio-frontend
+    ports:
+      - "3000:80"
+    networks:
+      - zettechavio-network
+    restart: unless-stopped
+
+  nginx:
+    image: nginx:alpine
+    container_name: zettechavio-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro
+      - ./certbot:/var/www/certbot:ro
+    depends_on:
+      - frontend
+      - backend
+    networks:
+      - zettechavio-network
+    restart: unless-stopped
+
+networks:
+  zettechavio-network:
+    driver: bridge
+
+volumes:
+  mysql_data:

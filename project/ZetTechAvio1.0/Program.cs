@@ -64,7 +64,8 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowReact", policy =>
     {
-        policy.WithOrigins("http://localhost:3000")
+        var allowedOrigins = builder.Configuration["Cors:AllowedOrigins"]?.Split(";") ?? new[] { "http://localhost:3000" };
+        policy.WithOrigins(allowedOrigins)
               .AllowAnyMethod()
               .AllowAnyHeader()
               .AllowCredentials();
@@ -108,4 +109,20 @@ app.MapStaticAssets();
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 
-app.Run();
+// Apply migrations automatically on startup
+try
+{
+    using (var scope = app.Services.CreateScope())
+    {
+        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        db.Database.Migrate();
+    }
+}
+catch (Exception ex)
+{
+    Console.WriteLine($"Migration error: {ex.Message}");
+}
+
+// Явное слушание на всех интерфейсах для Docker
+var urls = builder.Configuration["Urls"] ?? "http://0.0.0.0:5151;https://0.0.0.0:5152";
+app.Run(urls);
