@@ -74,21 +74,18 @@ jobs:
           script: |
             cd /root/ZetTechAvio
             
-            # Обновить код из GitHub
-            git pull origin main
+            # Обновить Docker образы из registry
+            echo "Pulling latest images from ghcr.io..."
+            docker compose pull
             
-            # Обновить docker-compose.yml если нужно
-            echo "Pulling latest images..."
-            docker-compose pull
-            
-            # Перезагрузить контейнеры
+            # Перезагрузить контейнеры с новыми образами
             echo "Restarting containers..."
-            docker-compose up -d
+            docker compose up -d
             
             # Проверить статус
             echo "Checking status..."
-            docker-compose ps
+            docker compose ps
             
             # Показать логи последних 20 строк
             echo "Recent logs:"
-            docker-compose logs --tail=20
+            docker compose logs --tail=20
