@@ -5,8 +5,8 @@ services:
     image: mysql:5.7
     container_name: zettechavio-mysql
     environment:
-      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-12344%&J}
-      MYSQL_DATABASE: ${MYSQL_DATABASE:-ZetTechAvioDB}
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
     ports:
       - "3306:3306"
     volumes:
@@ -22,11 +22,11 @@ services:
     image: ghcr.io/loweappp/zettechavio-backend:latest
     container_name: zettechavio-backend
     environment:
-      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Production}
-      ConnectionStrings__DefaultConnection: "Server=mysql;Database=${MYSQL_DATABASE:-ZetTechAvioDB};User=root;Password=${DB_PASSWORD:-12344%&J};SslMode=none;"
-      HttpClient__BaseAddress: ${HttpClient__BaseAddress:-https://api.zettechavio.ru}
-      Cors__AllowedOrigins: ${Cors__AllowedOrigins:-https://zettechavio.ru;https://www.zettechavio.ru}
-      Urls: ${Urls:-http://0.0.0.0:5151}
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT}
+      ConnectionStrings__DefaultConnection: "Server=mysql;Database=${MYSQL_DATABASE};User=root;Password=${DB_PASSWORD};SslMode=none;"
+      HttpClient__BaseAddress: ${HttpClient__BaseAddress}
+      Cors__AllowedOrigins: ${Cors__AllowedOrigins}
+      Urls: ${Urls}
     depends_on:
       mysql:
         condition: service_healthy
