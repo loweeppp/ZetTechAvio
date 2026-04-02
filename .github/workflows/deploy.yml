@@ -6,10 +6,6 @@ on:
   pull_request:
     branches: [ main, master ]
 
-permissions:
-  contents: read
-  packages: write
-
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
@@ -31,7 +27,15 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
       
-      # 4. Собрать и запушить Backend образ
+      # 4. Собрать React приложение
+      - name: Build React App
+        run: |
+          cd ./project/frontend
+          npm ci
+          npm run build
+          cd ../..
+      
+      # 5. Собрать и запушить Backend образ
       - name: Build and Push Backend
         uses: docker/build-push-action@v4
         with:
@@ -43,7 +47,7 @@ jobs:
           cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/zettechavio-backend:buildcache
           cache-to: type=registry,ref=ghcr.io/${{ github.repository_owner }}/zettechavio-backend:buildcache,mode=max
       
-      # 5. Собрать и запушить Frontend образ
+      # 6. Собрать и запушить Frontend образ
       - name: Build and Push Frontend
         uses: docker/build-push-action@v4
         with:
@@ -55,7 +59,7 @@ jobs:
           cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/zettechavio-frontend:buildcache
           cache-to: type=registry,ref=ghcr.io/${{ github.repository_owner }}/zettechavio-frontend:buildcache,mode=max
       
-      # 6. SSH деплой на VPS
+      # 7. SSH деплой на VPS
       - name: Deploy to VPS
         uses: appleboy/ssh-action@master
         with:
