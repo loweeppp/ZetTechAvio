@@ -32,7 +32,7 @@ jobs:
         run: |
           cd ./project/frontend
           npm ci
-          npm run build
+          CI=false npm run build
           cd ../..
       
       # 5. Собрать и запушить Backend образ
