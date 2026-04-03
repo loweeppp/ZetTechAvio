@@ -19,7 +19,7 @@ services:
       retries: 10
 
   backend:
-    image: ghcr.io/loweappp/zettechavio-backend:latest
+    image: ghcr.io/loweeppp/zettechavio-backend:latest
     container_name: zettechavio-backend
     environment:
       ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT}
@@ -37,7 +37,7 @@ services:
     restart: unless-stopped
 
   frontend:
-    image: ghcr.io/loweappp/zettechavio-frontend:latest
+    image: ghcr.io/loweeppp/zettechavio-frontend:latest
     container_name: zettechavio-frontend
     ports:
       - "3000:80"
