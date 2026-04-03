@@ -19,8 +19,7 @@ namespace ZetTechAvio1._0.Data
         public DbSet<Booking> Bookings { get; set; }
         public DbSet<Ticket> Tickets { get; set; }
         public DbSet<Seat> Seats { get; set; }
-        public DbSet<ConfirmationCode> ConfirmationCodes { get; set; }
-
+        public DbSet<Payment> Payments { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -352,28 +351,25 @@ namespace ZetTechAvio1._0.Data
             });
 
 //          -- ============================================
-//          -- 10. Код подтверждения
+//          -- 10. Payment Конфигурация
 //          -- ============================================
-            modelBuilder.Entity<ConfirmationCode>(entity =>
+            modelBuilder.Entity<Payment>(entity =>
             {
                 entity.HasKey(e => e.Id);
 
-                entity.Property(e => e.Email)
-                        .IsRequired()
-                        .HasMaxLength(255);
+                entity.HasOne(e => e.Booking)
+                        .WithMany() // один платеж к одной бронированию
+                        .HasForeignKey(e => e.BookingId)
+                        .OnDelete(DeleteBehavior.Cascade);
 
-                entity.Property(e => e.Code)
-                        .IsRequired()
-                        .HasMaxLength(6);
+                entity.HasIndex(e => e.YooKassaPaymentId)
+                        .IsUnique()
+                        .HasDatabaseName("idx_yookassa_payment_id");
 
-                entity.Property(e => e.Expiration)
-                        .IsRequired();
+                entity.HasIndex(e => e.BookingId)
+                        .HasDatabaseName("idx_booking_id");
 
-                entity.Property(e => e.CreatedAt);
-
-                entity.HasIndex(e => e.Email).HasDatabaseName("idx_confirmation_email");
-                entity.HasIndex(e => e.CreatedAt).HasDatabaseName("idx_confirmation_created");
-            });
+              });
         }
     }
 }

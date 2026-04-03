@@ -23,6 +23,9 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess }) {
   const [codeStage, setCodeStage] = useState('email');
   const [hovered, isHovered] = useState(false);
 
+  const API_URL = process.env.REACT_APP_API_URL || 'https://api.zettechavio.ru';
+
+
   useEffect(() => {
     setCodeStage('email');
     setError('');
@@ -75,7 +78,7 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess }) {
     setError('');
 
     try {
-      const response = await fetch('http://localhost:5151/api/bookings/request-confirmation', {
+      const response = await fetch(`${API_URL}/api/bookings/request-confirmation`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',  // отправляем и получаем cookies
@@ -100,7 +103,7 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess }) {
     if(!validateRegistration()) return;
     setError('');
     try {
-      const response = await fetch('http://localhost:5151/api/bookings/verify-code', {
+      const response = await fetch(`${API_URL}/api/bookings/verify-code`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',  // отправляем и получаем cookies
@@ -134,7 +137,7 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess }) {
     // Выполнение запроса на вход
     setLoading(true);
     try {
-      const response = await fetch('http://localhost:5151/api/auth/login', {
+      const response = await fetch(`${API_URL}/api/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -166,7 +169,7 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess }) {
 
     setLoading(true);
     try {
-      const response = await fetch('http://localhost:5151/api/auth/register', {
+      const response = await fetch(`${API_URL}/api/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

@@ -4,9 +4,11 @@ import './RecommFlights.css';
 export default function RecommendedFlights() {
     const [flights, setFlights] = useState([]);
     const [loading, setLoading] = useState(true);
+    const API_URL = process.env.REACT_APP_API_URL || 'https://api.zettechavio.ru';
+
 
     useEffect(() => {
-        fetch('http://localhost:5151/api/flights')
+        fetch(`${API_URL}/api/flights`)
             .then(r => r.json())
             .then(data => {
                 setFlights(data);

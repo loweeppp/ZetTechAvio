@@ -7,7 +7,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 // DbContext
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") 
-    ?? "Server=localhost;Database=ZetTechAvioDB;User=root;Password=;";
+    ?? "Server=SERVER_NAME;Database=DB_NAME;User=DB_USER;Password=DB_PASSWORD;";
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseMySql(connectionString, 

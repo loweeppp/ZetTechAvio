@@ -29,11 +29,14 @@ export default function BookingModal({ flight, isOpen, onClose, onBook, user }) 
   const [hovered, isHovered] = useState(false);
   const [codeStage, setCodeStage] = useState('email')
 
+  const API_URL = process.env.REACT_APP_API_URL || 'https://api.zettechavio.ru';
+
+
   // Получаем тарифы для этого рейса
   useEffect(() => {
     if (!isOpen || !flight) return;
 
-    fetch(`http://localhost:5151/api/flights/${flight.id}/fares`)
+    fetch(`${API_URL}/api/flights/${flight.id}/fares`)
       .then(r => r.json())
       .then(data => {
         setFares(data);
@@ -93,7 +96,7 @@ export default function BookingModal({ flight, isOpen, onClose, onBook, user }) 
 
     setError('');
     try {
-      const response = await fetch('http://localhost:5151/api/bookings/request-confirmation', {
+      const response = await fetch(`${API_URL}/api/bookings/request-confirmation`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',  // отправляем и получаем cookies
@@ -116,7 +119,7 @@ export default function BookingModal({ flight, isOpen, onClose, onBook, user }) 
   const confirmCode = async (email, code) => {
     setError('');
     try {
-      const response = await fetch('http://localhost:5151/api/bookings/verify-code', {
+      const response = await fetch(`${API_URL}/api/bookings/verify-code`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',  // отправляем и получаем cookies
@@ -157,7 +160,7 @@ export default function BookingModal({ flight, isOpen, onClose, onBook, user }) 
         }))
       };
 
-      const response = await fetch('http://localhost:5151/api/bookings', {
+      const response = await fetch(`${API_URL}/api/bookings`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

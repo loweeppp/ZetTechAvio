@@ -16,9 +16,12 @@ export default function FlightsList({ searchParams }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedFlight, setSelectedFlight] = useState(null);
 
+  const API_URL = process.env.REACT_APP_API_URL || 'https://api.zettechavio.ru';
+
+
 
   useEffect(() => {
-    let url = 'http://localhost:5151/api/flights';
+    let url = `${API_URL}/api/flights`;
 
     if (searchParams) {
       const params = new URLSearchParams();
