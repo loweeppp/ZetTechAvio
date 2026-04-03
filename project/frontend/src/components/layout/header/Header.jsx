@@ -31,7 +31,7 @@ export default function Header() {
         <div className="header-content">
           <h1 className="logo">
             <img src="/routing-2.png" alt="ZetTechAvio" className="imagelogo" />
-            <span className="logo-text"> ZetTechAvio</span>
+            <span className="logo-text"> ZetTechAvio1.0</span>
           </h1>
 
           <nav className="header-actions">
