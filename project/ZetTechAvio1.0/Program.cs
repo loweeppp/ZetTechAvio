@@ -110,18 +110,19 @@ app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 
 // Apply migrations automatically on startup
-try
-{
-    using (var scope = app.Services.CreateScope())
-    {
-        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-        db.Database.Migrate();
-    }
-}
-catch (Exception ex)
-{
-    Console.WriteLine($"Migration error: {ex.Message}");
-}
+// DISABLED: Using SQL dump instead of EF migrations to preserve existing data
+// try
+// {
+//     using (var scope = app.Services.CreateScope())
+//     {
+//         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>(); 
+//         db.Database.Migrate();
+//     }
+// }
+// catch (Exception ex)
+// {
+//     Console.WriteLine($"Migration error: {ex.Message}");
+// }
 
 // Явное слушание на всех интерфейсах для Docker
 var urls = builder.Configuration["Urls"] ?? "http://0.0.0.0:5151;https://0.0.0.0:5152";
