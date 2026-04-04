@@ -16,7 +16,7 @@ export default function ProfileModal({ isOpen, onClose, user, onLogout, onChange
     setError('');
 
     try {
-      const response = await fetch('http://localhost:5151/api/auth/logout', {
+      const response = await fetch('${API_URL}/api/auth/logout', {
         method: 'POST'
       });
       if (response.ok) {
@@ -36,7 +36,7 @@ export default function ProfileModal({ isOpen, onClose, user, onLogout, onChange
     setError('');
 
     try {
-      const response = await fetch('http://localhost:5151/api/auth/change', {
+      const response = await fetch('${API_URL}/api/auth/change', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
