@@ -22,7 +22,9 @@
 FROM nginx:alpine
 
 # Copy pre-built React app
-COPY build /usr/share/nginx/html
+COPY build /usr/share/nginx/html 
+
+
 
 # Copy nginx config
 COPY nginx.conf /etc/nginx/conf.d/default.conf

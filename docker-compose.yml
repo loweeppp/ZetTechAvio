@@ -11,6 +11,7 @@ services:
       - "3306:3306"
     volumes:
       - mysql_data:/var/lib/mysql
+      - ./zettechavio.sql:/docker-entrypoint-initdb.d/zettechavio.sql
     networks:
       - zettechavio-network
     healthcheck:
