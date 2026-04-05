@@ -153,7 +153,8 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess }) {
         onClose();
         setTimeout(() => window.location.reload(), 100);
       } else {
-        setError('Неверный email или пароль');
+        const errorData = await response.json().catch(() => ({}));
+        setError(errorData.message || 'Неверный email или пароль');
       }
     } catch (err) {
       setError('Ошибка подключения');
@@ -186,7 +187,8 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess }) {
         onClose();
         setTimeout(() => window.location.reload(), 100);
       } else {
-        setError('Ошибка при регистрации');
+        const errorData = await response.json().catch(() => ({}));
+        setError(errorData.message || 'Ошибка при регистрации');
       }
     } catch (err) {
       setError('Ошибка подключения');

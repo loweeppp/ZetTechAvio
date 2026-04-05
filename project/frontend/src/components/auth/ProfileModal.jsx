@@ -30,7 +30,8 @@ export default function ProfileModal({ isOpen, onClose, user, onLogout, onChange
         setTimeout(() => window.location.reload(), 100);
 
       } else {
-        setError('Ошибка при выходе');
+        const errorData = await response.json().catch(() => ({}));
+        setError(errorData.message || 'Ошибка при выходе');
       }
     } catch (err) {
       console.error('Logout error:', err);
@@ -63,12 +64,13 @@ export default function ProfileModal({ isOpen, onClose, user, onLogout, onChange
         if (data.token) {
           localStorage.setItem('token', data.token);
         }
-        onChange(data);  
+        onChange(data);
         setChangeMode(false);
+        setPassword('');
         setTimeout(() => window.location.reload(), 100);
 
       } else {
-        const errorData = await response.json();
+        const errorData = await response.json().catch(() => ({}));
         setError(errorData.message || "Ошибка при изменении профиля");
       }
     } catch (err) {
