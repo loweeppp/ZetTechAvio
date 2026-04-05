@@ -32,7 +32,7 @@ export default function Header() {
       <header className="header">
         <div className="header-content">
           <h1 className="logo">
-            <img src="/routing-2.png" alt="ZetTechAvio" className="imagelogo" />
+            <img src="/routing-2.ico" alt="ZetTechAvio" className="imagelogo" />
             <span className="logo-text"> ZetTechAvio</span>
           </h1>
 
