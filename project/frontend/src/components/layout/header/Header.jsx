@@ -5,16 +5,18 @@ import ProfileModal from '../../auth/ProfileModal';
 import './Header.css';
 
 export default function Header() {
-  const { currentUser, isLoading, login, logout, changeUser } = useAuth();
+  const { currentUser, isLoading, login, logout, changeUser, fetchCurrentUser } = useAuth();
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
 
   const handleProfileChange = (updatedUser) => {
-    changeUser(updatedUser);  // ← Обновляет и state, и localStorage
+    changeUser(updatedUser);  
   };
 
-  const handleLoginSuccess = (user) => {
-    login(user);
+  const handleLoginSuccess = async (loginResponse) => {
+    login(loginResponse);
+    
+    await fetchCurrentUser();
   };
 
   const handleLogout = () => {

@@ -10,6 +10,7 @@ namespace ZetTechAvio1._0.Services
         Task<(bool Success, string? Message, User? User)> RegisterAsync(string email, string password, string fullName, string phone);
         Task<(bool Success, string? Message, User? User)> LoginAsync(string email, string password);
         Task<(bool Success, string? Message, User? User)> ChangeAsync(string email, string password, string fullName, string phone, int Id);
+        Task<User?> GetUserByIdAsync(int userId);
     }
 
     public class AuthenticationService : IAuthenticationService
@@ -146,6 +147,22 @@ namespace ZetTechAvio1._0.Services
             {
                 Console.WriteLine($"[LOGIN] Exception: {ex.Message}\n{ex.StackTrace}");
                 return (false, $"Login error: {ex.Message}", null);
+            }
+        }
+
+        /// <summary>
+        /// Получить пользователя по ID
+        /// </summary>
+        public async Task<User?> GetUserByIdAsync(int userId)
+        {
+            try
+            {
+                return await _context.Users.FirstOrDefaultAsync(u => u.Id == userId);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[GetUserById] Error: {ex.Message}");
+                return null;
             }
         }
     }

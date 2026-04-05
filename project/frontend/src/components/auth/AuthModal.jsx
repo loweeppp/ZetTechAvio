@@ -149,7 +149,7 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess }) {
 
       if (response.ok) {
         const data = await response.json();
-        onLoginSuccess(data.user);
+        onLoginSuccess(data);
         onClose();
         setTimeout(() => window.location.reload(), 100);
       } else {
@@ -182,7 +182,7 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess }) {
 
       if (response.ok) {
         const data = await response.json();
-        onLoginSuccess(data.user);
+        onLoginSuccess(data);
         onClose();
         setTimeout(() => window.location.reload(), 100);
       } else {

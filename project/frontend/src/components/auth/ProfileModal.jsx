@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import './ProfileModal.css';
 
+const API_URL = process.env.REACT_APP_API_URL || 'https://api.zettechavio.ru';
+
 export default function ProfileModal({ isOpen, onClose, user, onLogout, onChange }) {
 
   const [changeMode, setChangeMode] = useState(false);
@@ -9,15 +11,18 @@ export default function ProfileModal({ isOpen, onClose, user, onLogout, onChange
   const [fullName, setFullName] = useState(user?.fullName || '');
   const [phone, setPhone] = useState(user?.phone || '');
   const [email, setEmail] = useState(user?.email || '');
-  const [password, setPassword] = useState(user?.password || '')
-
+  const [password, setPassword] = useState('')  
 
   const handleLogout = async () => {
     setError('');
 
     try {
-      const response = await fetch('${API_URL}/api/auth/logout', {
-        method: 'POST'
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_URL}/api/auth/logout`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
       });
       if (response.ok) {
         onLogout();
@@ -29,6 +34,7 @@ export default function ProfileModal({ isOpen, onClose, user, onLogout, onChange
       }
     } catch (err) {
       console.error('Logout error:', err);
+      setError('Ошибка подключения');
     }
   };
 
@@ -36,28 +42,38 @@ export default function ProfileModal({ isOpen, onClose, user, onLogout, onChange
     setError('');
 
     try {
-      const response = await fetch('${API_URL}/api/auth/change', {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_URL}/api/auth/change`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify({
           email,
           fullName,
           phone,
+          password: password || '', 
           id: user.id
         })
       });
 
       if (response.ok) {
         const data = await response.json();
-        onChange(data.user);
+        if (data.token) {
+          localStorage.setItem('token', data.token);
+        }
+        onChange(data);  
         setChangeMode(false);
         setTimeout(() => window.location.reload(), 100);
 
       } else {
-        setError(response.message || "Ошибка при изменении профиля");
+        const errorData = await response.json();
+        setError(errorData.message || "Ошибка при изменении профиля");
       }
     } catch (err) {
       console.error('Change account error:', err);
+      setError('Ошибка подключения');
     }
   }
 
@@ -97,7 +113,7 @@ export default function ProfileModal({ isOpen, onClose, user, onLogout, onChange
           <div className="profile-item">
             <label>Пароль:</label>
             <input type="password" value={password} onChange={(e) => setPassword(e.target.value)}
-              disabled={!changeMode} className={changeMode ? ("profile-item-change") : ("profile-item-input")} />
+              disabled={!changeMode} placeholder={changeMode ? "Введите новый пароль" : "••••••••"} className={changeMode ? ("profile-item-change") : ("profile-item-input")} />
           </div>
 
           <div className="profile-item">

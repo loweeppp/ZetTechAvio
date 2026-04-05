@@ -1,4 +1,6 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 using ZetTechAvio1._0.Services;
 
 namespace ZetTechAvio1._0.Controllers
@@ -9,13 +11,21 @@ namespace ZetTechAvio1._0.Controllers
     {
         private readonly IAuthenticationService _authService;
         private readonly IAuthStateService _authStateService;
+        private readonly IJwtTokenService _jwtTokenService;
 
-        public AuthController(IAuthenticationService authService, IAuthStateService authStateService)
+        public AuthController(
+            IAuthenticationService authService, 
+            IAuthStateService authStateService,
+            IJwtTokenService jwtTokenService)
         {
             _authService = authService;
             _authStateService = authStateService;
+            _jwtTokenService = jwtTokenService;
         }
 
+        /// <summary>
+        /// Регистрация нового пользователя
+        /// </summary>
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] RegisterRequest request)
         {
@@ -29,25 +39,19 @@ namespace ZetTechAvio1._0.Controllers
                 return BadRequest(new { message });
 
             await _authStateService.SetUserAsync(user);
-            return Ok(new { message, user });
+            
+            var token = _jwtTokenService.GenerateToken(user);
+            return Ok(new LoginResponse
+            {
+                Message = message,
+                Token = token,
+                UserId = user.Id
+            });
         }
 
-        [HttpPost("change")]
-        public async Task<IActionResult> Change([FromBody] ChangeRequest request)
-        {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
-            var (success, message, user) = await _authService.ChangeAsync(
-                request.Email, request.Password, request.FullName, request.Phone, request.Id);
-
-            if (!success)
-                return BadRequest(new { message });
-
-            await _authStateService.SetUserAsync(user);
-            return Ok(new { message, user });
-        }
-
+        /// <summary>
+        /// Вход в систему
+        /// </summary>
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginRequest request)
         {
@@ -60,49 +64,81 @@ namespace ZetTechAvio1._0.Controllers
                 return BadRequest(new { message });
 
             await _authStateService.SetUserAsync(user);
-            return Ok(new { message, user });
+            
+            var token = _jwtTokenService.GenerateToken(user);
+            return Ok(new LoginResponse
+            {
+                Message = message,
+                Token = token,
+                UserId = user.Id
+            });
         }
 
+        /// <summary>
+        /// Получить текущего пользователя (эндпоинт для фронтенда при загрузке)
+        /// Требует действительный JWT токен
+        /// Возвращает публичные данные пользователя БЕЗ passwordHash
+        /// </summary>
+        [HttpGet("current")]
+        [Authorize]
+        public async Task<IActionResult> GetCurrentUser()
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            
+            if (!int.TryParse(userIdClaim, out var userId))
+                return Unauthorized();
 
+            var user = await _authService.GetUserByIdAsync(userId);
+            if (user == null)
+                return Unauthorized();
 
+            return Ok(new CurrentUserResponse
+            {
+                Id = user.Id,
+                Email = user.Email,
+                FullName = user.FullName,
+                Phone = user.Phone,
+                Role = user.Role.ToString()
+            });
+        }
+
+        /// <summary>
+        /// Изменить данные пользователя
+        /// Требует авторизацию
+        /// </summary>
+        [HttpPost("change")]
+        [Authorize]
+        public async Task<IActionResult> Change([FromBody] ChangeRequest request)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var (success, message, user) = await _authService.ChangeAsync(
+                request.Email, request.Password, request.FullName, request.Phone, request.Id);
+
+            if (!success)
+                return BadRequest(new { message });
+
+            await _authStateService.SetUserAsync(user);
+            
+            var token = _jwtTokenService.GenerateToken(user);
+            return Ok(new LoginResponse
+            {
+                Message = message,
+                Token = token,
+                UserId = user.Id
+            });
+        }
+
+        /// <summary>
+        /// Выход из системы
+        /// </summary>
         [HttpPost("logout")]
+        [Authorize]
         public async Task<IActionResult> Logout()
         {
             await _authStateService.ClearUserAsync();
             return Ok(new { message = "Logged out successfully" });
         }
-
-        [HttpGet("current")]
-        public IActionResult GetCurrentUser()
-        {
-            var user = _authStateService.CurrentUser;
-            if (user == null)
-                return Unauthorized();
-
-            return Ok(user);
-        }
-    }
-
-    public class RegisterRequest
-    {
-        public string Email { get; set; } = "";
-        public string Password { get; set; } = "";
-        public string FullName { get; set; } = "";
-        public string Phone { get; set; } = "";
-    }
-
-    public class LoginRequest
-    {
-        public string Email { get; set; } = "";
-        public string Password { get; set; } = "";
-    }
-
-    public class ChangeRequest
-    {
-        public string Email { get; set; } = "";
-        public string Password { get; set; } = "";
-        public string FullName { get; set; } = "";
-        public string Phone { get; set; } = "";
-        public int Id { get; set; }
     }
 }
