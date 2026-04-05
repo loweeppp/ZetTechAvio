@@ -1,3 +1,6 @@
+using System.IdentityModel.Tokens.Jwt;
+using System.Text;
+using Microsoft.IdentityModel.Tokens;
 using ZetTechAvio1._0.Components;
 using ZetTechAvio1._0.Data;
 using ZetTechAvio1._0.Services;
@@ -73,9 +76,28 @@ builder.Services.AddCors(options =>
     });
 });
 
-// Добавляем базовую схему аутентификации
-builder.Services.AddAuthentication()
-    .AddCookie("Identity.Application");
+// Добавляем JWT аутентификацию
+var jwtSecret = builder.Configuration["JWT_SECRET"] ?? "fallback-secret-key-for-development-only-12345678";
+var key = Encoding.ASCII.GetBytes(jwtSecret);
+
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = "Bearer";
+    options.DefaultChallengeScheme = "Bearer";
+})
+.AddJwtBearer("Bearer", options =>
+{
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuerSigningKey = true,
+        IssuerSigningKey = new SymmetricSecurityKey(key),
+        ValidateIssuer = true,
+        ValidIssuer = "ZetTechAvio",
+        ValidateAudience = false,
+        ValidateLifetime = true,
+        ClockSkew = TimeSpan.Zero
+    };
+});
 
 builder.Services.AddAuthorization();
 
