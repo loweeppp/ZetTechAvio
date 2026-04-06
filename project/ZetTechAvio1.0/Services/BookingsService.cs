@@ -58,6 +58,13 @@ namespace ZetTechAvio1._0.Services
                 var senderEmail = _config["SmtpSettings:Email"] ?? _config["SMTP_USER"];
                 var senderPassword = _config["SmtpSettings:Password"] ?? _config["SMTP_PASSWORD"];
 
+                // Валидация SMTP параметров
+                if (string.IsNullOrWhiteSpace(smtpHost) || string.IsNullOrWhiteSpace(senderEmail) || string.IsNullOrWhiteSpace(senderPassword))
+                {
+                    _logger.LogWarning("SMTP параметры не установлены. Email не отправлен.");
+                    return new { message = "Бронирование создано, но email не отправлен (SMTP не настроен)" };
+                }
+
                 // Безопасный парсинг порта
                 if (!int.TryParse(smtpPortStr, out int smtpPort))
                 {
@@ -67,7 +74,7 @@ namespace ZetTechAvio1._0.Services
                 using (var smtp = new SmtpClient(smtpHost, smtpPort))
                 {
                     smtp.Credentials = new NetworkCredential(senderEmail, senderPassword);
-                    smtp.EnableSsl = true;
+                    smtp.EnableSsl = smtpPort != 25; // SSL для портов отличных от 25
 
                     var mail = new MailMessage
                     {
@@ -79,11 +86,14 @@ namespace ZetTechAvio1._0.Services
                     mail.To.Add(email);
 
                     await smtp.SendMailAsync(mail);
+                    _logger.LogInformation($"Email отправлен на {email}");
                 }
             }
             catch (Exception ex)
             {
                 // Логирование ошибки
+                _logger.LogWarning($"Ошибка отправки письма: {ex.Message}");
+                // Не выбрасываем исключение - бронирование уже создано
                 Console.WriteLine($"Ошибка отправки письма: {ex.Message}");
             }
 

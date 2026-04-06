@@ -31,14 +31,30 @@ namespace ZetTechAvio1._0.Services
             _config = config;
             _httpClient = httpClient;
 
-            _shopId = _config["YOOKASSA_SHOP_ID"] ?? throw new Exception("YOOKASSA_SHOP_ID не установлен");
-            _apiKey = _config["YOOKASSA_API_KEY"] ?? throw new Exception("YOOKASSA_API_KEY не установлен");
+            _shopId = _config["YOOKASSA_SHOP_ID"] ?? "";
+            _apiKey = _config["YOOKASSA_API_KEY"] ?? "";
+
+            if (string.IsNullOrWhiteSpace(_shopId) || string.IsNullOrWhiteSpace(_apiKey))
+            {
+                _logger.LogWarning("YooKassa не настроена: YOOKASSA_SHOP_ID или YOOKASSA_API_KEY не установлены");
+            }
+            else
+            {
+                _logger.LogInformation($"YooKassa инициализирована. ShopID: {_shopId}");
+            }
         }
 
         public async Task<Payment?> CreatePaymentAsync(int bookingId, string description)
         {
             try
             {
+                // Проверка что YooKassa настроена
+                if (string.IsNullOrWhiteSpace(_shopId) || string.IsNullOrWhiteSpace(_apiKey))
+                {
+                    _logger.LogError("YooKassa не настроена. Платеж не может быть создан.");
+                    return null;
+                }
+
                 // 1. Получить бронирование
                 var booking = await _context.Bookings.FindAsync(bookingId);
                 if (booking == null)
