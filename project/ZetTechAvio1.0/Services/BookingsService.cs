@@ -79,8 +79,27 @@ namespace ZetTechAvio1._0.Services
                 using (var smtp = new SmtpClient(smtpHost, smtpPort))
                 {
                     smtp.Credentials = new NetworkCredential(senderEmail, senderPassword);
-                    smtp.EnableSsl = smtpPort != 25; // SSL для портов отличных от 25
+                    
+                    // Настройка SSL/TLS в зависимости от порта
+                    if (smtpPort == 25)
+                    {
+                        smtp.EnableSsl = false; // Порт 25 - обычный SMTP без SSL
+                    }
+                    else if (smtpPort == 587)
+                    {
+                        smtp.EnableSsl = true; // Порт 587 - STARTTLS
+                    }
+                    else if (smtpPort == 465)
+                    {
+                        smtp.EnableSsl = true; // Порт 465 - SMTPS (SSL)
+                    }
+                    else
+                    {
+                        smtp.EnableSsl = true; // Для других портов включаем SSL
+                    }
 
+                    _logger.LogInformation($"SMTP подключение: Host={smtpHost}, Port={smtpPort}, SSL={smtp.EnableSsl}, User={senderEmail}");
+                    
                     _logger.LogInformation($"Создание MailMessage с From={senderEmail}");
                     var mail = new MailMessage
                     {
