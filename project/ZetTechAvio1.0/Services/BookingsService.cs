@@ -60,10 +60,13 @@ namespace ZetTechAvio1._0.Services
                 var senderEmail = _config["SmtpSettings:Email"] ?? _config["SMTP_USER"];
                 var senderPassword = _config["SmtpSettings:Password"] ?? _config["SMTP_PASSWORD"];
 
+                // Debug логирование
+                _logger.LogInformation($"SMTP Debug: Host={smtpHost}, Port={smtpPortStr}, Email='{senderEmail}', HasPassword={!string.IsNullOrWhiteSpace(senderPassword)}");
+
                 // Валидация SMTP параметров
                 if (string.IsNullOrWhiteSpace(smtpHost) || string.IsNullOrWhiteSpace(senderEmail) || string.IsNullOrWhiteSpace(senderPassword))
                 {
-                    _logger.LogWarning("SMTP параметры не установлены. Email не отправлен.");
+                    _logger.LogWarning("SMTP параметры не установлены. Host={smtpHost}, Email={senderEmail}. Email не отправлен.");
                     return false;
                 }
 
@@ -78,6 +81,7 @@ namespace ZetTechAvio1._0.Services
                     smtp.Credentials = new NetworkCredential(senderEmail, senderPassword);
                     smtp.EnableSsl = smtpPort != 25; // SSL для портов отличных от 25
 
+                    _logger.LogInformation($"Создание MailMessage с From={senderEmail}");
                     var mail = new MailMessage
                     {
                         From = new MailAddress(senderEmail),
