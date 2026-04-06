@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("ZetTechAvio1.0")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+422f690234a3b1290cc352de9d1bb1b0e9bf8504")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+f33d588b7c3cca38a064d3a951d52a3c3682cabc")]
 [assembly: System.Reflection.AssemblyProductAttribute("ZetTechAvio1.0")]
 [assembly: System.Reflection.AssemblyTitleAttribute("ZetTechAvio1.0")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
