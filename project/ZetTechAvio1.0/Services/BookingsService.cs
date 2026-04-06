@@ -24,12 +24,14 @@ namespace ZetTechAvio1._0.Services
         private readonly ApplicationDbContext _dbContext;
         private readonly IConfiguration _config;
         private readonly IWebHostEnvironment _env;
+        private readonly ILogger<ConfirmationService> _logger;
 
-        public ConfirmationService(ApplicationDbContext dbContext, IConfiguration config, IWebHostEnvironment env)
+        public ConfirmationService(ApplicationDbContext dbContext, IConfiguration config, IWebHostEnvironment env, ILogger<ConfirmationService> logger)
         {
             _dbContext = dbContext;
             _config = config;
             _env = env;
+            _logger = logger;
         }
 
         public async Task<bool> GenerateCodeAsync(string email, HttpResponse response)
@@ -62,7 +64,7 @@ namespace ZetTechAvio1._0.Services
                 if (string.IsNullOrWhiteSpace(smtpHost) || string.IsNullOrWhiteSpace(senderEmail) || string.IsNullOrWhiteSpace(senderPassword))
                 {
                     _logger.LogWarning("SMTP параметры не установлены. Email не отправлен.");
-                    return new { message = "Бронирование создано, но email не отправлен (SMTP не настроен)" };
+                    return false;
                 }
 
                 // Безопасный парсинг порта

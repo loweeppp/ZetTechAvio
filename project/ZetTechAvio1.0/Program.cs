@@ -26,13 +26,13 @@ builder.Services.AddScoped<IAuthStateService, AuthStateService>();
 builder.Services.AddScoped<IFaresService, FaresService>();
 builder.Services.AddScoped<IFlightsService, FlightsService>();
 builder.Services.AddScoped<IBookingsService, BookingsService>();
-builder.Services.AddScoped<IConfirmationService, ConfirmationService>();
 builder.Services.AddScoped<IPaymentService, PaymentService>();
 builder.Services.AddScoped<IConfirmationService>(sp => 
     new ConfirmationService(
     sp.GetRequiredService<ApplicationDbContext>(),
     sp.GetRequiredService<IConfiguration>(),
-    sp.GetRequiredService<IWebHostEnvironment>()));
+    sp.GetRequiredService<IWebHostEnvironment>(),
+    sp.GetRequiredService<ILogger<ConfirmationService>>()));
         //  builder.Configuration));
 
 
