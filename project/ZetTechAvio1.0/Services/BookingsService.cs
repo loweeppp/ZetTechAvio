@@ -53,10 +53,16 @@ namespace ZetTechAvio1._0.Services
             // Отправка письма
             try
             {
-                var smtpHost = _config["SmtpSettings:Host"];
-                var smtpPort = int.Parse(_config["SmtpSettings:Port"]);
-                var senderEmail = _config["SmtpSettings:Email"];
-                var senderPassword = _config["SmtpSettings:Password"];
+                var smtpHost = _config["SmtpSettings:Host"] ?? _config["SMTP_HOST"];
+                var smtpPortStr = _config["SmtpSettings:Port"] ?? _config["SMTP_PORT"];
+                var senderEmail = _config["SmtpSettings:Email"] ?? _config["SMTP_USER"];
+                var senderPassword = _config["SmtpSettings:Password"] ?? _config["SMTP_PASSWORD"];
+
+                // Безопасный парсинг порта
+                if (!int.TryParse(smtpPortStr, out int smtpPort))
+                {
+                    smtpPort = 25; // Дефолтный порт SMTP
+                }
 
                 using (var smtp = new SmtpClient(smtpHost, smtpPort))
                 {
