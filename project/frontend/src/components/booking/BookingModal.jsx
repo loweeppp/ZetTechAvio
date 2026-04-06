@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { createPayment } from '../../services/paymentService';
 import './BookingModal.css';
 
 // Маппинг между цифровым enum и названиями
@@ -144,10 +145,10 @@ export default function BookingModal({ flight, isOpen, onClose, onBook, user }) 
   const handleBook = async () => {
     if (!selectedFare || !validateBooking()) return;
 
-
     setBookingInProgress(true);
 
     try {
+      // ШАГ 1: Создаём бронирование
       const bookingRequest = {
         flightId: flight.id,
         fareId: selectedFare.id,
@@ -160,7 +161,7 @@ export default function BookingModal({ flight, isOpen, onClose, onBook, user }) 
         }))
       };
 
-      const response = await fetch(`${API_URL}/api/bookings`, {
+      const bookingResponse = await fetch(`${API_URL}/api/bookings`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -169,16 +170,32 @@ export default function BookingModal({ flight, isOpen, onClose, onBook, user }) 
         body: JSON.stringify(bookingRequest)
       });
 
-      if (!response.ok) {
-        const error = await response.json();
+      if (!bookingResponse.ok) {
+        const error = await bookingResponse.json();
         alert(`Ошибка: ${error.message || 'Не удалось создать бронирование'}`);
         return;
       }
 
-      const booking = await response.json();
-      onBook(booking);
-      onClose();
-      alert(`Бронирование успешно! Номер: ${booking.bookingReference}`);
+      const booking = await bookingResponse.json();
+      console.log('✅ Бронирование создано:', booking);
+
+      // ШАГ 2: Создаём платеж
+      try {
+        const token = localStorage.getItem('token');
+        const paymentData = await createPayment(booking.id, token);
+        console.log('✅ Платеж создан:', paymentData);
+
+        // ШАГ 3: Редиректим на YooKassa форму
+        if (paymentData.confirmationUrl) {
+          window.location.href = paymentData.confirmationUrl;
+        } else {
+          alert('Ошибка: нет ссылки на оплату');
+        }
+      } catch (paymentError) {
+        console.error('❌ Ошибка при создании платежа:', paymentError);
+        alert(`Ошибка платежа: ${paymentError.message}`);
+      }
+
     } catch (err) {
       console.error('Ошибка при бронировании:', err);
       alert('Ошибка при создании бронирования');

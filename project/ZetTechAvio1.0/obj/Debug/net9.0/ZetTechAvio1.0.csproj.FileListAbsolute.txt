@@ -178,3 +178,13 @@ D:\WORK FILES\HOME WORK\4 Курс\1 Семестр\ZetTechAvio\project\ZetTechA
 D:\WORK FILES\HOME WORK\4 Курс\1 Семестр\ZetTechAvio\project\ZetTechAvio1.0\obj\Debug\net9.0\compressed\x05bxuj2k5-u3rce108zy.gz
 D:\WORK FILES\HOME WORK\4 Курс\1 Семестр\ZetTechAvio\project\ZetTechAvio1.0\obj\Debug\net9.0\compressed\225kvak6d3-u3rce108zy.gz
 D:\WORK FILES\HOME WORK\4 Курс\1 Семестр\ZetTechAvio\project\ZetTechAvio1.0\obj\Debug\net9.0\compressed\bky5w2p4k8-ukpld493k6.gz
+D:\WORK FILES\HOME WORK\4 Курс\1 Семестр\ZetTechAvio\project\ZetTechAvio1.0\bin\Debug\net9.0\Microsoft.AspNetCore.Authentication.JwtBearer.dll
+D:\WORK FILES\HOME WORK\4 Курс\1 Семестр\ZetTechAvio\project\ZetTechAvio1.0\bin\Debug\net9.0\Microsoft.Bcl.TimeProvider.dll
+D:\WORK FILES\HOME WORK\4 Курс\1 Семестр\ZetTechAvio\project\ZetTechAvio1.0\bin\Debug\net9.0\Microsoft.IdentityModel.Abstractions.dll
+D:\WORK FILES\HOME WORK\4 Курс\1 Семестр\ZetTechAvio\project\ZetTechAvio1.0\bin\Debug\net9.0\Microsoft.IdentityModel.JsonWebTokens.dll
+D:\WORK FILES\HOME WORK\4 Курс\1 Семестр\ZetTechAvio\project\ZetTechAvio1.0\bin\Debug\net9.0\Microsoft.IdentityModel.Logging.dll
+D:\WORK FILES\HOME WORK\4 Курс\1 Семестр\ZetTechAvio\project\ZetTechAvio1.0\bin\Debug\net9.0\Microsoft.IdentityModel.Protocols.dll
+D:\WORK FILES\HOME WORK\4 Курс\1 Семестр\ZetTechAvio\project\ZetTechAvio1.0\bin\Debug\net9.0\Microsoft.IdentityModel.Protocols.OpenIdConnect.dll
+D:\WORK FILES\HOME WORK\4 Курс\1 Семестр\ZetTechAvio\project\ZetTechAvio1.0\bin\Debug\net9.0\Microsoft.IdentityModel.Tokens.dll
+D:\WORK FILES\HOME WORK\4 Курс\1 Семестр\ZetTechAvio\project\ZetTechAvio1.0\bin\Debug\net9.0\Newtonsoft.Json.dll
+D:\WORK FILES\HOME WORK\4 Курс\1 Семестр\ZetTechAvio\project\ZetTechAvio1.0\bin\Debug\net9.0\System.IdentityModel.Tokens.Jwt.dll

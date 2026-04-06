@@ -27,6 +27,7 @@ builder.Services.AddScoped<IFaresService, FaresService>();
 builder.Services.AddScoped<IFlightsService, FlightsService>();
 builder.Services.AddScoped<IBookingsService, BookingsService>();
 builder.Services.AddScoped<IConfirmationService, ConfirmationService>();
+builder.Services.AddScoped<IPaymentService, PaymentService>();
 builder.Services.AddScoped<IConfirmationService>(sp => 
     new ConfirmationService(
     sp.GetRequiredService<ApplicationDbContext>(),
