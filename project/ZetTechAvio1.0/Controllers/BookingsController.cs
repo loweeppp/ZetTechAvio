@@ -53,6 +53,27 @@ namespace ZetTechAvio1._0.Controllers
             }
         }
 
+        [HttpGet("my")]
+        [Authorize]
+        public async Task<IActionResult> GetMyBookings()
+        {
+            try
+            {
+                // Получаем userId из токена
+                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+                if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out int userId))
+                    return Unauthorized("Пользователь не идентифицирован");
+
+                var bookings = await _bookingsService.GetUserBookingsAsync(userId);
+                return Ok(bookings);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Ошибка при получении бронирований: {ex.Message}");
+                return StatusCode(500, new { message = "Внутренняя ошибка сервера" });
+            }
+        }
+
         [HttpGet("{userId}")]
         [Authorize]
         public async Task<IActionResult> GetUserBookings(int userId)

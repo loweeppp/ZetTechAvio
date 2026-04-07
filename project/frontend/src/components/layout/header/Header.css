@@ -1,14 +1,14 @@
-
 /* Основной контейнер */
 .page {
     min-height: 100vh;
-    background-color: #f3f4f6;  /* Серый фон */
+    background-color: #f3f4f6;
+    /* Серый фон */
 }
 
 
 .header-content {
-    max-width: 87%;      
-    margin: 0 auto;           
+    max-width: 87%;
+    margin: 0 auto;
     padding: 1rem 1.5rem;
     display: flex;
     align-items: center;
@@ -17,7 +17,7 @@
 
 .header {
     background-color: #0066FF;
-    width: 100%;            
+    width: 100%;
 }
 
 .btn-profile {
@@ -101,7 +101,7 @@
     height: 1.5rem;
 }
 
-.imagelogo{
+.imagelogo {
     width: 10;
     height: 10;
 
@@ -129,10 +129,79 @@
 
 
 .debug-count {
-    color: #FFD700; /* gold */
+    color: #FFD700;
+    /* gold */
     margin-left: 8px;
     font-weight: 700;
 }
 
+/* Навигационные вкладки */
+.nav-tabs {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease;
+    display: flex;
+    gap: 2rem;
+    padding: 1rem 1.5rem;
+    border-bottom: 2px solid #e5e7eb;
+    background-color: #ffffff;
+    max-width: 87%;
+    margin: 0 auto;
+    align-items: center;
+        
 
+}
 
+.nav-tabs.open {
+    max-height: 300px;
+    opacity: 1;
+}
+
+.nav-tab {
+    text-decoration: none;
+    color: #6b7280;
+    padding: 0.5rem 1rem;
+    border-bottom: 3px solid transparent;
+    transition: all 0.3s ease;
+    font-weight: 500;
+    font-size: 1rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    opacity: 0;
+}
+
+.nav-tabs.open .nav-tab {
+    opacity: 1;  /* Текст видно когда .open активен */
+}
+.nav-tab-profile {
+    text-decoration: none;
+    color: white;
+    padding: 0.5rem 1rem;
+    border-bottom: 3px solid transparent;
+    transition: all 0.3s ease;
+    font-weight: 500;
+    font-size: 1rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.nav-tab:hover {
+    color: #0066FF;
+    border-bottom-color: #0066FF;
+}
+
+.nav-tab.active {
+    color: #0066FF;
+    border-bottom-color: #0066FF;
+    font-weight: 600;
+}
+
+.nav-tab-profile.active {
+    color: white;
+    border-bottom-color: #0066FF;
+    font-weight: 600;
+}

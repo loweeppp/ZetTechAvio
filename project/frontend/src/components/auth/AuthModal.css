@@ -28,7 +28,6 @@
 
 .input {
   width: 100%;
-  padding: 10px;
   border: 1px solid #ddd;
   border-radius: 4px;
   font-size: 14px;
@@ -101,4 +100,19 @@ label {
 
 label input {
   margin-right: 8px;
+}
+
+.privacy-link {
+  color: #0066FF;
+  text-decoration: none;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border-bottom: 1px solid transparent;
+}
+
+.privacy-link:hover {
+  color: #0052cc;
+  border-bottom-color: #0066FF;
+  text-decoration: underline;
 }

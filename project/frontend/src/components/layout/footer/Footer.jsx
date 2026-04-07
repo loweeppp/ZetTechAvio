@@ -4,7 +4,7 @@ export default function Footer() {
     return (
         <footer className="footer">
             <div className="footer-content">
-                <div className="footer-logo"><img src="/routing-2.png" alt="ZetTechAvio" className="imagelogo" />
+                <div className="footer-logo"><img src="/routing-2.ico" alt="ZetTechAvio_logo" className="imagelogo" />
                     <span>ZetTechAvio</span>
                 </div>
                 <div className="footer-grid">
@@ -21,9 +21,9 @@ export default function Footer() {
                     <div className="footer-column">
                         <h3 className="footer-title">НАВИГАЦИЯ</h3>
                         <ul className="footer-links">
-                            <li><a href="#">Домашняя</a></li>
-                            <li><a href="#">Services</a></li>
-                            <li><a href="#">Project</a></li>
+                            <li><a href="/">Домашняя</a></li>
+                            <li><a href="/profile">Профиль</a></li>
+                            <li><a href="/privacy">Соглашение</a></li>
                         </ul>
                     </div>
 
@@ -50,7 +50,7 @@ export default function Footer() {
                     <div>© {new Date().getFullYear()} ZetTechAvio. Все права защищены.</div>
                     <div className="footer-legal">
                         <a href="#">DISCLAIMER</a>
-                        <a href="/privacy-policy" target="_blank" rel="noopener noreferrer">ПОЛЬЗОВАТЕЛЬСКОЕ СОГЛАШЕНИЕ</a>
+                        <a href="/privacy" target="_blank" className="privacy-link">ПОЛЬЗОВАТЕЛЬСКОЕ СОГЛАШЕНИЕ</a>
                     </div>
                 </div>
             </div>

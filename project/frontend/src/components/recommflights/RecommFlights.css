@@ -5,7 +5,12 @@
     border: 1px solid #e5e7eb;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     padding: 2.3rem;
+    padding-top: 1rem;
+    max-height: 380px;
+    /* height: 100%;
+    overflow-y: auto; */
 }
+
 
 .card-title {
     color: #111827;
@@ -56,4 +61,30 @@
     font-size: 1.25rem;
     font-weight: 700;
     color: #111827;
+}
+
+/* Контейнер RecommFlights с ограничением высоты */
+.recomm-flights-container {
+    height: 100%;
+    /* overflow-y: auto;
+    overflow-x: hidden; */
+}
+
+/* Красивая прокрутка */
+.recomm-flights-container::-webkit-scrollbar {
+    width: 8px;
+}
+
+.recomm-flights-container::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 10px;
+}
+
+.recomm-flights-container::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 10px;
+}
+
+.recomm-flights-container::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
 }

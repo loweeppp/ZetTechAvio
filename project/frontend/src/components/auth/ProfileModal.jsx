@@ -44,19 +44,23 @@ export default function ProfileModal({ isOpen, onClose, user, onLogout, onChange
 
     try {
       const token = localStorage.getItem('token');
+      
+      // Всегда отправляем пароль, но пустую строку если не изменялся
+      const changeData = {
+        email,
+        fullName,
+        phone,
+        password: password, // Отправляем как есть (пустой или заполненный)
+        id: user.id
+      };
+      
       const response = await fetch(`${API_URL}/api/auth/change`, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({
-          email,
-          fullName,
-          phone,
-          password: password || '', 
-          id: user.id
-        })
+        body: JSON.stringify(changeData)
       });
 
       if (response.ok) {
@@ -81,6 +85,11 @@ export default function ProfileModal({ isOpen, onClose, user, onLogout, onChange
 
   const handleChangeMode = () => {
     setChangeMode(prev => !prev);
+    // Очищаем пароль и ошибки при отмене редактирования
+    if (changeMode) {
+      setPassword('');
+      setError('');
+    }
   };
 
   if (!isOpen || !user) return null;

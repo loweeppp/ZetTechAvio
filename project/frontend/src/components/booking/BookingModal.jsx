@@ -153,6 +153,7 @@ export default function BookingModal({ flight, isOpen, onClose, onBook, user }) 
         flightId: flight.id,
         fareId: selectedFare.id,
         quantity,
+        email, // Отправляем email для гостей
         passengers: passengers.map(p => ({
           fullName: p.fullName,
           passengerType: p.passengerType,
@@ -161,12 +162,20 @@ export default function BookingModal({ flight, isOpen, onClose, onBook, user }) 
         }))
       };
 
+      // Подготавливаем headers - авторизация если пользователь авторизован, иначе используем cookies
+      const headers = {
+        'Content-Type': 'application/json'
+      };
+
+      const token = localStorage.getItem('token');
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
       const bookingResponse = await fetch(`${API_URL}/api/bookings`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
+        headers,
+        credentials: 'include', // Отправляем cookies с подтвержденным email/кодом
         body: JSON.stringify(bookingRequest)
       });
 

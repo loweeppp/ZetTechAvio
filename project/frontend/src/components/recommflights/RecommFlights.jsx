@@ -23,7 +23,8 @@ export default function RecommendedFlights() {
     if (loading) return <p>Загрузка рейсов...</p>;
     if (flights.length === 0) return <p>Рейсы не найдены</p>;
     return (
-        <div className="recommended-flights">
+        <div className="recomm-flights-container">
+            <div className="recommended-flights">
             {/* Рекомендуемый рейс */}
             <div className="recommended-column">
                 <div className="recommended-card">
@@ -53,6 +54,6 @@ export default function RecommendedFlights() {
 
                 </div>
             </div>
-       
+        </div>
     );
 }

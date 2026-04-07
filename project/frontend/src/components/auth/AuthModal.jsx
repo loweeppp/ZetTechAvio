@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import './AuthModal.css';
 import { hover } from '@testing-library/user-event/dist/hover';
 
@@ -268,7 +269,7 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess }) {
               onChange={(e) => {
                 const value = e.target.value.replace(/\D/g, ''); // Удаляем все нецифровые символы
                 setPhone(value)}}
-              maxLength={12}
+              maxLength={11}
             />
             <input
               className="input mt-2"
@@ -297,7 +298,7 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess }) {
                 checked={agreeToPolicy}
                 onChange={(e) => setAgreeToPolicy(e.target.checked)}
               />
-              <span> Я согласен с политикой конфиденциальности</span>
+              <span> Я согласен с <Link to="/privacy" target="_blank" className="privacy-link">политикой конфиденциальности</Link></span>
             </label>
 
             {error && <div className="text-danger mt-2">{error}</div>}

@@ -100,9 +100,7 @@ export default function SearchForm({onSearch}) {
           {/* Найти */}
           <button className="btn-search" onClick={handleSearch}>Найти</button>
           <span className="hint-text" >
-            Начните поиск — затем сможете выбрать места и оформить покупку (
-            <a className="linkPolitica" href="/privacy-policy" target="_blank" rel="noopener noreferrer">требуется вход.</a>
-            )
+            Начните поиск — затем сможете выбрать места и оформить покупку билета.
           </span>
         </div>
       </div>

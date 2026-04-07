@@ -46,15 +46,12 @@ namespace ZetTechAvio1._0.Services
                 if (user == null)
                     return (false, "User not found", null);
 
-                var passwordHash = _passwordService.HashPassword(password);
-
                 // Update user details
                 user.FullName = fullName;
                 user.Phone = phone;
-                user.PasswordHash = passwordHash;
                 user.Email = email.ToLower();
 
-                // Update password if provided
+                // Update password only if provided (not empty)
                 if (!string.IsNullOrWhiteSpace(password))
                 {
                     user.PasswordHash = _passwordService.HashPassword(password);

@@ -3,7 +3,7 @@
 /* Основной контейнер - */
 .page-container {
     min-height: 100vh;
-    background-color: #f3f4f6;  
+    background-color: #f3f4f6;
 }
 
 .main-content {
@@ -21,6 +21,8 @@
     display: grid;
     grid-template-columns: 2fr 1fr;
     gap: 2rem;
+    height: 360px;
+    align-items: start;
 }
 
 @media (max-width: 1024px) {
@@ -35,7 +37,9 @@
     border-radius: 1rem;
     border: 1px solid #e5e7eb;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    height: 100%;
     padding: 2rem;
+    overflow-y: auto;
 }
 
 .title {
@@ -209,4 +213,3 @@
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     padding: 1.5rem;
 }
-
