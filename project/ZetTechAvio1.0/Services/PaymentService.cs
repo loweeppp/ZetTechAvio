@@ -164,16 +164,22 @@ namespace ZetTechAvio1._0.Services
         {
             try
             {
+                _logger.LogInformation("[WEBHOOK] Получены данные webhook");
+                
                 if (string.IsNullOrEmpty(jsonData))
                 {
-                    _logger.LogWarning("Webhook получил пустые данные");
+                    _logger.LogWarning("[WEBHOOK] ❌ Webhook получил пустые данные");
                     return false;
                 }
+
+                _logger.LogInformation($"[WEBHOOK] JSON данные: {jsonData}");
 
                 // Парсим JSON от YooKassa
                 var notification = JsonConvert.DeserializeObject<dynamic>(jsonData);
                 string yooKassaPaymentId = notification["object"]["id"];
                 string status = notification["object"]["status"];
+
+                _logger.LogInformation($"[WEBHOOK] PaymentID: {yooKassaPaymentId}, Status: {status}");
 
                 // Находим платеж в БД
                 var payment = await _context.Payments
@@ -181,14 +187,16 @@ namespace ZetTechAvio1._0.Services
 
                 if (payment == null)
                 {
-                    _logger.LogWarning("Платеж {PaymentId} не найден в БД", yooKassaPaymentId);
+                    _logger.LogWarning("[WEBHOOK] ❌ Платеж {PaymentId} не найден в БД", yooKassaPaymentId);
                     return false;
                 }
+
+                _logger.LogInformation($"[WEBHOOK] Платеж найден: ID={payment.Id}, BookingID={payment.BookingId}, CurrentStatus={payment.Status}");
 
                 // Если уже обработан - не обновляем повторно (идемпотентность)
                 if (payment.Status != Payment.PaymentStatus.Pending)
                 {
-                    _logger.LogInformation("Платеж {PaymentId} уже обработан со статусом {Status}", 
+                    _logger.LogInformation("[WEBHOOK] Платеж {PaymentId} уже обработан со статусом {Status}", 
                         yooKassaPaymentId, payment.Status);
                     return true;
                 }
@@ -197,6 +205,8 @@ namespace ZetTechAvio1._0.Services
                 switch (status)
                 {
                     case "succeeded":
+                        _logger.LogInformation($"[WEBHOOK] ✅ Статус SUCCEEDED получен для платежа {yooKassaPaymentId}");
+                        
                         payment.Status = Payment.PaymentStatus.Succeeded;
                         payment.UpdatedAt = DateTime.UtcNow;
 
@@ -207,14 +217,22 @@ namespace ZetTechAvio1._0.Services
                         
                         if (booking != null)
                         {
+                            _logger.LogInformation($"[WEBHOOK] Бронирование найдено: {booking.Id}, User email: {booking.User?.Email ?? "ПУСТО"}");
+                            
                             booking.Status = BookingStatus.Confirmed;
                             booking.UpdatedAt = DateTime.UtcNow;
 
                             // Отправляем письмо с подтверждением платежа
+                            _logger.LogInformation($"[WEBHOOK] Вызов SendPaymentConfirmationEmailAsync для бронирования {booking.Id}");
                             await SendPaymentConfirmationEmailAsync(booking, payment);
+                            _logger.LogInformation($"[WEBHOOK] Завершено SendPaymentConfirmationEmailAsync");
+                        }
+                        else
+                        {
+                            _logger.LogWarning($"[WEBHOOK] ❌ Бронирование не найдено для платежа {payment.BookingId}");
                         }
 
-                        _logger.LogInformation("Платеж {PaymentId} успешно обработан", yooKassaPaymentId);
+                        _logger.LogInformation("[WEBHOOK] ✅ Платеж {PaymentId} успешно обработан", yooKassaPaymentId);
                         break;
 
                     case "failed":
@@ -243,7 +261,11 @@ namespace ZetTechAvio1._0.Services
         {
             try
             {
+                _logger.LogInformation($"[PAYMENT_EMAIL] Начало отправки письма для бронирования {booking.Id}");
+                
                 var userEmail = booking.User?.Email;
+                _logger.LogInformation($"[PAYMENT_EMAIL] Email пользователя: {userEmail ?? "ПУСТО"}");
+                
                 if (string.IsNullOrWhiteSpace(userEmail))
                 {
                     _logger.LogWarning("Email пользователя не найден для бронирования {BookingId}", booking.Id);
@@ -255,9 +277,11 @@ namespace ZetTechAvio1._0.Services
                 var senderEmail = _config["SmtpSettings:Email"] ?? _config["SMTP_USER"];
                 var senderPassword = _config["SmtpSettings:Password"] ?? _config["SMTP_PASSWORD"];
 
+                _logger.LogInformation($"[PAYMENT_EMAIL] SMTP Config - Host: {smtpHost}, Port: {smtpPortStr}, From: {senderEmail ?? "ПУСТО"}");
+
                 if (string.IsNullOrWhiteSpace(smtpHost) || string.IsNullOrWhiteSpace(senderEmail))
                 {
-                    _logger.LogWarning("SMTP не настроен, письмо не отправлено");
+                    _logger.LogWarning("[PAYMENT_EMAIL] SMTP не настроен, письмо не отправлено");
                     return;
                 }
 
@@ -268,6 +292,8 @@ namespace ZetTechAvio1._0.Services
                 {
                     smtp.Credentials = new NetworkCredential(senderEmail, senderPassword);
                     smtp.EnableSsl = smtpPort == 587 || smtpPort == 465;
+                    
+                    _logger.LogInformation($"[PAYMENT_EMAIL] SMTP клиент создан - EnableSSL: {smtp.EnableSsl}");
 
                     // Генерируем QR-код (заглушка)
                     var qrCodeData = GenerateQRCodeAsText(booking.BookingReference);
@@ -319,13 +345,14 @@ namespace ZetTechAvio1._0.Services
                     mail.Body = emailBody;
                     mail.To.Add(userEmail);
 
+                    _logger.LogInformation($"[PAYMENT_EMAIL] Отправка письма на {userEmail}");
                     await smtp.SendMailAsync(mail);
-                    _logger.LogInformation($"Письмо с подтверждением платежа отправлено на {userEmail}");
+                    _logger.LogInformation($"[PAYMENT_EMAIL] ✅ Письмо успешно отправлено на {userEmail}");
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogWarning($"Ошибка при отправке письма подтверждения платежа: {ex.Message}");
+                _logger.LogError($"[PAYMENT_EMAIL] ❌ ОШИБКА при отправке письма подтверждения платежа: {ex.GetType().Name} - {ex.Message}\n{ex.StackTrace}");
                 // Не выбрасываем исключение - платеж уже принят
             }
         }
