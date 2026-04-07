@@ -16,6 +16,13 @@
 .hero-section {
     padding: 3rem;
     padding-top: 0.2rem;
+    /* background-image: url('/images/hero-background.png');
+    background-size: cover;
+    background-position: bottom center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    position: relative;
+    overflow: hidden; */
 }
 
 .grid-container {
@@ -24,6 +31,8 @@
     gap: 2rem;
     height: 360px;
     align-items: start;
+    /* position: relative;
+    z-index: 1; */
 }
 
 @media (max-width: 1024px) {
