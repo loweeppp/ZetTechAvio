@@ -208,9 +208,9 @@ export default function BookingModal({ flight, isOpen, onClose, onBook, user }) 
         const paymentData = await createPayment(booking.id, token);
         console.log('✅ Платеж создан:', paymentData);
 
-        // ШАГ 3: Открываем форму оплаты в новой вкладке
+        // ШАГ 3: Редиректим на YooKassa форму
         if (paymentData.confirmationUrl) {
-          window.open(paymentData.confirmationUrl, '_blank');
+          window.location.href = paymentData.confirmationUrl;
         } else {
           alert('Ошибка: нет ссылки на оплату');
         }
