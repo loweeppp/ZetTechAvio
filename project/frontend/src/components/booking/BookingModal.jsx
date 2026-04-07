@@ -23,6 +23,8 @@ export default function BookingModal({ flight, isOpen, onClose, onBook, user }) 
   const [loading, setLoading] = useState(true);
   const [passengers, setPassengers] = useState([]);
   const [bookingInProgress, setBookingInProgress] = useState(false);
+  const [isConfirmingEmail, setIsConfirmingEmail] = useState(false);
+  const [isConfirmingCode, setIsConfirmingCode] = useState(false);
 
   const [email, setEmail] = useState(user?.email || '');
   const [code, setCode] = useState('');
@@ -70,6 +72,8 @@ export default function BookingModal({ flight, isOpen, onClose, onBook, user }) 
   useEffect(() => {
     setCodeStage('email');
     setError('');
+    setIsConfirmingEmail(false);
+    setIsConfirmingCode(false);
   }, [email]);
 
   // Валидация данных 
@@ -96,6 +100,7 @@ export default function BookingModal({ flight, isOpen, onClose, onBook, user }) 
     if(!validateBooking()) return;
 
     setError('');
+    setIsConfirmingEmail(true);
     try {
       const response = await fetch(`${API_URL}/api/bookings/request-confirmation`, {
         method: 'POST',
@@ -106,6 +111,8 @@ export default function BookingModal({ flight, isOpen, onClose, onBook, user }) 
       const result = await response.json();
       if (!response.ok) {
         setError(result.message || 'Ошибка подтверждения email');
+        setIsConfirmingEmail(false);
+        return;
       }
 
       setCodeStage('code');
@@ -114,11 +121,14 @@ export default function BookingModal({ flight, isOpen, onClose, onBook, user }) 
     } catch (err) {
       console.error('Ошибка при подтверждении email:', err);
       setError('Ошибка при подтверждении email');
+    } finally {
+      setIsConfirmingEmail(false);
     }
   };
 
   const confirmCode = async (email, code) => {
     setError('');
+    setIsConfirmingCode(true);
     try {
       const response = await fetch(`${API_URL}/api/bookings/verify-code`, {
         method: 'POST',
@@ -129,6 +139,8 @@ export default function BookingModal({ flight, isOpen, onClose, onBook, user }) 
       const result = await response.json();
       if (!response.ok) {
         setError(result.message || 'Ошибка подтверждения кода');
+        setIsConfirmingCode(false);
+        return;
       }
 
       if (response.ok) {
@@ -138,6 +150,8 @@ export default function BookingModal({ flight, isOpen, onClose, onBook, user }) 
     } catch (err) {
       console.error('Ошибка при подтверждении кода:', err);
       setError('Ошибка при подтверждении кода');
+    } finally {
+      setIsConfirmingCode(false);
     }
   };
 
@@ -340,9 +354,9 @@ export default function BookingModal({ flight, isOpen, onClose, onBook, user }) 
               <button
                 className="btn-book-confirm"
                 onClick={() => сonfirmEmail(email)}
-                disabled={!selectedFare || quantity > (selectedFare?.seatsAvailable || 0) || bookingInProgress || !email}
+                disabled={!selectedFare || quantity > (selectedFare?.seatsAvailable || 0) || !email || isConfirmingEmail}
               >
-                {bookingInProgress ? 'Обработка...' : 'Подтвердить почту'}
+                {isConfirmingEmail ? '⏳ Отправка...' : 'Подтвердить почту'}
               </button>
             )}
 
@@ -351,9 +365,9 @@ export default function BookingModal({ flight, isOpen, onClose, onBook, user }) 
               <button
                 className="btn-book-confirm"
                 onClick={() => confirmCode(email, code)}
-                disabled={!selectedFare || quantity > (selectedFare?.seatsAvailable || 0) || bookingInProgress || !email}
+                disabled={!selectedFare || quantity > (selectedFare?.seatsAvailable || 0) || !email || !code || isConfirmingCode}
               >
-                {bookingInProgress ? 'Обработка...' : 'Подтвердить код'}
+                {isConfirmingCode ? '⏳ Проверка...' : 'Подтвердить код'}
               </button>
             )}
 
@@ -364,7 +378,7 @@ export default function BookingModal({ flight, isOpen, onClose, onBook, user }) 
                 onClick={handleBook}
                 disabled={bookingInProgress}
               >
-                {bookingInProgress ? 'Обработка...' : 'Перейти к оплате'}
+                {bookingInProgress ? '⏳ Обработка платежа...' : 'Перейти к оплате'}
               </button>
             )}
 

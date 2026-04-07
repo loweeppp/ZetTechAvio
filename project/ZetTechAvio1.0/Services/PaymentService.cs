@@ -4,6 +4,8 @@ using Newtonsoft.Json;
 using Microsoft.EntityFrameworkCore;
 using System.Text;
 using System.Net.Http.Headers;
+using System.Net.Mail;
+using System.Net;
 
 namespace ZetTechAvio1._0.Services
 {
@@ -199,11 +201,17 @@ namespace ZetTechAvio1._0.Services
                         payment.UpdatedAt = DateTime.UtcNow;
 
                         // Обновляем бронирование
-                        var booking = await _context.Bookings.FindAsync(payment.BookingId);
+                        var booking = await _context.Bookings
+                            .Include(b => b.User)
+                            .FirstOrDefaultAsync(b => b.Id == payment.BookingId);
+                        
                         if (booking != null)
                         {
                             booking.Status = BookingStatus.Confirmed;
                             booking.UpdatedAt = DateTime.UtcNow;
+
+                            // Отправляем письмо с подтверждением платежа
+                            await SendPaymentConfirmationEmailAsync(booking, payment);
                         }
 
                         _logger.LogInformation("Платеж {PaymentId} успешно обработан", yooKassaPaymentId);
@@ -226,6 +234,125 @@ namespace ZetTechAvio1._0.Services
                 _logger.LogError($"Ошибка при обработке webhook: {ex.Message}");
                 return false;
             }
+        }
+
+        /// <summary>
+        /// Отправляет письмо с подтверждением платежа и QR-кодом билета
+        /// </summary>
+        private async Task SendPaymentConfirmationEmailAsync(Booking booking, Payment payment)
+        {
+            try
+            {
+                var userEmail = booking.User?.Email;
+                if (string.IsNullOrWhiteSpace(userEmail))
+                {
+                    _logger.LogWarning("Email пользователя не найден для бронирования {BookingId}", booking.Id);
+                    return;
+                }
+
+                var smtpHost = _config["SmtpSettings:Host"] ?? _config["SMTP_HOST"];
+                var smtpPortStr = _config["SmtpSettings:Port"] ?? _config["SMTP_PORT"] ?? "587";
+                var senderEmail = _config["SmtpSettings:Email"] ?? _config["SMTP_USER"];
+                var senderPassword = _config["SmtpSettings:Password"] ?? _config["SMTP_PASSWORD"];
+
+                if (string.IsNullOrWhiteSpace(smtpHost) || string.IsNullOrWhiteSpace(senderEmail))
+                {
+                    _logger.LogWarning("SMTP не настроен, письмо не отправлено");
+                    return;
+                }
+
+                if (!int.TryParse(smtpPortStr, out int smtpPort))
+                    smtpPort = 587;
+
+                using (var smtp = new SmtpClient(smtpHost, smtpPort))
+                {
+                    smtp.Credentials = new NetworkCredential(senderEmail, senderPassword);
+                    smtp.EnableSsl = smtpPort == 587 || smtpPort == 465;
+
+                    // Генерируем QR-код (заглушка)
+                    var qrCodeData = GenerateQRCodeAsText(booking.BookingReference);
+
+                    var mail = new MailMessage
+                    {
+                        From = new MailAddress(senderEmail),
+                        Subject = $"Подтверждение платежа - Бронирование {booking.BookingReference}",
+                        IsBodyHtml = true
+                    };
+
+                    // HTML письмо с информацией о платеже и "QR-кодом"
+                    var emailBody = $@"
+                    <html>
+                    <head><meta charset='utf-8'></head>
+                    <body style='font-family: Arial, sans-serif;'>
+                        <div style='max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 8px;'>
+                            <h2 style='color: #2196F3;'>✅ Платеж успешно принят!</h2>
+                            
+                            <div style='background: #f5f5f5; padding: 15px; border-radius: 5px; margin: 20px 0;'>
+                                <p><strong>Номер бронирования:</strong> {booking.BookingReference}</p>
+                                <p><strong>Сумма платежа:</strong> {payment.TotalAmount:F2} ₽</p>
+                                <p><strong>Статус:</strong> Подтверждено</p>
+                                <p><strong>Дата/время платежа:</strong> {payment.UpdatedAt:dd.MM.yyyy HH:mm:ss}</p>
+                            </div>
+
+                            <h3 style='color: #333;'>📱 Ваш QR-код билета:</h3>
+                            <div style='background: #fff; padding: 15px; border: 1px solid #ddd; border-radius: 5px; margin: 20px 0; font-family: monospace; font-size: 10px; line-height: 1.2; white-space: pre;'>
+{qrCodeData}
+                            </div>
+
+                            <p style='color: #666; font-size: 12px;'>
+                                ℹ️ QR-код содержит информацию о вашем бронировании. Покажите его при регистрации в аэропорту.
+                            </p>
+
+                            <div style='margin-top: 30px; padding-top: 15px; border-top: 1px solid #ddd;'>
+                                <p style='color: #999; font-size: 12px;'>
+                                    Письмо отправлено автоматически. Пожалуйста, не отвечайте на это письмо.
+                                </p>
+                                <p style='color: #999; font-size: 12px;'>
+                                    При возникновении вопросов обратитесь в служу поддержки: ZetTechAvioBot@mail.ru
+                                </p>
+                            </div>
+                        </div>
+                    </body>
+                    </html>
+                    ";
+
+                    mail.Body = emailBody;
+                    mail.To.Add(userEmail);
+
+                    await smtp.SendMailAsync(mail);
+                    _logger.LogInformation($"Письмо с подтверждением платежа отправлено на {userEmail}");
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning($"Ошибка при отправке письма подтверждения платежа: {ex.Message}");
+                // Не выбрасываем исключение - платеж уже принят
+            }
+        }
+
+        /// <summary>
+        /// Генерирует простой QR-код в виде текста (заглушка)
+        /// В продакшене можно использовать библиотеку QRCoder для генерирования реального QR-кода
+        /// </summary>
+        private string GenerateQRCodeAsText(string bookingReference)
+        {
+            // Простая текстовая заглушка QR-кода
+            // В реальном приложении здесь был бы реальный QR-код
+            var qrData = $"BOOKING:{bookingReference}|AIRLINE:ZetTechAvio|TIME:{DateTime.UtcNow:yyyy-MM-dd}";
+            
+            // Генерируем простой паттерн в стиле ASCII QR-кода
+            var ascii = @"
+█████████████████████████████████████
+█                                   █
+█  ██████  ██  ██  ██████  ██████   █
+█  ██      ██████  ██  ██  ██  ██   █
+█  ██████  ██  ██  ██████  ██████   █
+█           " + bookingReference.PadRight(14) + @" █
+█                                   █
+█████████████████████████████████████
+            ";
+            
+            return ascii;
         }
     }
 }
