@@ -66,7 +66,7 @@ namespace ZetTechAvio1._0.Services
                 // Валидация SMTP параметров
                 if (string.IsNullOrWhiteSpace(smtpHost) || string.IsNullOrWhiteSpace(senderEmail) || string.IsNullOrWhiteSpace(senderPassword))
                 {
-                    _logger.LogWarning("SMTP параметры не установлены. Host={smtpHost}, Email={senderEmail}. Email не отправлен.");
+                    _logger.LogWarning($"SMTP параметры не установлены. Host={smtpHost}, Email={senderEmail}. Email не отправлен.");
                     return false;
                 }
 
@@ -125,21 +125,21 @@ namespace ZetTechAvio1._0.Services
             return true;
         }
 
-        public async Task<bool> VerifyCodeAsync(string email, string code, HttpRequest request, HttpResponse response)
+        public Task<bool> VerifyCodeAsync(string email, string code, HttpRequest request, HttpResponse response)
         {
             // Пытаемся получить куки
             var safeCookieName = $"ConfirmationCode_{email.Replace("@", "_").Replace(".", "_")}";
             
             if (!request.Cookies.TryGetValue(safeCookieName, out var storedCode))
-                return false;  // куки не найдена или истекла
+                return Task.FromResult(false);  // куки не найдена или истекла
 
             if (storedCode != code)
-                return false;  // коды не совпадают
+                return Task.FromResult(false);  // коды не совпадают
 
             // Удаляем куки после успешной проверки
             response.Cookies.Delete(safeCookieName);
 
-            return true;
+            return Task.FromResult(true);
         }
     }
 
@@ -220,6 +220,11 @@ namespace ZetTechAvio1._0.Services
         {
             var bookings = await _dbContext.Bookings
                 .Include(b => b.Tickets)
+                    .ThenInclude(t => t.Flight)
+                        .ThenInclude(f => f.OriginAirport)
+                .Include(b => b.Tickets)
+                    .ThenInclude(t => t.Flight)
+                        .ThenInclude(f => f.DestAirport)
                 .Where(b => b.UserId == userId)
                 .OrderByDescending(b => b.CreatedAt)
                 .ToListAsync();
@@ -253,7 +258,28 @@ namespace ZetTechAvio1._0.Services
                     TicketNumber = t.TicketNumber,
                     PassengerName = t.PassengerName,
                     Price = t.Price,
-                    Status = t.Status.ToString()
+                    Status = t.Status.ToString(),
+                    FlightId = t.FlightId,
+                    Flight = t.Flight != null ? new FlightResponse
+                    {
+                        Id = t.Flight.Id,
+                        FlightNumber = t.Flight.FlightNumber,
+                        DepartureTime = t.Flight.DepartureDt,
+                        ArrivalTime = t.Flight.ArrivalDt,
+                        Duration = TimeSpan.FromMinutes(t.Flight.DurationMinutes),
+                        DepartureAirport = new AirportResponse
+                        {
+                            Id = t.Flight.OriginAirport?.Id ?? 0,
+                            Code = t.Flight.OriginAirport?.Iata ?? "N/A",
+                            City = t.Flight.OriginAirport?.City ?? "Unknown"
+                        },
+                        ArrivalAirport = new AirportResponse
+                        {
+                            Id = t.Flight.DestAirport?.Id ?? 0,
+                            Code = t.Flight.DestAirport?.Iata ?? "N/A",
+                            City = t.Flight.DestAirport?.City ?? "Unknown"
+                        }
+                    } : null
                 }).ToList()
             };
         }

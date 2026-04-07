@@ -107,18 +107,23 @@ function BookingCard({ booking }) {
     return statusMap[status] || { label: status, color: '#999' };
   };
 
-  const paymentStatus = booking.payment
-    ? booking.payment.status === 'Succeeded' 
-      ? '💰 Оплачено'
-      : '⏳ Не оплачено'
-    : '❓ Нет платежа';
+  // Получаем информацию о полете из первого билета
+  const firstTicket = booking.tickets?.[0];
+  const flight = firstTicket?.flight;
+
+  // Парсим дату правильно
+  const flightDate = flight?.departureTime 
+    ? new Date(flight.departureTime).toLocaleDateString('ru-RU')
+    : 'Unknown';
+  
+  const flightTime = flight?.departureTime
+    ? new Date(flight.departureTime).toLocaleTimeString('ru-RU', { 
+      hour: '2-digit', 
+      minute: '2-digit' 
+    })
+    : 'Unknown';
 
   const status = getStatusBadge(booking.status);
-  const flightDate = new Date(booking.flight?.departureDt).toLocaleDateString('ru-RU');
-  const flightTime = new Date(booking.flight?.departureDt).toLocaleTimeString('ru-RU', { 
-    hour: '2-digit', 
-    minute: '2-digit' 
-  });
 
   return (
     <div className="booking-card">
@@ -131,23 +136,20 @@ function BookingCard({ booking }) {
           <span className="status-badge" style={{ backgroundColor: status.color }}>
             {status.label}
           </span>
-          <span className="payment-badge">
-            {paymentStatus}
-          </span>
         </div>
       </div>
 
       <div className="card-body">
         <div className="flight-info">
           <div className="route">
-            <span className="airport">{booking.flight?.originAirport?.iata || 'N/A'}</span>
+            <span className="airport">{flight?.departureAirport?.code || 'N/A'}</span>
             <span className="arrow">→</span>
-            <span className="airport">{booking.flight?.destAirport?.iata || 'N/A'}</span>
+            <span className="airport">{flight?.arrivalAirport?.code || 'N/A'}</span>
           </div>
           <div className="cities">
-            <span>{booking.flight?.originAirport?.city || 'Unknown'}</span>
+            <span>{flight?.departureAirport?.city || 'Unknown'}</span>
             <span> → </span>
-            <span>{booking.flight?.destAirport?.city || 'Unknown'}</span>
+            <span>{flight?.arrivalAirport?.city || 'Unknown'}</span>
           </div>
         </div>
 

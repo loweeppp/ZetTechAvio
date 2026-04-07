@@ -35,7 +35,7 @@ namespace ZetTechAvio1._0.Controllers
             var (success, message, user) = await _authService.RegisterAsync(
                 request.Email, request.Password, request.FullName, request.Phone);
 
-            if (!success)
+            if (!success || user == null)
                 return BadRequest(new { message });
 
             await _authStateService.SetUserAsync(user);
@@ -60,7 +60,7 @@ namespace ZetTechAvio1._0.Controllers
 
             var (success, message, user) = await _authService.LoginAsync(request.Email, request.Password);
 
-            if (!success)
+            if (!success || user == null)
                 return BadRequest(new { message });
 
             await _authStateService.SetUserAsync(user);

@@ -28,6 +28,9 @@ namespace ZetTechAvio1._0.Controllers
         [HttpGet("search")]
         public async Task<IActionResult> SearchFlights([FromQuery] string? from, [FromQuery] string? to, [FromQuery] string? date)
         {
+            if (string.IsNullOrWhiteSpace(from) || string.IsNullOrWhiteSpace(to) || string.IsNullOrWhiteSpace(date))
+                return BadRequest(new { message = "Параметры from, to и date обязательны" });
+
             var flights = await _flightsService.SearchFlightsAsync(from, to, date);
             return Ok(flights);
         }

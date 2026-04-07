@@ -52,5 +52,25 @@ namespace ZetTechAvio1._0.Models
         public string PassengerName { get; set; } = "";
         public decimal Price { get; set; }
         public string Status { get; set; } = "";
+        public int FlightId { get; set; }
+        public FlightResponse? Flight { get; set; }
+    }
+
+    public class FlightResponse
+    {
+        public int Id { get; set; }
+        public string FlightNumber { get; set; } = "";
+        public DateTime DepartureTime { get; set; }
+        public DateTime ArrivalTime { get; set; }
+        public TimeSpan Duration { get; set; }
+        public AirportResponse? DepartureAirport { get; set; }
+        public AirportResponse? ArrivalAirport { get; set; }
+    }
+
+    public class AirportResponse
+    {
+        public int Id { get; set; }
+        public string Code { get; set; } = "";
+        public string City { get; set; } = "";
     }
 }
