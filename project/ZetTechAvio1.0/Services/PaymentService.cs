@@ -176,8 +176,23 @@ namespace ZetTechAvio1._0.Services
 
                 // Парсим JSON от YooKassa
                 var notification = JsonConvert.DeserializeObject<dynamic>(jsonData);
+                
+                // Проверяем структуру JSON
+                if (notification == null || notification["object"] == null)
+                {
+                    _logger.LogError("[WEBHOOK] JSON структура неправильная: отсутствует 'object' или данные пусты");
+                    _logger.LogError($"[WEBHOOK] Полученные данные: {jsonData}");
+                    return false;
+                }
+
                 string yooKassaPaymentId = notification["object"]["id"];
                 string status = notification["object"]["status"];
+
+                if (string.IsNullOrEmpty(yooKassaPaymentId) || string.IsNullOrEmpty(status))
+                {
+                    _logger.LogError("[WEBHOOK] JSON отсутствуют поля 'id' или 'status'");
+                    return false;
+                }
 
                 _logger.LogInformation($"[WEBHOOK] PaymentID: {yooKassaPaymentId}, Status: {status}");
 
