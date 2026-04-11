@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using ZetTechAvio1._0.Services;
@@ -116,6 +117,7 @@ namespace ZetTechAvio1._0.Controllers
         /// </summary>
         [HttpPost("webhook")]
         [AllowAnonymous]
+        [EnableCors("AllowWebhook")]
         public async Task<IActionResult> HandleWebhook()
         {
             try

@@ -76,6 +76,14 @@ builder.Services.AddCors(options =>
               .AllowAnyHeader()
               .AllowCredentials();
     });
+    
+    // Отдельная политика для webhook (без ограничений по Origin)
+    options.AddPolicy("AllowWebhook", policy =>
+    {
+        policy.AllowAnyOrigin()
+              .AllowAnyMethod()
+              .AllowAnyHeader();
+    });
 });
 
 // Добавляем JWT аутентификацию
