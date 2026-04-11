@@ -88,6 +88,8 @@ namespace ZetTechAvio1._0.Services
                     }
                 };
 
+                _logger.LogInformation($" YooKassa запрос с notification_url: https://api.zettechavio.ru/api/payment/webhook");
+
                 var jsonContent = new StringContent(
                     JsonConvert.SerializeObject(requestBody),
                     Encoding.UTF8,
@@ -112,6 +114,7 @@ namespace ZetTechAvio1._0.Services
                     }
 
                     var responseContent = await response.Content.ReadAsStringAsync();
+                    _logger.LogInformation($" YooKassa API успех: {responseContent}");
                     dynamic result = JsonConvert.DeserializeObject(responseContent);
 
                     // 3. Сохранить платеж в БД
