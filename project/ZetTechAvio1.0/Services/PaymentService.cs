@@ -80,6 +80,7 @@ namespace ZetTechAvio1._0.Services
                     },
                     capture = true,
                     description = description,
+                    notification_url = "https://api.zettechavio.ru/api/payment/webhook",
                     metadata = new
                     {
                         booking_id = bookingId,
