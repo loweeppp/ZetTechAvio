@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using System.Linq;
 using ZetTechAvio1._0.Data;
 using ZetTechAvio1._0.Models;
 
@@ -55,35 +56,32 @@ namespace ZetTechAvio1._0.Services
         {
             try
             {
-                var query = _dbContext.Flights
+                IQueryable<Flight> query = _dbContext.Flights
                     .Include(f => f.OriginAirport)
                     .Include(f => f.DestAirport)
                     .Include(f => f.Fares);
 
-
-                var flights = await query.ToListAsync();
-
+                // Filter BEFORE ToListAsync (on database, not in memory!)
                 if (!string.IsNullOrEmpty(from))
                 {
-                    flights = flights.Where(f =>
-                        (f.OriginAirport?.Iata?.ToLower().Contains(from.ToLower()) ?? false) ||
-                        (f.OriginAirport?.City?.ToLower().Contains(from.ToLower()) ?? false))
-                        .ToList();
+                    query = query.Where(f =>
+                        f.OriginAirport.Iata.ToLower().Contains(from.ToLower()) ||
+                        f.OriginAirport.City.ToLower().Contains(from.ToLower()));
                 }
 
                 if (!string.IsNullOrEmpty(to))
                 {
-                    flights = flights.Where(f =>
-                        (f.DestAirport?.Iata?.ToLower().Contains(to.ToLower()) ?? false) ||
-                        (f.DestAirport?.City?.ToLower().Contains(to.ToLower()) ?? false))
-                        .ToList();
+                    query = query.Where(f =>
+                        f.DestAirport.Iata.ToLower().Contains(to.ToLower()) ||
+                        f.DestAirport.City.ToLower().Contains(to.ToLower()));
                 }
 
                 if (!string.IsNullOrEmpty(date) && DateTime.TryParse(date, out var parsedDate))
                 {
-                    flights = flights.Where(f => f.DepartureDt.Date == parsedDate.Date).ToList();
+                    query = query.Where(f => f.DepartureDt.Date == parsedDate.Date);
                 }
 
+                var flights = await query.ToListAsync();
                 return flights.Select(MapToDto).ToList();
             }
             catch (Exception ex)

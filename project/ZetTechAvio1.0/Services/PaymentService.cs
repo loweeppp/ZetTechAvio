@@ -12,11 +12,8 @@ namespace ZetTechAvio1._0.Services
     public interface IPaymentService
     {
         Task<Payment?> CreatePaymentAsync(int bookingId, string description);
-        Task<bool> HandleWebhookAsync(string jsonData);
-        Task<Payment?> GetPaymentAsync(int paymentId);
         Task<Payment?> VerifyAndUpdatePaymentStatusAsync(int bookingId, string yooKassaPaymentId);
     }
-    // Реализуйте методы для создания платежа, получения статуса и обработки уведомлений от Яндекс.Кассы
 
     public class PaymentService : IPaymentService
     {
@@ -149,133 +146,7 @@ namespace ZetTechAvio1._0.Services
             }
         }
 
-        public async Task<Payment?> GetPaymentAsync(int paymentId)
-        {
-            try
-            {
-                var payment = await _context.Payments.FindAsync(paymentId);
-                if (payment == null)
-                {
-                    _logger.LogWarning("Платеж с ID {PaymentId} не найден", paymentId);
-                    return null;
-                }
-                return payment;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError($"Ошибка при получении платежа: {ex.Message}");
-                return null;
-            }
-        }
 
-        public async Task<bool> HandleWebhookAsync(string jsonData)
-        {
-            try
-            {
-                _logger.LogInformation("[WEBHOOK] Получены данные webhook");
-                
-                if (string.IsNullOrEmpty(jsonData))
-                {
-                    _logger.LogWarning("[WEBHOOK] ❌ Webhook получил пустые данные");
-                    return false;
-                }
-
-                _logger.LogInformation($"[WEBHOOK] JSON данные: {jsonData}");
-
-                // Парсим JSON от YooKassa
-                var notification = JsonConvert.DeserializeObject<dynamic>(jsonData);
-                
-                // Проверяем структуру JSON
-                if (notification == null || notification["object"] == null)
-                {
-                    _logger.LogError("[WEBHOOK] JSON структура неправильная: отсутствует 'object' или данные пусты");
-                    _logger.LogError($"[WEBHOOK] Полученные данные: {jsonData}");
-                    return false;
-                }
-
-                string yooKassaPaymentId = notification["object"]["id"];
-                string status = notification["object"]["status"];
-
-                if (string.IsNullOrEmpty(yooKassaPaymentId) || string.IsNullOrEmpty(status))
-                {
-                    _logger.LogError("[WEBHOOK] JSON отсутствуют поля 'id' или 'status'");
-                    return false;
-                }
-
-                _logger.LogInformation($"[WEBHOOK] PaymentID: {yooKassaPaymentId}, Status: {status}");
-
-                // Находим платеж в БД
-                var payment = await _context.Payments
-                    .FirstOrDefaultAsync(p => p.YooKassaPaymentId == yooKassaPaymentId);
-
-                if (payment == null)
-                {
-                    _logger.LogWarning("[WEBHOOK] ❌ Платеж {PaymentId} не найден в БД", yooKassaPaymentId);
-                    return false;
-                }
-
-                _logger.LogInformation($"[WEBHOOK] Платеж найден: ID={payment.Id}, BookingID={payment.BookingId}, CurrentStatus={payment.Status}");
-
-                // Если уже обработан - не обновляем повторно (идемпотентность)
-                if (payment.Status != Payment.PaymentStatus.Pending)
-                {
-                    _logger.LogInformation("[WEBHOOK] Платеж {PaymentId} уже обработан со статусом {Status}", 
-                        yooKassaPaymentId, payment.Status);
-                    return true;
-                }
-
-                // Обновляем статус платежа
-                switch (status)
-                {
-                    case "succeeded":
-                        _logger.LogInformation($"[WEBHOOK] ✅ Статус SUCCEEDED получен для платежа {yooKassaPaymentId}");
-                        
-                        payment.Status = Payment.PaymentStatus.Succeeded;
-                        payment.UpdatedAt = DateTime.UtcNow;
-
-                        // Обновляем бронирование
-                        var booking = await _context.Bookings
-                            .Include(b => b.User)
-                            .FirstOrDefaultAsync(b => b.Id == payment.BookingId);
-                        
-                        if (booking != null)
-                        {
-                            _logger.LogInformation($"[WEBHOOK] Бронирование найдено: {booking.Id}, User email: {booking.User?.Email ?? "ПУСТО"}");
-                            
-                            booking.Status = BookingStatus.Confirmed;
-                            booking.UpdatedAt = DateTime.UtcNow;
-
-                            // Отправляем письмо с подтверждением платежа
-                            _logger.LogInformation($"[WEBHOOK] Вызов SendPaymentConfirmationEmailAsync для бронирования {booking.Id}");
-                            await SendPaymentConfirmationEmailAsync(booking, payment);
-                            _logger.LogInformation($"[WEBHOOK] Завершено SendPaymentConfirmationEmailAsync");
-                        }
-                        else
-                        {
-                            _logger.LogWarning($"[WEBHOOK] ❌ Бронирование не найдено для платежа {payment.BookingId}");
-                        }
-
-                        _logger.LogInformation("[WEBHOOK] ✅ Платеж {PaymentId} успешно обработан", yooKassaPaymentId);
-                        break;
-
-                    case "failed":
-                    case "canceled":
-                        payment.Status = Payment.PaymentStatus.Failed;
-                        payment.UpdatedAt = DateTime.UtcNow;
-                        _logger.LogInformation("Платеж {PaymentId} отклонён со статусом {Status}", 
-                            yooKassaPaymentId, status);
-                        break;
-                }
-
-                await _context.SaveChangesAsync();
-                return true;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError($"Ошибка при обработке webhook: {ex.Message}");
-                return false;
-            }
-        }
 
         /// <summary>
         /// Отправляет письмо с подтверждением платежа и QR-кодом билета

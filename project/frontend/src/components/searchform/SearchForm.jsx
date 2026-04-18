@@ -1,6 +1,5 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import './SearchForm.css';
-
 
 export default function SearchForm({onSearch}) {
   const [from, setFrom] = useState('');
@@ -8,37 +7,29 @@ export default function SearchForm({onSearch}) {
   const [date, setDate] = useState('');
   const [passengers, setPassengers] = useState(1);
 
-  const updateSearch = (newFrom, newTo, newDate, newPassengers) => {
-    const params = {from: newFrom, to: newTo, date: newDate, passengers: newPassengers};
-    onSearch(params);
-  };
-
   const handleFromChange = (e) => {
-    const newFrom = e.target.value;
-    setFrom(newFrom);
-    updateSearch(newFrom, to, date, passengers);
+    setFrom(e.target.value);
   };
 
   const handleToChange = (e) => {
-    const newTo = e.target.value;
-    setTo(newTo);
-    updateSearch(from, newTo, date, passengers);
+    setTo(e.target.value);
   };
 
   const handleDateChange = (e) => {
-    const newDate = e.target.value;
-    setDate(newDate);
-    updateSearch(from, to, newDate, passengers);
+    setDate(e.target.value);
   };
 
   const handlePassengersChange = (e) => {
-    const newPassengers = e.target.value;
-    setPassengers(newPassengers);
-    updateSearch(from, to, date, newPassengers);
+    setPassengers(e.target.value);
   };
 
   const handleSearch = () => {
-    console.log(`Поиск: ${from} → ${to}, Дата: ${date}, Пассажиры: ${passengers}`);
+    // Check if at least one search field is filled
+    if (!from && !to && !date) {
+      console.warn('Please fill at least one search field');
+      return;
+    }
+
     onSearch({from, to, date, passengers});
   };
 

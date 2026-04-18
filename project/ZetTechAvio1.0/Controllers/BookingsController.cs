@@ -27,9 +27,7 @@ namespace ZetTechAvio1._0.Controllers
         {
             try
             {
-                // Получаем userId из токена
-                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
-                if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out int userId))
+                if (!this.TryGetUserId(out int userId))
                     return Unauthorized("Пользователь не идентифицирован");
 
                 if (!ModelState.IsValid)
@@ -59,9 +57,7 @@ namespace ZetTechAvio1._0.Controllers
         {
             try
             {
-                // Получаем userId из токена
-                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
-                if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out int userId))
+                if (!this.TryGetUserId(out int userId))
                     return Unauthorized("Пользователь не идентифицирован");
 
                 var bookings = await _bookingsService.GetUserBookingsAsync(userId);
