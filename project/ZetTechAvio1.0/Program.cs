@@ -36,24 +36,33 @@ builder.Services.AddScoped<IConfirmationService>(sp =>
         //  builder.Configuration));
 
 
-// Конфигурация HttpClient
-builder.Services.AddHttpClient();
-// Настройка HttpClient в зависимости от среды
+// Конфигурация HttpClient для внешних запросов (YooKassa, etc.)
 if (builder.Environment.IsDevelopment())
 {
-    builder.Services.AddScoped(sp =>
+    builder.Services.AddScoped<HttpClient>(sp =>
     {
         var handler = new HttpClientHandler();
         handler.ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => true;
-        return new HttpClient(handler) { BaseAddress = new Uri("http://localhost:5151") };
+        handler.AutomaticDecompression = System.Net.DecompressionMethods.GZip | System.Net.DecompressionMethods.Deflate;
+        return new HttpClient(handler);
     });
 }
 else
 {
-    builder.Services.AddScoped(sp => 
-        new HttpClient { BaseAddress = new Uri(builder.Configuration["HttpClient:BaseAddress"] ?? "http://localhost:5151") }
-    );
+    // Production: используем стандартный HttpClient с поддержкой DNS
+    builder.Services.AddScoped<HttpClient>(sp =>
+    {
+        var handler = new HttpClientHandler();
+        handler.AutomaticDecompression = System.Net.DecompressionMethods.GZip | System.Net.DecompressionMethods.Deflate;
+        // Используем системные DNS resolver
+        handler.UseCookies = true;
+        var client = new HttpClient(handler) { Timeout = TimeSpan.FromSeconds(30) };
+        return client;
+    });
 }
+
+// Также зарегистрируем стандартный HttpClientFactory
+builder.Services.AddHttpClient();
 
 // Поддержка Razor Components
 builder.Services.AddRazorComponents()
