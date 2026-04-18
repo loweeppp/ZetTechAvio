@@ -10,3 +10,39 @@ appsettings.Production.json
 ssl/
 *.pem
 *.key
+
+mcp.json
+
+# .NET / C#
+bin/
+obj/
+*.user
+*.suo
+.vs/
+.vscode/
+*.csproj.user
+*.cache
+*.cache.json
+
+# Node.js / npm
+node_modules/
+dist/
+build/
+.next/
+npm-debug.log
+yarn-error.log
+
+# IDE
+.idea/
+*.swp
+*.swo
+*~
+
+# System
+.DS_Store
+Thumbs.db
+*.log
+
+# Database & backups (keep only on VPS)
+*.sql
+MySql/

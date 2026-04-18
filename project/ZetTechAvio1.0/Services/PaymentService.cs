@@ -14,6 +14,7 @@ namespace ZetTechAvio1._0.Services
         Task<Payment?> CreatePaymentAsync(int bookingId, string description);
         Task<bool> HandleWebhookAsync(string jsonData);
         Task<Payment?> GetPaymentAsync(int paymentId);
+        Task<Payment?> VerifyAndUpdatePaymentStatusAsync(int bookingId, string yooKassaPaymentId);
     }
     // Реализуйте методы для создания платежа, получения статуса и обработки уведомлений от Яндекс.Кассы
 
@@ -70,7 +71,7 @@ namespace ZetTechAvio1._0.Services
                 {
                     amount = new
                     {
-                        value = booking.TotalAmount.ToString("F2"),
+                        value = booking.TotalAmount.ToString("F2", System.Globalization.CultureInfo.InvariantCulture),
                         currency = "RUB"
                     },
                     confirmation = new
@@ -90,8 +91,11 @@ namespace ZetTechAvio1._0.Services
 
                 _logger.LogInformation($" YooKassa запрос с notification_url: https://api.zettechavio.ru/api/payment/webhook");
 
+                var jsonPayload = JsonConvert.SerializeObject(requestBody);
+                _logger.LogInformation($"[PAYMENT DEBUG] JSON Request Payload:\n{jsonPayload}");
+                
                 var jsonContent = new StringContent(
-                    JsonConvert.SerializeObject(requestBody),
+                    jsonPayload,
                     Encoding.UTF8,
                     "application/json"
                 );
@@ -399,6 +403,117 @@ namespace ZetTechAvio1._0.Services
             ";
             
             return ascii;
+        }
+
+        /// <summary>
+        /// Проверяет статус платежа в YooKassa и обновляет его в БД
+        /// Используется для тестирования на localhost (веб-хуки не могут достичь localhost)
+        /// </summary>
+        public async Task<Payment?> VerifyAndUpdatePaymentStatusAsync(int bookingId, string yooKassaPaymentId)
+        {
+            try
+            {
+                // Проверка что YooKassa настроена
+                if (string.IsNullOrWhiteSpace(_shopId) || string.IsNullOrWhiteSpace(_apiKey))
+                {
+                    _logger.LogError("[PAYMENT_VERIFY] YooKassa не настроена");
+                    return null;
+                }
+
+                _logger.LogInformation($"[PAYMENT_VERIFY] Проверка статуса платежа {yooKassaPaymentId}");
+
+                // Запрашиваем статус платежа из YooKassa
+                var auth = Convert.ToBase64String(Encoding.ASCII.GetBytes($"{_shopId}:{_apiKey}"));
+                using (var requestMessage = new HttpRequestMessage(HttpMethod.Get, $"https://api.yookassa.ru/v3/payments/{yooKassaPaymentId}"))
+                {
+                    requestMessage.Headers.Authorization = new AuthenticationHeaderValue("Basic", auth);
+
+                    var response = await _httpClient.SendAsync(requestMessage);
+
+                    if (!response.IsSuccessStatusCode)
+                    {
+                        var errorContent = await response.Content.ReadAsStringAsync();
+                        _logger.LogError($"[PAYMENT_VERIFY] Ошибка при получении статуса: {response.StatusCode} - {errorContent}");
+                        return null;
+                    }
+
+                    var responseContent = await response.Content.ReadAsStringAsync();
+                    dynamic result = JsonConvert.DeserializeObject(responseContent);
+
+                    string status = result["status"];
+                    bool paid = result["paid"] ?? false;
+
+                    _logger.LogInformation($"[PAYMENT_VERIFY] Статус платежа: {status}, Оплачено: {paid}");
+
+                    // Находим платеж в БД
+                    var payment = await _context.Payments
+                        .FirstOrDefaultAsync(p => p.YooKassaPaymentId == yooKassaPaymentId);
+
+                    if (payment == null)
+                    {
+                        _logger.LogWarning($"[PAYMENT_VERIFY] Платеж {yooKassaPaymentId} не найден в БД");
+                        return null;
+                    }
+
+                    // Если уже обработан - не обновляем повторно
+                    if (payment.Status != Payment.PaymentStatus.Pending)
+                    {
+                        _logger.LogInformation($"[PAYMENT_VERIFY] Платеж {yooKassaPaymentId} уже обработан со статусом {payment.Status}");
+                        return payment;
+                    }
+
+                    // Обновляем статус если платёж успешен
+                    if (status == "succeeded" && paid)
+                    {
+                        _logger.LogInformation($"[PAYMENT_VERIFY] ✅ Платеж {yooKassaPaymentId} успешно подтверждён!");
+
+                        payment.Status = Payment.PaymentStatus.Succeeded;
+                        payment.UpdatedAt = DateTime.UtcNow;
+
+                        // Обновляем бронирование
+                        var booking = await _context.Bookings
+                            .Include(b => b.User)
+                            .FirstOrDefaultAsync(b => b.Id == bookingId);
+
+                        if (booking != null)
+                        {
+                            booking.Status = BookingStatus.Confirmed;
+                            booking.UpdatedAt = DateTime.UtcNow;
+
+                            _logger.LogInformation($"[PAYMENT_VERIFY] Бронирование {bookingId} обновлено на Confirmed");
+
+                            // Отправляем письмо с подтверждением
+                            await SendPaymentConfirmationEmailAsync(booking, payment);
+                        }
+                        else
+                        {
+                            _logger.LogWarning($"[PAYMENT_VERIFY] Бронирование {bookingId} не найдено");
+                        }
+
+                        await _context.SaveChangesAsync();
+                    }
+                    else if (status == "failed" || status == "canceled")
+                    {
+                        _logger.LogWarning($"[PAYMENT_VERIFY] ⚠️ Платеж {yooKassaPaymentId} отклонён: {status}");
+                        
+                        payment.Status = Payment.PaymentStatus.Failed;
+                        payment.UpdatedAt = DateTime.UtcNow;
+
+                        await _context.SaveChangesAsync();
+                    }
+                    else
+                    {
+                        _logger.LogInformation($"[PAYMENT_VERIFY] Платеж {yooKassaPaymentId} всё ещё в статусе {status}");
+                    }
+
+                    return payment;
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"[PAYMENT_VERIFY] Ошибка при проверке статуса: {ex.Message}\n{ex.StackTrace}");
+                return null;
+            }
         }
     }
 }

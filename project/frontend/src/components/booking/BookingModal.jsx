@@ -208,6 +208,13 @@ export default function BookingModal({ flight, isOpen, onClose, onBook, user }) 
         const paymentData = await createPayment(booking.id, token);
         console.log('✅ Платеж создан:', paymentData);
 
+        // Сохраняем yooKassaPaymentId для проверки статуса после возврата
+        sessionStorage.setItem('pendingPaymentVerification', JSON.stringify({
+          bookingId: booking.id,
+          yooKassaPaymentId: paymentData.yooKassaPaymentId,
+          timestamp: Date.now()
+        }));
+
         // ШАГ 3: Редиректим на YooKassa форму
         if (paymentData.confirmationUrl) {
           window.location.href = paymentData.confirmationUrl;

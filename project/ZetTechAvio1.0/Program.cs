@@ -36,7 +36,7 @@ builder.Services.AddScoped<IConfirmationService>(sp =>
         //  builder.Configuration));
 
 
-// Конфигурация HttpClient для внешних запросов (YooKassa, etc.)
+// Конфигурация HttpClient для внутренних запросов (Blazor компоненты) и YooKassa
 if (builder.Environment.IsDevelopment())
 {
     builder.Services.AddScoped<HttpClient>(sp =>
@@ -44,7 +44,10 @@ if (builder.Environment.IsDevelopment())
         var handler = new HttpClientHandler();
         handler.ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => true;
         handler.AutomaticDecompression = System.Net.DecompressionMethods.GZip | System.Net.DecompressionMethods.Deflate;
-        return new HttpClient(handler);
+        var client = new HttpClient(handler);
+        // Для локального запуска - относительные URL будут указывать на localhost:5151
+        client.BaseAddress = new Uri("http://localhost:5151");
+        return client;
     });
 }
 else
@@ -57,6 +60,8 @@ else
         // Используем системные DNS resolver
         handler.UseCookies = true;
         var client = new HttpClient(handler) { Timeout = TimeSpan.FromSeconds(30) };
+        // В Production - указываем на внешний API
+        client.BaseAddress = new Uri("https://api.zettechavio.ru");
         return client;
     });
 }

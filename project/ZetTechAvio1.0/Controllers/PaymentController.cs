@@ -60,6 +60,7 @@ namespace ZetTechAvio1._0.Controllers
                 {
                     message = "Платеж создан",
                     paymentId = payment.Id,
+                    yooKassaPaymentId = payment.YooKassaPaymentId,
                     confirmationUrl = payment.ConfirmationUrl,
                     amount = payment.TotalAmount,
                     status = payment.Status.ToString()
@@ -161,10 +162,59 @@ namespace ZetTechAvio1._0.Controllers
                 return StatusCode(500, new { status = "error", message = ex.Message });
             }
         }
+
+        /// <summary>
+        /// Проверить статус платежа в YooKassa и обновить его локально
+        /// Используется для тестирования на localhost (веб-хуки не могут достичь localhost)
+        /// </summary>
+        [HttpPost("verify-status")]
+        [Authorize]
+        public async Task<IActionResult> VerifyPaymentStatus([FromBody] VerifyPaymentRequest request)
+        {
+            if (request?.BookingId <= 0 || string.IsNullOrWhiteSpace(request?.YooKassaPaymentId))
+            {
+                return BadRequest(new { message = "BookingId и YooKassaPaymentId обязательны" });
+            }
+
+            try
+            {
+                _logger.LogInformation($"[VERIFY] Проверка платежа {request.YooKassaPaymentId} для бронирования {request.BookingId}");
+
+                var payment = await _paymentService.VerifyAndUpdatePaymentStatusAsync(request.BookingId, request.YooKassaPaymentId);
+
+                if (payment == null)
+                {
+                    return StatusCode(500, new { message = "Ошибка при проверке статуса платежа" });
+                }
+
+                _logger.LogInformation($"[VERIFY] Платеж обновлён: {payment.YooKassaPaymentId}, Status={payment.Status}");
+
+                return Ok(new
+                {
+                    message = "Статус платежа обновлён",
+                    paymentId = payment.Id,
+                    status = payment.Status.ToString(),
+                    yooKassaPaymentId = payment.YooKassaPaymentId,
+                    bookingId = payment.BookingId,
+                    amount = payment.TotalAmount
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"[VERIFY] Ошибка: {ex.Message}");
+                return StatusCode(500, new { message = "Внутренняя ошибка сервера" });
+            }
+        }
     }
 
     public class CreatePaymentRequest
     {
         public int BookingId { get; set; }
+    }
+
+    public class VerifyPaymentRequest
+    {
+        public int BookingId { get; set; }
+        public string YooKassaPaymentId { get; set; }
     }
 }
