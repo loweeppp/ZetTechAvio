@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import { verifyPaymentStatus } from '../../services/paymentService';
 import './MyBookings.css';
@@ -12,36 +12,7 @@ export default function MyBookings() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  useEffect(() => {
-    if (currentUser) {
-      verifyPendingPayment(); // Проверяем платёж если вернулись из YooKassa
-      loadBookings();
-    }
-  }, [currentUser]);
-
-  const verifyPendingPayment = async () => {
-    try {
-      const pending = sessionStorage.getItem('pendingPaymentVerification');
-      if (!pending) return;
-
-      const { bookingId, yooKassaPaymentId } = JSON.parse(pending);
-      const token = localStorage.getItem('token');
-
-      console.log('🔄 Проверка платежа после возврата из YooKassa...');
-      const result = await verifyPaymentStatus(bookingId, yooKassaPaymentId, token);
-      
-      console.log('✅ Платеж проверен:', result.status);
-      sessionStorage.removeItem('pendingPaymentVerification');
-      
-      // Обновляем список бронирований
-      await loadBookings();
-    } catch (err) {
-      console.error('⚠️ Ошибка при проверке платежа:', err);
-      // Не показываем ошибку пользователю - платеж может быть в процессе
-    }
-  };
-
-  const loadBookings = async () => {
+  const loadBookings = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -66,7 +37,36 @@ export default function MyBookings() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    if (!currentUser) return;
+
+    const init = async () => {
+      try {
+        // Проверяем платёж если вернулись из YooKassa
+        const pending = sessionStorage.getItem('pendingPaymentVerification');
+        if (pending) {
+          const { bookingId, yooKassaPaymentId } = JSON.parse(pending);
+          const token = localStorage.getItem('token');
+
+          console.log('Проверка платежа после возврата из YooKassa...');
+          const result = await verifyPaymentStatus(bookingId, yooKassaPaymentId, token);
+          
+          console.log('Платеж проверен:', result.status);
+          sessionStorage.removeItem('pendingPaymentVerification');
+        }
+      } catch (err) {
+        console.error('Ошибка при проверке платежа:', err);
+        // Не показываем ошибку пользователю - платеж может быть в процессе
+      }
+      
+      // Загружаем бронирования
+      await loadBookings();
+    };
+
+    init();
+  }, [currentUser, loadBookings]);
 
   const filteredBookings = bookings.filter(b => {
     if (filter === 'active') return b.status === 'Confirmed' || b.status === 'Created';

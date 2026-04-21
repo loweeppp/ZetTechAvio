@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { createPayment } from '../../services/paymentService';
 import './BookingModal.css';
 
@@ -29,11 +29,114 @@ export default function BookingModal({ flight, isOpen, onClose, onBook, user }) 
   const [email, setEmail] = useState(user?.email || '');
   const [code, setCode] = useState('');
 
-  const [hovered, isHovered] = useState(false);
   const [codeStage, setCodeStage] = useState('email')
+
+  // Refs для полей пассажиров
+  const passengerRefs = useRef({});
+  const emailRef = useRef(null);
+  const isVerifyingCode = useRef(false);
 
   const API_URL = process.env.REACT_APP_API_URL || 'https://api.zettechavio.ru';
 
+  // Валидация данных 
+  const validateBooking = () => {
+    function isvalidateEmail(e) {
+      return /\S+@\S+\.\S+/.test(e);
+    }
+    if (!isvalidateEmail(email)) {
+      setError('Неверный формат email');
+      return false;
+    }
+
+    if (quantity > 5) {
+      setError('Максимум 5 билетов за один платеж');
+      return false;
+    }
+
+    if( !email || !passengers[0]?.fullName || !passengers[0]?.passportSeries || !passengers[0]?.passportNumber) {
+      setError('Поля не могут быть пустыми');
+      return false;
+    }
+    return true;
+  };
+
+  const confirmCode = useCallback(async (emailArg, codeArg) => {
+    setError('');
+    setIsConfirmingCode(true);
+    try {
+      const response = await fetch(`${API_URL}/api/bookings/verify-code`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ email: emailArg, code: codeArg })
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        setError(result.message || 'Ошибка подтверждения кода');
+        isVerifyingCode.current = false;
+        return;
+      }
+
+      // Успех - переходим на стадию подтверждения
+      setCodeStage('confirmed');
+      isVerifyingCode.current = false;
+
+    } catch (err) {
+      console.error('Ошибка при подтверждении кода:', err);
+      setError('Ошибка при подтверждении кода');
+      isVerifyingCode.current = false;
+    } finally {
+      setIsConfirmingCode(false);
+    }
+  }, [API_URL]);
+
+  const сonfirmEmail = useCallback(async (emailArg) => {
+    if(!validateBooking()) return;
+
+    setError('');
+    setIsConfirmingEmail(true);
+    try {
+      const response = await fetch(`${API_URL}/api/bookings/request-confirmation`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ email: emailArg })
+      });
+      const result = await response.json();
+      if (!response.ok) {
+        setError(result.message || 'Ошибка подтверждения email');
+        setIsConfirmingEmail(false);
+        return;
+      }
+
+      setCodeStage('code');
+
+    } catch (err) {
+      console.error('Ошибка при подтверждении email:', err);
+      setError('Ошибка при подтверждении email');
+    } finally {
+      setIsConfirmingEmail(false);
+    }
+  }, [API_URL, validateBooking]);
+
+  // Очистка данных при открытии модального окна
+  useEffect(() => {
+    if (isOpen) {
+      setPassengers([]);
+      setEmail(user?.email || '');
+      setCode('');
+      setCodeStage('email');
+      setError('');
+      setIsConfirmingEmail(false);
+      setIsConfirmingCode(false);
+      setSelectedClass('Economy');
+      setQuantity(1);
+      isVerifyingCode.current = false;
+      setLoading(true);
+    }
+  }, [isOpen, user?.email]);
 
   // Получаем тарифы для этого рейса
   useEffect(() => {
@@ -51,13 +154,15 @@ export default function BookingModal({ flight, isOpen, onClose, onBook, user }) 
       });
   }, [isOpen, flight]);
 
-  // Инициализируем массив пассажиров при изменении количества
+  // Инициализируем массив пассажиров при изменении количества или открытии модального окна
   useEffect(() => {
+    if (!isOpen) return;
+    
     const newPassengers = Array(quantity).fill(null).map((_, i) =>
       passengers[i] || { fullName: '', passengerType: 'Adult', passportSeries: '', passportNumber: '' }
     );
     setPassengers(newPassengers);
-  }, [quantity]);
+  }, [quantity, isOpen]);
 
   const selectedFare = fares.find(f => CLASS_NAMES[f.class] === selectedClass);
   const totalPrice = selectedFare ? selectedFare.price * quantity : 0;
@@ -66,95 +171,57 @@ export default function BookingModal({ flight, isOpen, onClose, onBook, user }) 
     const updated = [...passengers];
     updated[index] = { ...updated[index], [field]: value };
     setPassengers(updated);
+
+    // Автоматический переход при заполнении поля до конца
+    if (field === 'passportSeries' && value.length === 4) {
+      // Переход на Номер паспорта
+      setTimeout(() => {
+        passengerRefs.current[`passenger_${index}_passportNumber`]?.focus();
+      }, 0);
+    } else if (field === 'passportNumber' && value.length === 6) {
+      // Переход на Email только если он не заполнен
+      if (!email) {
+        setTimeout(() => {
+          emailRef.current?.focus();
+        }, 0);
+      }
+    }
   };
 
-  // если email изменился, сбрасываем стадию и ошибки
+  const handlePassengerKeyDown = (index, field, e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      
+      if (field === 'fullName') {
+        // Переход на Серия паспорта
+        passengerRefs.current[`passenger_${index}_passportSeries`]?.focus();
+      }
+    }
+  };
+
+  // Очистка при изменении email
   useEffect(() => {
     setCodeStage('email');
     setError('');
     setIsConfirmingEmail(false);
     setIsConfirmingCode(false);
+    isVerifyingCode.current = false;
   }, [email]);
 
-  // Валидация данных 
-  const validateBooking = () => {
-
-    function isvalidateEmail(e) {
-      return /\S+@\S+\.\S+/.test(e);
-
+  // Автоматическая проверка кода при заполнении 6 цифр
+  useEffect(() => {
+    if (code.length === 6 && codeStage === 'code' && !isVerifyingCode.current) {
+      isVerifyingCode.current = true;
+      confirmCode(email, code);
     }
-    if (!isvalidateEmail(email)) {
-      setError('Неверный формат email');
-      return false;
+  }, [code, codeStage, email, confirmCode]);
+
+  // Сброс при закрытии модального окна
+  useEffect(() => {
+    if (!isOpen) {
+      isVerifyingCode.current = false;
     }
-
-    if( !email || !passengers[0]?.fullName || !passengers[0]?.passportSeries || !passengers[0]?.passportNumber) {
-      setError('Поля не могут быть пустыми');
-      return false;
-    }
-    return true;
-  };
-
-
-  const сonfirmEmail = async (email) => {
-    if(!validateBooking()) return;
-
-    setError('');
-    setIsConfirmingEmail(true);
-    try {
-      const response = await fetch(`${API_URL}/api/bookings/request-confirmation`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',  // отправляем и получаем cookies
-        body: JSON.stringify({ email })
-      });
-      const result = await response.json();
-      if (!response.ok) {
-        setError(result.message || 'Ошибка подтверждения email');
-        setIsConfirmingEmail(false);
-        return;
-      }
-
-      setCodeStage('code');
-      isHovered(true);
-
-    } catch (err) {
-      console.error('Ошибка при подтверждении email:', err);
-      setError('Ошибка при подтверждении email');
-    } finally {
-      setIsConfirmingEmail(false);
-    }
-  };
-
-  const confirmCode = async (email, code) => {
-    setError('');
-    setIsConfirmingCode(true);
-    try {
-      const response = await fetch(`${API_URL}/api/bookings/verify-code`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',  // отправляем и получаем cookies
-        body: JSON.stringify({ email, code })
-      });
-      const result = await response.json();
-      if (!response.ok) {
-        setError(result.message || 'Ошибка подтверждения кода');
-        setIsConfirmingCode(false);
-        return;
-      }
-
-      if (response.ok) {
-        setCodeStage('confirmed');
-      }
-
-    } catch (err) {
-      console.error('Ошибка при подтверждении кода:', err);
-      setError('Ошибка при подтверждении кода');
-    } finally {
-      setIsConfirmingCode(false);
-    }
-  };
-
+  }, [isOpen]);
 
   const handleBook = async () => {
     if (!selectedFare || !validateBooking()) return;
@@ -277,8 +344,11 @@ export default function BookingModal({ flight, isOpen, onClose, onBook, user }) 
               <div className="quantity-selector">
                 <button onClick={() => setQuantity(Math.max(1, quantity - 1))} disabled={quantity === 1}>−</button>
                 <input type="number" value={quantity} readOnly />
-                <button onClick={() => setQuantity(quantity + 1)} disabled={quantity >= (selectedFare?.seatsAvailable || 0)}>+</button>
+                <button onClick={() => setQuantity(Math.min(5, quantity + 1))} disabled={quantity >= 5 || quantity >= (selectedFare?.seatsAvailable || 0)}>+</button>
               </div>
+              {quantity > 5 && (
+                <p className="error">Максимум 5 билетов за один платёж</p>
+              )}
               {selectedFare && quantity > selectedFare.seatsAvailable && (
                 <p className="error">Недостаточно мест (доступно: {selectedFare.seatsAvailable})</p>
               )}
@@ -296,8 +366,9 @@ export default function BookingModal({ flight, isOpen, onClose, onBook, user }) 
                       placeholder="Полное имя"
                       value={passenger.fullName}
                       onChange={(e) => {
-                        const value = e.target.value.replace(/[^a-zA-Zа-яА-ЯёЁ\s]/g, ''); // Разрешаем только буквы и пробелы
+                        const value = e.target.value.replace(/[^a-zA-Zа-яА-ЯёЁ\s]/g, '');
                         handlePassengerChange(index, 'fullName', value)}}
+                      onKeyDown={(e) => handlePassengerKeyDown(index, 'fullName', e)}
                       required
                     />
                     <select
@@ -308,20 +379,22 @@ export default function BookingModal({ flight, isOpen, onClose, onBook, user }) 
                       <option value="Child">Ребёнок</option>
                     </select>
                     <input
+                      ref={(el) => passengerRefs.current[`passenger_${index}_passportSeries`] = el}
                       type="text"
                       placeholder="Серия паспорта"
                       value={passenger.passportSeries}
                       onChange={(e) => {
-                        const value = e.target.value.replace(/\D/g, ''); // Удаляем все нецифровые символы
+                        const value = e.target.value.replace(/\D/g, '');
                         handlePassengerChange(index, 'passportSeries', value)}}
                       maxLength="4"
                     />
                     <input
+                      ref={(el) => passengerRefs.current[`passenger_${index}_passportNumber`] = el}
                       type="text"
                       placeholder="Номер паспорта"
                       value={passenger.passportNumber}
                       onChange={(e) => {
-                        const value = e.target.value.replace(/\D/g, ''); // Удаляем все нецифровые символы
+                        const value = e.target.value.replace(/\D/g, '');
                         handlePassengerChange(index, 'passportNumber', value)}}
                       maxLength="6"
                     />
@@ -335,17 +408,29 @@ export default function BookingModal({ flight, isOpen, onClose, onBook, user }) 
               <p>Класс: <strong>{selectedClass}</strong></p>
               <p>Билеты: <strong>{quantity}</strong></p>
 
-              {/* Почта */}
-              <p><input value={email} type="email" onChange={(e) => setEmail(e.target.value)}  className=".passenger-form input" placeholder="Введите email" /></p>
+            {/* Почта */}
+              <p><input 
+                ref={emailRef}
+                value={email} 
+                type="email" 
+                onChange={(e) => setEmail(e.target.value)}  
+                className=".passenger-form input" 
+                placeholder="Введите email" 
+              /></p>
 
               {/* Код */}
-              {hovered !== false && (
+              {codeStage === 'code' && (
                 <p><input
-                maxLength={6}
-                onChange={(e) => {
-                  const value = e.target.value.replace(/\D/g, ''); // Удаляем все нецифровые символы
-                  setCode(value)}} 
-                  value={code} type="code" className=".passenger-form input" placeholder="Введите код подтверждения" /></p>
+                  maxLength={6}
+                  onChange={(e) => {
+                    const value = e.target.value.replace(/\D/g, '');
+                    setCode(value)}} 
+                  value={code} 
+                  type="text" 
+                  className=".passenger-form input" 
+                  placeholder="Введите код подтверждения" 
+                />
+                </p>
               )}
 
               {error && <div className="text-danger mt-2">{error}</div>}
@@ -361,7 +446,7 @@ export default function BookingModal({ flight, isOpen, onClose, onBook, user }) 
               <button
                 className="btn-book-confirm"
                 onClick={() => сonfirmEmail(email)}
-                disabled={!selectedFare || quantity > (selectedFare?.seatsAvailable || 0) || !email || isConfirmingEmail}
+                disabled={!selectedFare || quantity > 5 || quantity > (selectedFare?.seatsAvailable || 0) || !email || isConfirmingEmail}
               >
                 {isConfirmingEmail ? '⏳ Отправка...' : 'Подтвердить почту'}
               </button>
@@ -383,7 +468,7 @@ export default function BookingModal({ flight, isOpen, onClose, onBook, user }) 
               <button
                 className="btn-book-confirm"
                 onClick={handleBook}
-                disabled={bookingInProgress}
+                disabled={bookingInProgress || quantity > 5}
               >
                 {bookingInProgress ? '⏳ Обработка платежа...' : 'Перейти к оплате'}
               </button>

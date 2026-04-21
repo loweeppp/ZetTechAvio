@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { Link } from 'react-router-dom';
+import { EyeIcon } from '../../images/EyeIcon';
 import './AuthModal.css';
 import { hover } from '@testing-library/user-event/dist/hover';
 
@@ -23,14 +24,52 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess }) {
   const [code, setCode] = useState('');
   const [codeStage, setCodeStage] = useState('email');
   const [hovered, isHovered] = useState(false);
+  const [showLoginPassword, setShowLoginPassword] = useState(false);
+  const [showRegisterPassword, setShowRegisterPassword] = useState(false);
+  const isVerifyingCode = useRef(false);
 
   const API_URL = process.env.REACT_APP_API_URL || 'https://api.zettechavio.ru';
 
+  // Очистка полей при открытии модального окна
+  useEffect(() => {
+    if (isOpen) {
+      setIsLoginMode(true);
+      setLoginEmail('');
+      setFullName('');
+      setEmail('');
+      setPhone('');
+      setPassword('');
+      setCode('');
+      setCodeStage('email');
+      setError('');
+      setAgreeToPolicy(false);
+      setShowLoginPassword(false);
+      setShowRegisterPassword(false);
+      isHovered(false);
+      isVerifyingCode.current = false;
+    }
+  }, [isOpen]);
 
   useEffect(() => {
     setCodeStage('email');
     setError('');
+    isVerifyingCode.current = false;
   }, [email]);
+
+  // Сброс при закрытии модального окна
+  useEffect(() => {
+    if (!isOpen) {
+      isVerifyingCode.current = false;
+    }
+  }, [isOpen]);
+
+  // Автоматическая проверка кода при заполнении 6 цифр
+  useEffect(() => {
+    if (code.length === 6 && codeStage === 'code' && !isVerifyingCode.current) {
+      isVerifyingCode.current = true;
+      confirmCode(email, code);
+    }
+  }, [code, codeStage, email]);
 
   const validateRegistration = () => {
 
@@ -74,7 +113,7 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess }) {
     return true;
   };
 
-  const сonfirmEmail = async (email) => {
+  const сonfirmEmail = useCallback(async (emailArg) => {
     if (!validateRegistration()) return;
     setError('');
 
@@ -82,8 +121,8 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess }) {
       const response = await fetch(`${API_URL}/api/bookings/request-confirmation`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',  // отправляем и получаем cookies
-        body: JSON.stringify({ email })
+        credentials: 'include',
+        body: JSON.stringify({ email: emailArg })
       });
       const result = await response.json();
       if (!response.ok) {
@@ -98,32 +137,36 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess }) {
     catch (error) {
       setError('Ошибка подключения');
     }
-  };
+  }, [API_URL, validateRegistration]);
 
-  const confirmCode = async (email, code) => {
+  const confirmCode = useCallback(async (emailArg, codeArg) => {
     if(!validateRegistration()) return;
     setError('');
     try {
       const response = await fetch(`${API_URL}/api/bookings/verify-code`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',  // отправляем и получаем cookies
-        body: JSON.stringify({ email, code })
+        credentials: 'include',
+        body: JSON.stringify({ email: emailArg, code: codeArg })
       });
       const result = await response.json();
       if (!response.ok) {
         setError(result.message || 'Ошибка подтверждения кода');
+        isVerifyingCode.current = false;
+        return;
       }
 
       if (response.ok) {
         setCodeStage('confirmed');
+        isVerifyingCode.current = false;
       }
 
     } catch (err) {
       console.error('Ошибка при подтверждении кода:', err);
       setError('Ошибка при подтверждении кода');
+      isVerifyingCode.current = false;
     }
-  };
+  }, [API_URL, validateRegistration]);
 
   //Переключение на режим входа
   const handleLogin = async (e) => {
@@ -216,29 +259,36 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess }) {
               value={loginEmail}
               onChange={(e) => setLoginEmail(e.target.value)}
             />
-            <input
-              className="input mt-2"
-              type="password"
-              placeholder="Пароль"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
-
-            {error && <div className="text-danger mt-2">{error}</div>}
-
-            <div className="mt-3">
-              <button type="submit" className="btn btn-primary" disabled={loading}>
-                {loading ? 'Загрузка...' : 'Войти'}
-              </button>
-              <button type="button" className="btn btn-link" onClick={onClose} disabled={loading}>
-                Отмена
+            <div className="password-field-wrapper">
+              <input
+                className="input mt-2 password-input"
+                type={showLoginPassword ? 'text' : 'password'}
+                placeholder="Пароль"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+              <button
+                type="button"
+                className="password-toggle-btn"
+                onClick={() => setShowLoginPassword(!showLoginPassword)}
+                tabIndex="-1"
+                title={showLoginPassword ? 'Скрыть пароль' : 'Показать пароль'}
+              >
+                <EyeIcon isVisible={showLoginPassword} size={20} />
               </button>
             </div>
 
-            <div className="mt-3 text-center">
-              <span>Нет аккаунта? </span>
-              <button type="button" className="btn btn-link" onClick={() => setIsLoginMode(false)}>
-                Создать
+            {error && <div className="text-danger mt-2">{error}</div>}
+
+            <div className="mt-3 button-group">
+              <button type="submit" className="btn btn-primary" disabled={loading}>
+                {loading ? 'Загрузка...' : 'Войти'}
+              </button>
+              <button type="button" className="btn btn-secondary" onClick={onClose} disabled={loading}>
+                Отмена
+              </button>
+              <button type="button" className="btn btn-secondary" onClick={() => setIsLoginMode(false)}>
+                Создать аккаунт →
               </button>
             </div>
           </form>
@@ -267,17 +317,28 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess }) {
               placeholder="Телефон"
               value={phone}
               onChange={(e) => {
-                const value = e.target.value.replace(/\D/g, ''); // Удаляем все нецифровые символы
+                const value = e.target.value.replace(/\D/g, '');
                 setPhone(value)}}
               maxLength={11}
             />
-            <input
-              className="input mt-2"
-              type="password"
-              placeholder="Пароль"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
+            <div className="password-field-wrapper">
+              <input
+                className="input mt-2 password-input"
+                type={showRegisterPassword ? 'text' : 'password'}
+                placeholder="Пароль"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+              <button
+                type="button"
+                className="password-toggle-btn"
+                onClick={() => setShowRegisterPassword(!showRegisterPassword)}
+                tabIndex="-1"
+                title={showRegisterPassword ? 'Скрыть пароль' : 'Показать пароль'}
+              >
+                <EyeIcon isVisible={showRegisterPassword} size={20} />
+              </button>
+            </div>
             {hovered !== false && (
               <input
                 className="input mt-2"
@@ -303,11 +364,11 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess }) {
 
             {error && <div className="text-danger mt-2">{error}</div>}
 
-            <div className="mt-3">
+            <div className="mt-3 button-group">
               {/* Кнопка отправить код*/}
               {codeStage === 'email' && (
                 <button onClick={() => сonfirmEmail(email)} type="button" className="btn btn-primary" disabled={loading}>
-                  {loading ? 'Загрузка...' : 'Подтвердить код'}
+                  {loading ? 'Загрузка...' : 'Подтвердить email'}
                 </button>
               )}
 
@@ -325,14 +386,11 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess }) {
                 </button>
               )}
 
-              <button type="button" className="btn btn-link" onClick={onClose} disabled={loading}>
+              <button type="button" className="btn btn-secondary" onClick={onClose} disabled={loading}>
                 Отмена
               </button>
-            </div>
-
-            <div className="mt-3 text-center">
-              <button type="button" className="btn btn-link" onClick={() => setIsLoginMode(true)}>
-                Вернуться к входу
+              <button type="button" className="btn btn-secondary" onClick={() => setIsLoginMode(true)}>
+                ← Вернуться к входу
               </button>
             </div>
           </form>

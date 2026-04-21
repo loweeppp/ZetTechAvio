@@ -20,6 +20,15 @@
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
+.modal-box-register {
+  background: white;
+  padding: 30px;
+  border-radius: 8px;
+  max-width: 400px;
+  width: 90%;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
 .modal-box h3 {
   margin-top: 0;
   margin-bottom: 20px;
@@ -52,13 +61,16 @@
   border-radius: 4px;
   cursor: pointer;
   font-size: 14px;
-  margin-right: 10px;
   transition: 0.2s;
+  min-width: 100px;
+  flex: 1;
 }
 
 .btn-primary {
   background: #007bff;
   color: white;
+  margin-bottom: 8px;
+  width: 100%;
 }
 
 .btn-primary:hover:not(:disabled) {
@@ -70,12 +82,32 @@
   cursor: not-allowed;
 }
 
+.btn-secondary {
+  background: #f0f0f0;
+  color: #333;
+  border: 1px solid #ddd;
+  margin-bottom: 0;
+  width: 100%;
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: #e0e0e0;
+  border-color: #999;
+}
+
+.btn-secondary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .btn-link {
   background: none;
   color: #007bff;
   text-decoration: underline;
-  padding: 0;
+  padding: 8px 0;
   margin: 0;
+  width: 100%;
+  margin-bottom: 8px;
 }
 
 .btn-link:hover:not(:disabled) {
@@ -96,10 +128,13 @@ label {
   display: flex;
   align-items: center;
   font-size: 14px;
+  line-height: 1.4;
 }
 
 label input {
   margin-right: 8px;
+  margin-top: 2px;
+  flex-shrink: 0;
 }
 
 .privacy-link {
@@ -115,4 +150,60 @@ label input {
   color: #0052cc;
   border-bottom-color: #0066FF;
   text-decoration: underline;
+}
+
+.button-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.button-group .btn {
+  margin-bottom: 0;
+}
+
+.policy-label {
+  line-height: 1.5 !important;
+  margin-top: 15px !important;
+}
+
+.password-field-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  margin-top: 10px;
+}
+
+.password-input {
+  margin-top: 0 !important;
+  padding-right: 40px;
+}
+
+.password-toggle-btn {
+  position: absolute;
+  right: 10px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 5px 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  color: #666;
+  width: 32px;
+  height: 32px;
+}
+
+.password-toggle-btn:hover {
+  color: #333;
+  opacity: 0.8;
+}
+
+.password-toggle-btn:active {
+  opacity: 0.6;
+}
+
+.password-toggle-btn svg {
+  stroke: currentColor;
 }

@@ -63,7 +63,8 @@ namespace ZetTechAvio1._0.Services
                     return null;
                 }
 
-                // 2. Создать платеж в YooKassa через REST API
+                // 2. Создать платеж в YooKassa через REST API 
+                
                 var requestBody = new
                 {
                     amount = new
@@ -214,13 +215,13 @@ namespace ZetTechAvio1._0.Services
                                 <p><strong>Дата/время платежа:</strong> {payment.UpdatedAt:dd.MM.yyyy HH:mm:ss}</p>
                             </div>
 
-                            <h3 style='color: #333;'>📱 Ваш QR-код билета:</h3>
+                            <h3 style='color: #333;'> Ваш QR-код билета:</h3>
                             <div style='background: #fff; padding: 15px; border: 1px solid #ddd; border-radius: 5px; margin: 20px 0; font-family: monospace; font-size: 10px; line-height: 1.2; white-space: pre;'>
 {qrCodeData}
                             </div>
 
                             <p style='color: #666; font-size: 12px;'>
-                                ℹ️ QR-код содержит информацию о вашем бронировании. Покажите его при регистрации в аэропорту.
+                                 QR-код содержит информацию о вашем бронировании. Покажите его при регистрации в аэропорту.
                             </p>
 
                             <div style='margin-top: 30px; padding-top: 15px; border-top: 1px solid #ddd;'>
@@ -241,7 +242,7 @@ namespace ZetTechAvio1._0.Services
 
                     _logger.LogInformation($"[PAYMENT_EMAIL] Отправка письма на {userEmail}");
                     await smtp.SendMailAsync(mail);
-                    _logger.LogInformation($"[PAYMENT_EMAIL] ✅ Письмо успешно отправлено на {userEmail}");
+                    _logger.LogInformation($"[PAYMENT_EMAIL] Письмо успешно отправлено на {userEmail}");
                 }
             }
             catch (Exception ex)
@@ -336,7 +337,7 @@ namespace ZetTechAvio1._0.Services
                     // Обновляем статус если платёж успешен
                     if (status == "succeeded" && paid)
                     {
-                        _logger.LogInformation($"[PAYMENT_VERIFY] ✅ Платеж {yooKassaPaymentId} успешно подтверждён!");
+                        _logger.LogInformation($"[PAYMENT_VERIFY] Платеж {yooKassaPaymentId} успешно подтверждён!");
 
                         payment.Status = Payment.PaymentStatus.Succeeded;
                         payment.UpdatedAt = DateTime.UtcNow;
@@ -365,7 +366,7 @@ namespace ZetTechAvio1._0.Services
                     }
                     else if (status == "failed" || status == "canceled")
                     {
-                        _logger.LogWarning($"[PAYMENT_VERIFY] ⚠️ Платеж {yooKassaPaymentId} отклонён: {status}");
+                        _logger.LogWarning($"[PAYMENT_VERIFY] Платеж {yooKassaPaymentId} отклонён: {status}");
                         
                         payment.Status = Payment.PaymentStatus.Failed;
                         payment.UpdatedAt = DateTime.UtcNow;
