@@ -105,7 +105,7 @@ export default function UserProfile() {
         <>
             <div className="profile-page">
                 <div className="profile-container">
-                    <h1>👤 Мой Профиль</h1>
+                    <h1>Мой Профиль</h1>
 
                     {/* Основная информация */}
                     <div className="profile-section">

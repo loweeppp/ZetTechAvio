@@ -1,0 +1,126 @@
+.footerv2 {
+  border-top: 1px solid rgba(226, 232, 240, 1);
+  background: #fff;
+  color: #0f172a;
+}
+
+.footerv2__container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 56px 24px;
+}
+
+.footerv2__grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 28px;
+}
+
+@media (min-width: 768px) {
+  .footerv2__grid {
+    grid-template-columns: 2fr 1fr 1fr;
+    gap: 40px;
+  }
+}
+
+.footerv2__logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.footerv2__mark {
+  width: 36px;
+  height: 36px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #2563eb, #4f46e5);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.footerv2__plane {
+  width: 16px;
+  height: 16px;
+  transform: rotate(-45deg);
+}
+
+.footerv2__name {
+  letter-spacing: -0.01em;
+}
+
+.footerv2__nameAccent {
+  color: #2563eb;
+}
+
+.footerv2__desc {
+  margin: 16px 0 0;
+  max-width: 420px;
+  color: #475569;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.footerv2__title {
+  font-size: 14px;
+  letter-spacing: -0.01em;
+  color: #0f172a;
+}
+
+.footerv2__links {
+  list-style: none;
+  padding: 0;
+  margin: 16px 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  color: #475569;
+  font-size: 14px;
+}
+
+.footerv2__link {
+  text-decoration: none;
+  color: inherit;
+  transition: color 0.15s ease;
+}
+
+.footerv2__link:hover {
+  color: #0f172a;
+}
+
+.footerv2__bottom {
+  margin-top: 40px;
+  padding-top: 18px;
+  border-top: 1px solid rgba(241, 245, 249, 1);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 12px;
+  color: #64748b;
+}
+
+@media (min-width: 640px) {
+  .footerv2__bottom {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+}
+
+.footerv2__bottomLinks {
+  display: flex;
+  gap: 18px;
+}
+
+.footerv2__bottomLink {
+  text-decoration: none;
+  color: inherit;
+  transition: color 0.15s ease;
+}
+
+.footerv2__bottomLink:hover {
+  color: #0f172a;
+}
+

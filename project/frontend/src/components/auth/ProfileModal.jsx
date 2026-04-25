@@ -3,6 +3,33 @@ import './ProfileModal.css';
 
 const API_URL = process.env.REACT_APP_API_URL || 'https://api.zettechavio.ru';
 
+function FloatingInput({
+  id,
+  label,
+  type = 'text',
+  value,
+  onChange,
+  disabled = false,
+  placeholder,
+}) {
+  return (
+    <div className="floating-input-wrapper">
+      <input
+        id={id}
+        type={type}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        disabled={disabled}
+        placeholder=" "
+        className="floating-input"
+      />
+      <label htmlFor={id} className="floating-label">
+        {label}
+      </label>
+    </div>
+  );
+}
+
 export default function ProfileModal({ isOpen, onClose, user, onLogout, onChange }) {
 
   const [changeMode, setChangeMode] = useState(false);
@@ -97,59 +124,111 @@ export default function ProfileModal({ isOpen, onClose, user, onLogout, onChange
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-box" onClick={(e) => e.stopPropagation()}>
-        <div className="profile-header">
+        {/* Header */}
+        <div className="modal-header">
           <h3>Мой профиль</h3>
-          <button type="button" className="btn-close" onClick={onClose}> ✕ </button>
+          <button
+            type="button"
+            onClick={onClose}
+            className="modal-close-btn"
+            title="Закрыть"
+          >
+            ✕
+          </button>
         </div>
 
-        <div className="profile-content">
-          <div className="profile-item">
-            <label>Имя:</label>
-            <input type="text" value={fullName} onChange={(e) => setFullName(e.target.value)}
-              disabled={!changeMode} className={changeMode ? ("profile-item-change") : ("profile-item-input")} />
-          </div>
+        {/* Content */}
+        <div className="modal-content">
+          <FloatingInput
+            id="fullName"
+            label="Полное имя"
+            type="text"
+            value={fullName}
+            onChange={setFullName}
+            disabled={!changeMode}
+          />
 
-          <div className="profile-item">
-            <label>Email:</label>
-            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)}
-              disabled={!changeMode} className={changeMode ? ("profile-item-change") : ("profile-item-input")} />
-          </div>
+          <FloatingInput
+            id="email"
+            label="Email"
+            type="email"
+            value={email}
+            onChange={setEmail}
+            disabled={!changeMode}
+          />
 
-          <div className="profile-item">
-            <label>Телефон:</label>
-            <input type="text" value={phone} onChange={(e) => setPhone(e.target.value)}
-              disabled={!changeMode} className={changeMode ? ("profile-item-change") : ("profile-item-input")} />
-          </div>
+          <FloatingInput
+            id="phone"
+            label="Телефон"
+            type="text"
+            value={phone}
+            onChange={setPhone}
+            disabled={!changeMode}
+          />
 
-          <div className="profile-item">
-            <label>Пароль:</label>
-            <input type="password" value={password} onChange={(e) => setPassword(e.target.value)}
-              disabled={!changeMode} placeholder={changeMode ? "Введите новый пароль" : "••••••••"} className={changeMode ? ("profile-item-change") : ("profile-item-input")} />
-          </div>
+          <FloatingInput
+            id="password"
+            label="Пароль"
+            type="password"
+            value={password}
+            onChange={setPassword}
+            disabled={!changeMode}
+            placeholder={changeMode ? "Введите новый пароль" : ""}
+          />
 
-          <div className="profile-item">
-            <label>Дата регистрации:</label>
-            <p>{new Date(user.createdAt).toLocaleDateString('ru-RU')}</p>
+          {/* Registration date */}
+          <div style={{ marginBottom: '1.5rem' }}>
+            <label className="profile-date-label">
+              Дата регистрации
+            </label>
+            <p className="profile-date-value">
+              {new Date(user.createdAt).toLocaleDateString('ru-RU')}
+            </p>
           </div>
         </div>
 
-        {error && <div className="text-danger mt-2">{error}</div>}
+        {/* Error message */}
+        {error && <div className="error-message">{error}</div>}
 
-
+        {/* Actions */}
         <div className="profile-actions">
-          <button type="button" className="btn btn-danger" onClick={handleLogout}>
+          <button
+            type="button"
+            onClick={handleLogout}
+            className="btn btn-danger"
+          >
             Выход
           </button>
 
           {changeMode ? (
-            <button type="button" className="btn btn-secondary" onClick={() => { handleChangeMode(); handleSaveChanges(); }}> Сохранить </button>
+            <>
+              <button
+                type="button"
+                onClick={() => {
+                  handleChangeMode();
+                  handleSaveChanges();
+                }}
+                className="btn btn-submit"
+              >
+                Сохранить
+              </button>
+              <button
+                type="button"
+                onClick={handleChangeMode}
+                className="btn btn-secondary"
+              >
+                Отменить
+              </button>
+            </>
           ) : (
-            <button type="button" className="btn btn-change" onClick={handleChangeMode}> Изменить</button>
+            <button
+              type="button"
+              onClick={handleChangeMode}
+              className="btn btn-submit"
+            >
+              Изменить
+            </button>
           )}
-
-          {changeMode ? (
-            <button type="button" className="btn btn-change" onClick={handleChangeMode}> Отменить</button>
-          ) : (<></>)}
         </div>
       </div>
     </div>

@@ -2,7 +2,35 @@ import { useEffect, useState, useRef, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { EyeIcon } from '../../images/EyeIcon';
 import './AuthModal.css';
-import { hover } from '@testing-library/user-event/dist/hover';
+
+function FloatingInput({
+  id,
+  label,
+  type = 'text',
+  value,
+  onChange,
+  disabled = false,
+  placeholder,
+  maxLength,
+}) {
+  return (
+    <div className="floating-input-wrapper">
+      <input
+        id={id}
+        type={type}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        disabled={disabled}
+        maxLength={maxLength}
+        placeholder=" "
+        className="floating-input"
+      />
+      <label htmlFor={id} className="floating-label">
+        {label}
+      </label>
+    </div>
+  );
+}
 
 export default function AuthModal({ isOpen, onClose, onLoginSuccess }) {
 
@@ -247,47 +275,67 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess }) {
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-box-register" onClick={(e) => e.stopPropagation()}>
+      <div className="modal-box" onClick={(e) => e.stopPropagation()}>
         {isLoginMode ? (
           // РЕЖИМ ВХОДА
           <form onSubmit={handleLogin}>
-            <h3>Вход в аккаунт</h3>
-            <input
-              className="input"
+            <h3 className="modal-title">Вход в аккаунт</h3>
+
+            <FloatingInput
+              id="login-email"
+              label="Email"
               type="email"
-              placeholder="Email"
               value={loginEmail}
-              onChange={(e) => setLoginEmail(e.target.value)}
+              onChange={setLoginEmail}
             />
-            <div className="password-field-wrapper">
+
+            <div className="password-input-wrapper">
               <input
-                className="input mt-2 password-input"
+                id="login-password"
                 type={showLoginPassword ? 'text' : 'password'}
-                placeholder="Пароль"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                placeholder=" "
+                className="password-input"
               />
+              <label htmlFor="login-password" className="password-label">
+                Пароль
+              </label>
               <button
                 type="button"
-                className="password-toggle-btn"
                 onClick={() => setShowLoginPassword(!showLoginPassword)}
                 tabIndex="-1"
-                title={showLoginPassword ? 'Скрыть пароль' : 'Показать пароль'}
+                className="password-toggle"
               >
                 <EyeIcon isVisible={showLoginPassword} size={20} />
               </button>
             </div>
 
-            {error && <div className="text-danger mt-2">{error}</div>}
+            {error && <div className="error-message">{error}</div>}
 
-            <div className="mt-3 button-group">
-              <button type="submit" className="btn btn-primary" disabled={loading}>
+            <div className="button-group">
+              <button
+                type="submit"
+                disabled={loading}
+                className="btn btn-submit"
+              >
                 {loading ? 'Загрузка...' : 'Войти'}
               </button>
-              <button type="button" className="btn btn-secondary" onClick={onClose} disabled={loading}>
+
+              <button
+                type="button"
+                onClick={onClose}
+                disabled={loading}
+                className="btn btn-secondary"
+              >
                 Отмена
               </button>
-              <button type="button" className="btn btn-secondary" onClick={() => setIsLoginMode(false)}>
+
+              <button
+                type="button"
+                onClick={() => setIsLoginMode(false)}
+                className="btn btn-outline"
+              >
                 Создать аккаунт →
               </button>
             </div>
@@ -295,101 +343,143 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess }) {
         ) : (
           // РЕЖИМ РЕГИСТРАЦИИ
           <form onSubmit={handleRegister}>
-            <h3>Регистрация</h3>
-            <input
-              className="input"
+            <h3 className="modal-title">Регистрация</h3>
+
+            <FloatingInput
+              id="reg-fullname"
+              label="Полное имя"
               type="text"
-              placeholder="Имя"
               value={fullName}
-              onChange={(e) => setFullName(e.target.value)}
+              onChange={setFullName}
             />
-            <input
-              className="input mt-2"
+
+            <FloatingInput
+              id="reg-email"
+              label="Email"
               type="email"
-              placeholder="Email"
               value={email}
-              codeStage={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={setEmail}
             />
-            <input
-              className="input mt-2"
+
+            <FloatingInput
+              id="reg-phone"
+              label="Телефон"
               type="tel"
-              placeholder="Телефон"
               value={phone}
-              onChange={(e) => {
-                const value = e.target.value.replace(/\D/g, '');
-                setPhone(value)}}
+              onChange={(val) => {
+                const value = val.replace(/\D/g, '');
+                setPhone(value);
+              }}
               maxLength={11}
             />
-            <div className="password-field-wrapper">
+
+            <div className="password-input-wrapper">
               <input
-                className="input mt-2 password-input"
+                id="reg-password"
                 type={showRegisterPassword ? 'text' : 'password'}
-                placeholder="Пароль"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                placeholder=" "
+                className="password-input"
               />
+              <label htmlFor="reg-password" className="password-label">
+                Пароль
+              </label>
               <button
                 type="button"
-                className="password-toggle-btn"
                 onClick={() => setShowRegisterPassword(!showRegisterPassword)}
                 tabIndex="-1"
-                title={showRegisterPassword ? 'Скрыть пароль' : 'Показать пароль'}
+                className="password-toggle"
               >
                 <EyeIcon isVisible={showRegisterPassword} size={20} />
               </button>
             </div>
+
             {hovered !== false && (
-              <input
-                className="input mt-2"
-                type="code"
-                placeholder="Код подтверждения"
+              <FloatingInput
+                id="reg-code"
+                label="Код подтверждения"
+                type="text"
                 value={code}
+                onChange={(val) => {
+                  const value = val.replace(/\D/g, '');
+                  setCode(value);
+                }}
                 maxLength={6}
-                onChange={(e) => {
-                  const value = e.target.value.replace(/\D/g, ''); // Удаляем все нецифровые символы
-                  setCode(value)}}
               />
             )}
 
-
-            <label className="mt-2">
+            <label className="policy-checkbox-label">
               <input
                 type="checkbox"
                 checked={agreeToPolicy}
                 onChange={(e) => setAgreeToPolicy(e.target.checked)}
               />
-              <span> Я согласен с <Link to="/privacy" target="_blank" className="privacy-link">политикой конфиденциальности</Link></span>
+              <span>
+                Я согласен с{' '}
+                <Link
+                  to="/privacy"
+                  target="_blank"
+                  className="privacy-link"
+                >
+                  политикой конфиденциальности
+                </Link>
+              </span>
             </label>
 
-            {error && <div className="text-danger mt-2">{error}</div>}
+            {error && <div className="error-message">{error}</div>}
 
-            <div className="mt-3 button-group">
+            <div className="button-group">
               {/* Кнопка отправить код*/}
               {codeStage === 'email' && (
-                <button onClick={() => сonfirmEmail(email)} type="button" className="btn btn-primary" disabled={loading}>
+                <button
+                  onClick={() => сonfirmEmail(email)}
+                  type="button"
+                  disabled={loading}
+                  className="btn btn-submit"
+                >
                   {loading ? 'Загрузка...' : 'Подтвердить email'}
                 </button>
               )}
 
               {/* Кнопка подтвердить код*/}
               {codeStage === 'code' && (
-                <button onClick={() => confirmCode(email, code)} type="button" className="btn btn-primary" disabled={loading}>
+                <button
+                  onClick={() => confirmCode(email, code)}
+                  type="button"
+                  disabled={loading}
+                  className="btn btn-submit"
+                >
                   {loading ? 'Загрузка...' : 'Подтвердить код'}
                 </button>
               )}
 
               {/* Кнопка Создать аккаунт*/}
               {codeStage === 'confirmed' && (
-                <button onClick={() => handleRegister()} type="button" className="btn btn-primary" disabled={loading}>
+                <button
+                  onClick={() => handleRegister()}
+                  type="button"
+                  disabled={loading}
+                  className="btn btn-submit"
+                >
                   {loading ? 'Загрузка...' : 'Создать аккаунт'}
                 </button>
               )}
 
-              <button type="button" className="btn btn-secondary" onClick={onClose} disabled={loading}>
+              <button
+                type="button"
+                onClick={onClose}
+                disabled={loading}
+                className="btn btn-secondary"
+              >
                 Отмена
               </button>
-              <button type="button" className="btn btn-secondary" onClick={() => setIsLoginMode(true)}>
+
+              <button
+                type="button"
+                onClick={() => setIsLoginMode(true)}
+                className="btn btn-outline"
+              >
                 ← Вернуться к входу
               </button>
             </div>

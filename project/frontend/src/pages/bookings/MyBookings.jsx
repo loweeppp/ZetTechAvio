@@ -78,13 +78,13 @@ export default function MyBookings() {
   return (
     <div className="my-bookings">
       <div className="bookings-container">
-        <h1>🎫 Мои Билеты</h1>
+        <h1>Мои Билеты</h1>
         
         {/* Фильтры */}
         <div className="filter-tabs">
           {[
-            { id: 'all', label: '📋 Все', icon: '📋' },
-            { id: 'active', label: '✈️ Активные', icon: '✈️' },
+            { id: 'all', label: 'Все',  },
+            { id: 'active', label: 'Активные',  },
             { id: 'completed', label: '✅ Завершенные', icon: '✅' },
             { id: 'cancelled', label: '❌ Отменены', icon: '❌' }
           ].map(f => (
