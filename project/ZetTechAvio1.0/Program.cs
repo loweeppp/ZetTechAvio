@@ -69,6 +69,15 @@ else
 // Также зарегистрируем стандартный HttpClientFactory
 builder.Services.AddHttpClient();
 
+var llmApiBase = builder.Configuration["LLM:ApiBase"] ?? "http://10.8.1.1:1234/v1";
+builder.Services.AddHttpClient("OpenAI", client =>
+{
+    client.BaseAddress = new Uri(llmApiBase);
+    client.Timeout = TimeSpan.FromSeconds(60);
+});
+
+builder.Services.AddScoped<ILLMService, LLMService>();
+
 // Поддержка Razor Components
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();

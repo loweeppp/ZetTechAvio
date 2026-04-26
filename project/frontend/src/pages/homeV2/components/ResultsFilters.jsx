@@ -75,18 +75,6 @@ export default function ResultsFilters() {
         </div>
       </FilterGroup>
 
-      <FilterGroup title="Авиакомпании" last>
-        <div className="homev2res__airlines">
-          {AIRLINES.map((a) => (
-            <Checkbox
-              key={a}
-              label={a}
-              checked={airlines.includes(a)}
-              onChange={() => toggle(airlines, a, setAirlines)}
-            />
-          ))}
-        </div>
-      </FilterGroup>
     </aside>
   );
 }

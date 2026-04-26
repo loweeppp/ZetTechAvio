@@ -1,17 +1,19 @@
 import React from 'react';
 import { Sparkles, ArrowRight, Loader2, RotateCcw } from 'lucide-react';
 
+const API_URL = process.env.REACT_APP_API_URL || 'https://api.zettechavio.ru';
+
 const CITIES = [
-  { code: 'MOW', name: 'Moscow', airport: 'SVO/DME/VKO' },
-  { code: 'LED', name: 'Saint Petersburg', airport: 'LED' },
-  { code: 'KZN', name: 'Kazan', airport: 'KZN' },
-  { code: 'AER', name: 'Sochi', airport: 'AER' },
-  { code: 'IST', name: 'Istanbul', airport: 'IST' },
-  { code: 'DXB', name: 'Dubai', airport: 'DXB' },
-  { code: 'LON', name: 'London', airport: 'LHR/LGW' },
-  { code: 'PAR', name: 'Paris', airport: 'CDG/ORY' },
-  { code: 'BKK', name: 'Bangkok', airport: 'BKK' },
-  { code: 'NYC', name: 'New York', airport: 'JFK/LGA/EWR' },
+  { code: 'MOW', name: 'Москва', airport: 'SVO/DME/VKO', query: 'Москва' },
+  { code: 'LED', name: 'Санкт-Петербург', airport: 'LED', query: 'Санкт-Петербург' },
+  { code: 'KZN', name: 'Казань', airport: 'KZN', query: 'Казань' },
+  { code: 'AER', name: 'Сочи', airport: 'AER', query: 'Сочи' },
+  { code: 'IST', name: 'Стамбул', airport: 'IST', query: 'Стамбул' },
+  { code: 'DXB', name: 'Дубай', airport: 'DXB', query: 'Дубай' },
+  { code: 'LON', name: 'Лондон', airport: 'LHR/LGW', query: 'Лондон' },
+  { code: 'PAR', name: 'Париж', airport: 'CDG/ORY', query: 'Париж' },
+  { code: 'BKK', name: 'Бангкок', airport: 'BKK', query: 'Бангкок' },
+  { code: 'NYC', name: 'Нью-Йорк', airport: 'JFK/LGA/EWR', query: 'Нью-Йорк' },
 ];
 
 const EXAMPLES = [
@@ -68,10 +70,36 @@ function parseLLMResponse(text) {
   return { from, to, date, passengers, reasoning };
 }
 
+const formatDate = (value) => (value ? String(value).split('-').reverse().join('.') : '');
+const prepareSearchValue = (field) => {
+  if (!field) return '';
+  if (typeof field === 'object') return field.query || field.name || field.code || '';
+  return String(field);
+};
+
+const isRussianText = (text) => /[а-яА-ЯЁё]/.test(String(text || ''));
+
+const buildFallbackReasoning = ({ from, to, date, passengers, explicitPassengers }) => {
+  const parts = [];
+  if (from) parts.push(`от ${from.name}`);
+  if (to) parts.push(`в ${to.name}`);
+  if (date) parts.push(`дата ${formatDate(date)}`);
+  if (explicitPassengers || passengers > 1) {
+    parts.push(`${passengers} пассажир${passengers === 1 ? '' : passengers < 5 ? 'а' : 'ов'}`);
+  }
+
+  if (parts.length > 0) {
+    return `Распознан запрос: ${parts.join(', ')}.`;
+  }
+
+  return 'Распознан запрос. Уточните маршрут, дату или количество пассажиров.';
+};
+
 export default function AISearch({ onSearch }) {
   const [query, setQuery] = React.useState('');
   const [loading, setLoading] = React.useState(false);
   const [result, setResult] = React.useState(null);
+  const [error, setError] = React.useState('');
   const [exampleIdx, setExampleIdx] = React.useState(0);
   const textareaRef = React.useRef(null);
 
@@ -83,15 +111,104 @@ export default function AISearch({ onSearch }) {
     return () => clearInterval(id);
   }, []);
 
+  const resolveCity = (value) => {
+    if (!value) return null;
+    const normalized = String(value).trim();
+    const byCode = CITIES.find((c) => c.code === normalized.toUpperCase());
+    if (byCode) return byCode;
+    const byName = CITIES.find(
+      (c) =>
+        c.name.toLowerCase() === normalized.toLowerCase() ||
+        (c.query || '').toLowerCase() === normalized.toLowerCase(),
+    );
+    if (byName) return byName;
+    return { code: normalized.toUpperCase(), name: normalized, airport: normalized, query: normalized };
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!query.trim()) return;
     setLoading(true);
+    setError('');
     setResult(null);
-    await new Promise((r) => setTimeout(r, 1400));
-    const parsed = parseLLMResponse(query);
-    setResult(parsed);
-    setLoading(false);
+
+    try {
+      const response = await fetch(`${API_URL}/api/ai/parse`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ text: query.trim() }),
+      });
+
+      if (!response.ok) {
+        const payload = await response.json().catch(() => null);
+        throw new Error(payload?.message || 'Ошибка анализа запроса');
+      }
+
+      const payload = await response.json();
+      const hasSearchValue = payload?.from || payload?.to || payload?.date;
+      if (!hasSearchValue) {
+        throw new Error('ИИ не смог понять параметры поиска. Попробуйте переформулировать запрос.');
+      }
+
+      const explicitPassengers = payload?.passengers != null;
+      const parsed = {
+        from: payload?.from ? resolveCity(payload.from) : null,
+        to: payload?.to ? resolveCity(payload.to) : null,
+        date: payload?.date || '',
+        passengers: payload?.passengers || 1,
+        showPassengers: explicitPassengers || (payload?.passengers || 1) > 1,
+        reasoning: isRussianText(payload?.reasoning)
+          ? payload.reasoning
+          : buildFallbackReasoning({
+              from: payload?.from ? resolveCity(payload.from) : null,
+              to: payload?.to ? resolveCity(payload.to) : null,
+              date: payload?.date || '',
+              passengers: payload?.passengers || 1,
+              explicitPassengers,
+            }),
+      };
+
+      if (parsed.from && parsed.to) {
+        try {
+          const routeParams = new URLSearchParams();
+          routeParams.append('from', prepareSearchValue(parsed.from));
+          routeParams.append('to', prepareSearchValue(parsed.to));
+          const routeResponse = await fetch(`${API_URL}/api/flights/search?${routeParams.toString()}`);
+          if (routeResponse.ok) {
+            const routeFlights = await routeResponse.json() || [];
+            const availableDates = Array.from(
+              new Set(
+                routeFlights
+                  .map((flight) => flight.departureDt?.slice(0, 10))
+                  .filter(Boolean),
+              ),
+            ).sort();
+
+            if (parsed.date && availableDates.length > 0 && !availableDates.includes(parsed.date)) {
+              const dateList = availableDates.slice(0, 5).map(formatDate).join(', ');
+              parsed.reasoning = `На эту дату нет рейсов, но есть на эти даты: ${dateList}`;
+            } else if (!parsed.date && availableDates.length > 0) {
+              const dateList = availableDates.slice(0, 5).map(formatDate).join(', ');
+              parsed.reasoning = `Есть рейсы на маршруте ${parsed.from.name} → ${parsed.to.name}. Доступные даты: ${dateList}`;
+            } else if (routeFlights.length === 0) {
+              parsed.reasoning = `По маршруту ${parsed.from.name} → ${parsed.to.name} рейсов не найдено.`;
+            }
+          }
+        } catch (fetchError) {
+          console.warn('Route check failed', fetchError);
+        }
+      }
+
+      setResult(parsed);
+    } catch (err) {
+      console.error('AI parse error:', err);
+      setError(err instanceof Error ? err.message : 'Не удалось распознать запрос');
+      setResult(parseLLMResponse(query));
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleReset = () => {
@@ -178,20 +295,23 @@ export default function AISearch({ onSearch }) {
             </div>
           </div>
 
+          {error && <div className="homev2__aiError">{error}</div>}
           {result && (
             <div className="homev2__aiResult">
               <div>
+                {result.reasoning && (
                 <div className="homev2__aiReason">
                   <Sparkles className="homev2__aiReasonIcon" />
                   <span>{result.reasoning}</span>
                 </div>
-                <div className="homev2__aiChips">
-                  <Chip>{result.from.name}</Chip>
-                  <span className="homev2__aiArrow">→</span>
-                  <Chip>{result.to.name}</Chip>
-                  <Chip>{String(result.date).split('-').reverse().join('.')}</Chip>
-                  <Chip>{result.passengers} пасс.</Chip>
-                </div>
+              )}
+              <div className="homev2__aiChips">
+                {result.from && <Chip>{result.from.name}</Chip>}
+                {result.from && result.to && <span className="homev2__aiArrow">→</span>}
+                {result.to && <Chip>{result.to.name}</Chip>}
+                {result.date && <Chip>{formatDate(result.date)}</Chip>}
+                {result.showPassengers && <Chip>{result.passengers} пасс.</Chip>}
+              </div>
               </div>
 
               <button

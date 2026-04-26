@@ -88,6 +88,12 @@
     display: flex;
     align-items: center;
     gap: 0.5rem;
+    background-color: rgba(68, 78, 231, 1);
+    background: radial-gradient(ellipse at 50% 50%, rgba(43, 104, 235, 1) 32%, rgba(227, 227, 227, 1) 83%);
+    border-color: rgba(0, 0, 0, 0);
+    border-image: none;
+    box-shadow: 0px 4px 12px 0px rgba(0, 0, 0, 0.15);
+    border-radius: 16px;
 }
 
 .logo-text {
@@ -148,7 +154,7 @@
     max-width: 87%;
     margin: 0 auto;
     align-items: center;
-        
+
 
 }
 
@@ -173,8 +179,10 @@
 }
 
 .nav-tabs.open .nav-tab {
-    opacity: 1;  /* Текст видно когда .open активен */
+    opacity: 1;
+    /* Текст видно когда .open активен */
 }
+
 .nav-tab-profile {
     text-decoration: none;
     color: white;

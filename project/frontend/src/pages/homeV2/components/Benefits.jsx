@@ -14,8 +14,8 @@ const ITEMS = [
   },
   {
     Icon: Headphones,
-    title: 'Поддержка 24/7',
-    text: 'Живые люди в любой точке мира, готовые помочь при изменении планов.',
+    title: 'Контакты',
+    text: 'Есть вопросы? Напишите нам на ZetTechAvioBot@mail.ru — ответим как можно скорее.',
   },
   {
     Icon: ShieldCheck,

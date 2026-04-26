@@ -1,8 +1,28 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { ArrowLeft, BarChart3, Lock, LogOut, User } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import AuthModal from '../../components/auth/AuthModal';
 import ProfileModal from '../../components/auth/ProfileModal';
 import './UserProfile.css';
+
+const API_URL = process.env.REACT_APP_API_URL || 'https://api.zettechavio.ru';
+
+function formatMoney(value) {
+  return Number(value || 0).toLocaleString('ru-RU');
+}
+
+function getUserInitials(fullName, email) {
+  if (fullName) {
+    return fullName
+      .split(' ')
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((part) => part[0]?.toUpperCase())
+      .join('');
+  }
+  return email?.[0]?.toUpperCase() || 'U';
+}
 
 export default function UserProfile() {
     const { currentUser, logout, changeUser } = useAuth();
@@ -83,103 +103,148 @@ export default function UserProfile() {
     };
 
     const handleLoginSuccess = async (loginResponse) => {
-        // Обработка успешного входа если нужна
+        setIsAuthModalOpen(false);
+        if (loginResponse?.user) {
+            changeUser(loginResponse.user);
+        }
     };
+
+    const navigate = useNavigate();
 
     const handleLogout = () => {
         if (window.confirm('Вы уверены, что хотите выйти?')) {
             logout();
-            window.location.href = '/';
+            navigate('/');
         }
     };
 
     if (!currentUser) {
         return (
-            <div className="profile-container">
-                <p>Пожалуйста, авторизуйтесь для просмотра профиля</p>
+            <div className="profile-page profile-page--empty">
+                <div className="profile-shell">
+                    <div className="profile-card profile-card--empty">
+                        <h1>Пожалуйста, авторизуйтесь</h1>
+                        <p>Чтобы просмотреть профиль и историю поездок, войдите в аккаунт.</p>
+                        <button className="btn-primary" onClick={() => setIsAuthModalOpen(true)}>
+                            Войти
+                        </button>
+                    </div>
+                </div>
+                <AuthModal
+                    isOpen={isAuthModalOpen}
+                    onClose={() => setIsAuthModalOpen(false)}
+                    onLoginSuccess={handleLoginSuccess}
+                />
             </div>
         );
     }
 
     return (
-        <>
-            <div className="profile-page">
-                <div className="profile-container">
-                    <h1>Мой Профиль</h1>
+        <div className="profile-page">
+            <div className="profile-shell">
+                <div className="profile-header">
+                    <button className="profile-back" onClick={() => navigate(-1)}>
+                        <ArrowLeft className="profile-back-icon" />
+                        Назад
+                    </button>
+                    <div className="profile-header-copy">
+                        <h1>Мой профиль</h1>
+                        <p className="profile-subtitle">Ваши данные, история поездок и настройки безопасности.</p>
+                    </div>
+                </div>
 
-                    {/* Основная информация */}
-                    <div className="profile-section">
-                        <h2>Личная информация</h2>
-                        <div className="profile-info">
-                            <div className="info-group">
-                                <label>Имя и фамилия:</label>
-                                <p>{currentUser.fullName}</p>
-                            </div>
-                            <div className="info-group">
-                                <label>Email:</label>
-                                <p>{currentUser.email}</p>
-                            </div>
-                            <div className="info-group">
-                                <label>Номер телефона:</label>
-                                <p>{currentUser.phone || currentUser.phoneNumber || 'Не указан'}</p>
+                <div className="profile-grid">
+                    <section className="profile-card profile-card--info">
+                        <div className="profile-card-header">
+                            <div className="profile-avatar">{getUserInitials(currentUser.fullName, currentUser.email)}</div>
+                            <div>
+                                <div className="profile-name">{currentUser.fullName || currentUser.email}</div>
+                                <div className="profile-role">Пассажир</div>
                             </div>
                         </div>
-                    </div>
 
-                    {/* Статистика */}
-                    <div className="profile-section">
-                        <h2>📊 Статистика</h2>
-                        <div className="stats-grid">
-                            <div className="stat-card">
+                        <div className="profile-details">
+                            <div className="profile-detail-row">
+                                <div className="profile-detail-label">Имя и фамилия</div>
+                                <div className="profile-detail-value">{currentUser.fullName || 'Не указано'}</div>
+                            </div>
+                            <div className="profile-detail-row">
+                                <div className="profile-detail-label">Email</div>
+                                <div className="profile-detail-value">{currentUser.email}</div>
+                            </div>
+                            <div className="profile-detail-row">
+                                <div className="profile-detail-label">Телефон</div>
+                                <div className="profile-detail-value">{currentUser.phone || currentUser.phoneNumber || 'Не указан'}</div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section className="profile-card profile-card--stats">
+                        <div className="profile-card-header">
+                            <BarChart3 className="profile-card-icon" />
+                            <div>
+                                <h2>Статистика</h2>
+                                <p>Показатели вашей активности и расходов.</p>
+                            </div>
+                        </div>
+
+                        <div className="stats-grid stats-grid--profile">
+                            <div className="stat-tile">
                                 <div className="stat-value">{loadingStats ? '...' : stats.totalTickets}</div>
                                 <div className="stat-label">Всего билетов</div>
                             </div>
-                            <div className="stat-card">
-                                <div className="stat-value">{loadingStats ? '...' : stats.spent.toLocaleString('ru-RU')}₽</div>
+                            <div className="stat-tile">
+                                <div className="stat-value">{loadingStats ? '...' : `${formatMoney(stats.spent)} ₽`}</div>
                                 <div className="stat-label">Потрачено</div>
                             </div>
-                            <div className="stat-card">
+                            <div className="stat-tile">
                                 <div className="stat-value">{loadingStats ? '...' : stats.activeFlights}</div>
                                 <div className="stat-label">Активные рейсы</div>
                             </div>
-                            <div className="stat-card">
+                            <div className="stat-tile">
                                 <div className="stat-value">{loadingStats ? '...' : stats.completed}</div>
                                 <div className="stat-label">Завершено</div>
                             </div>
                         </div>
-                    </div>
+                    </section>
+                </div>
 
-                    {/* Параметры безопасности */}
-                    <div className="profile-section">
-                        <h2>🔒 Безопасность</h2>
-                        <div className="security-options">
-                            <button className="security-btn" onClick={() => setIsProfileModalOpen(true)}>
-                                <span className="icon">🔐</span>
-                                <span className="btn-text">Изменить пароль</span>
+                <div className="profile-grid profile-grid--tight">
+                    <section className="profile-card profile-card--security">
+                        <div className="profile-card-header">
+                            <Lock className="profile-card-icon" />
+                            <div>
+                                <h2>Безопасность</h2>
+                                <p>Настройте доступ и защиту аккаунта.</p>
+                            </div>
+                        </div>
+
+                        <div className="security-list">
+                            <button className="security-action" onClick={() => setIsProfileModalOpen(true)}>
+                                <span className="security-action-icon"></span>
+                                Изменить пароль
                             </button>
-
-                            <button className="security-btn">
-                                <span className="icon"></span>
-                                <span className="btn-text">Двухфакторная аутентификация</span>
+                            <button className="security-action">
+                                <span className="security-action-icon"></span>
+                                Двухфакторная аутентификация
                             </button>
                         </div>
-                    </div>
+                    </section>
 
-
-
-                    {/* Выход */}
-                    <div className="profile-section logout-section">
-                        <button className="btn-logout" onClick={handleLogout}>
-                            Выход из аккаунта
-                        </button>
-                    </div>
+                    <section className="profile-card profile-card--logout">
+                        <div className="logout-panel">
+                            <div>
+                                <h2>Выйти из аккаунта</h2>
+                                <p>Безопасно завершите сессию и защитите данные.</p>
+                            </div>
+                            <button className="btn-logout" onClick={handleLogout}>
+                                <LogOut className="btn-logout-icon" />
+                                Выйти
+                            </button>
+                        </div>
+                    </section>
                 </div>
             </div>
-            <AuthModal
-                isOpen={isAuthModalOpen}
-                onClose={() => setIsAuthModalOpen(false)}
-                onLoginSuccess={handleLoginSuccess}
-            />
 
             <ProfileModal
                 isOpen={isProfileModalOpen}
@@ -188,7 +253,7 @@ export default function UserProfile() {
                 onLogout={handleLogout}
                 onChange={handleProfileChange}
             />
-        </>
+        </div>
     );
 }
 

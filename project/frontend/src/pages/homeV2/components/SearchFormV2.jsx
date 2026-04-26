@@ -7,20 +7,28 @@ import {
   Search,
 } from 'lucide-react';
 
+const API_URL = process.env.REACT_APP_API_URL || 'https://api.zettechavio.ru';
+
 const CITIES = [
-  { code: 'MOW', name: 'Moscow', airport: 'SVO/DME/VKO' },
-  { code: 'LED', name: 'Saint Petersburg', airport: 'LED' },
-  { code: 'KZN', name: 'Kazan', airport: 'KZN' },
-  { code: 'AER', name: 'Sochi', airport: 'AER' },
-  { code: 'IST', name: 'Istanbul', airport: 'IST' },
-  { code: 'DXB', name: 'Dubai', airport: 'DXB' },
-  { code: 'LON', name: 'London', airport: 'LHR/LGW' },
-  { code: 'PAR', name: 'Paris', airport: 'CDG/ORY' },
-  { code: 'BKK', name: 'Bangkok', airport: 'BKK' },
-  { code: 'NYC', name: 'New York', airport: 'JFK/LGA/EWR' },
+  { code: 'MOW', name: 'Москва', airport: 'SVO/DME/VKO', query: 'Москва' },
+  { code: 'LED', name: 'Санкт-Петербург', airport: 'LED', query: 'Санкт-Петербург' },
+  { code: 'KZN', name: 'Казань', airport: 'KZN', query: 'Казань' },
+  { code: 'AER', name: 'Сочи', airport: 'AER', query: 'Сочи' },
+  { code: 'IST', name: 'Стамбул', airport: 'IST', query: 'Стамбул' },
+  { code: 'DXB', name: 'Дубай', airport: 'DXB', query: 'Дубай' },
+  { code: 'LON', name: 'Лондон', airport: 'LHR/LGW', query: 'Лондон' },
+  { code: 'PAR', name: 'Париж', airport: 'CDG/ORY', query: 'Париж' },
+  { code: 'BKK', name: 'Бангкок', airport: 'BKK', query: 'Бангкок' },
+  { code: 'NYC', name: 'Нью-Йорк', airport: 'JFK/LGA/EWR', query: 'Нью-Йорк' },
 ];
 
-function CityInput({ label, value, onChange, placeholder }) {
+const formatDate = (value) => {
+  if (!value) return '';
+  const parts = String(value).split('-');
+  return parts.length === 3 ? `${parts[2]}.${parts[1]}.${parts[0]}` : String(value);
+};
+
+function CityInput({ label, value, onChange, placeholder, items = CITIES }) {
   const [open, setOpen] = React.useState(false);
   const [query, setQuery] = React.useState('');
   const ref = React.useRef(null);
@@ -33,10 +41,10 @@ function CityInput({ label, value, onChange, placeholder }) {
     return () => document.removeEventListener('mousedown', onDoc);
   }, []);
 
-  const filtered = CITIES.filter((c) => !value || c.code !== value.code).filter(
+  const filtered = items.filter((c) => !value || c.code !== value.code).filter(
     (c) =>
       query
-        ? `${c.name}${c.code}${c.airport}`
+        ? `${c.name}${c.query ?? c.name}${c.code}${c.airport}`
             .toLowerCase()
             .includes(query.toLowerCase())
         : true,
@@ -111,6 +119,13 @@ export default function SearchFormV2({ onSearch }) {
   const [date, setDate] = React.useState('');
   const [passengers, setPassengers] = React.useState(1);
   const [swapping, setSwapping] = React.useState(false);
+  const [error, setError] = React.useState('');
+  const [cities, setCities] = React.useState(CITIES);
+  const [routeMap, setRouteMap] = React.useState({});
+  const [routeDates, setRouteDates] = React.useState({});
+  const [dateOpen, setDateOpen] = React.useState(false);
+  const [dateQuery, setDateQuery] = React.useState('');
+  const dateDropdownRef = React.useRef(null);
 
   const swap = () => {
     setSwapping(true);
@@ -119,11 +134,148 @@ export default function SearchFormV2({ onSearch }) {
     setTo(from);
   };
 
+  React.useEffect(() => {
+    const loadRoutes = async () => {
+      try {
+        const response = await fetch(`${API_URL}/api/flights`);
+        if (!response.ok) return;
+
+        const flights = await response.json();
+        const cityMap = new Map(CITIES.map((item) => [item.code, item]));
+        const map = {};
+        const dates = {};
+
+        const addRoute = (key, city) => {
+          if (!map[key]) map[key] = [];
+          if (!map[key].some((entry) => entry.code === city.code)) {
+            map[key].push(city);
+          }
+        };
+
+        const addDate = (key, dateString) => {
+          if (!dates[key]) dates[key] = new Set();
+          dates[key].add(dateString);
+        };
+
+        flights.forEach((flight) => {
+          const origin = {
+            code: flight.originAirport.iata,
+            name: flight.originAirport.city,
+            airport: flight.originAirport.iata,
+            query: flight.originAirport.city,
+          };
+          const dest = {
+            code: flight.destAirport.iata,
+            name: flight.destAirport.city,
+            airport: flight.destAirport.iata,
+            query: flight.destAirport.city,
+          };
+
+          if (!cityMap.has(origin.code)) cityMap.set(origin.code, origin);
+          if (!cityMap.has(dest.code)) cityMap.set(dest.code, dest);
+
+          const originCodeKey = origin.code.toLowerCase();
+          const originCityKey = origin.query.toLowerCase();
+          const destCodeKey = dest.code.toLowerCase();
+          const destCityKey = (dest.query || dest.name).toLowerCase();
+          const departureDate = flight.departureDt?.slice(0, 10);
+
+          addRoute(originCodeKey, dest);
+          addRoute(originCityKey, dest);
+
+          if (departureDate) {
+            addDate(`${originCodeKey}:${destCodeKey}`, departureDate);
+            addDate(`${originCityKey}:${destCodeKey}`, departureDate);
+            addDate(`${originCodeKey}:${destCityKey}`, departureDate);
+            addDate(`${originCityKey}:${destCityKey}`, departureDate);
+          }
+        });
+
+        setCities([...cityMap.values()]);
+        setRouteMap(map);
+        setRouteDates(
+          Object.fromEntries(
+            Object.entries(dates).map(([key, set]) => [key, [...set].sort()]),
+          ),
+        );
+      } catch (err) {
+        // ignore route fetch errors, keep static cities
+      }
+    };
+
+    loadRoutes();
+  }, []);
+
+  React.useEffect(() => {
+    const onDoc = (e) => {
+      if (dateDropdownRef.current && !dateDropdownRef.current.contains(e.target)) {
+        setDateOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', onDoc);
+    return () => document.removeEventListener('mousedown', onDoc);
+  }, []);
+
+  const availableDestinations = React.useMemo(() => {
+    if (!from) return cities;
+
+    const originKeys = [
+      from.code?.toLowerCase(),
+      (from.query || from.name || '').toLowerCase(),
+    ].filter(Boolean);
+
+    const destinations = [];
+    const added = new Set();
+
+    originKeys.forEach((key) => {
+      const items = routeMap[key] || [];
+      items.forEach((item) => {
+        if (!added.has(item.code)) {
+          added.add(item.code);
+          destinations.push(item);
+        }
+      });
+    });
+
+    return destinations.length > 0 ? destinations : cities;
+  }, [from, cities, routeMap]);
+
+  const availableDates = React.useMemo(() => {
+    if (!from || !to) return [];
+
+    const routeKeys = [
+      `${from.code?.toLowerCase()}:${to.code?.toLowerCase()}`,
+      `${from.query?.toLowerCase()}:${to.code?.toLowerCase()}`,
+      `${from.code?.toLowerCase()}:${to.query?.toLowerCase()}`,
+      `${from.query?.toLowerCase()}:${to.query?.toLowerCase()}`,
+    ].filter(Boolean);
+
+    const dates = new Set();
+
+    routeKeys.forEach((key) => {
+      (routeDates[key] || []).forEach((dateItem) => dates.add(dateItem));
+    });
+
+    return [...dates].sort();
+  }, [from, to, routeDates]);
+
+  const filteredDates = React.useMemo(() => {
+    if (!dateQuery) return availableDates;
+    const search = dateQuery.toLowerCase();
+    return availableDates.filter((availableDate) =>
+      formatDate(availableDate).toLowerCase().includes(search),
+    );
+  }, [availableDates, dateQuery]);
+
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (from && to) {
-      onSearch?.({ from, to, date: date || 'Apr 28', passengers });
+    if (!from && !to && !date) {
+      setError('Выберите маршрут, пункт назначения или дату вылета');
+      return;
     }
+    setError('');
+    onSearch?.({ from, to, date, passengers });
   };
 
   return (
@@ -135,6 +287,7 @@ export default function SearchFormV2({ onSearch }) {
             value={from}
             onChange={setFrom}
             placeholder="Город или аэропорт"
+            items={cities}
           />
 
           <button
@@ -153,6 +306,7 @@ export default function SearchFormV2({ onSearch }) {
             value={to}
             onChange={setTo}
             placeholder="Город или аэропорт"
+            items={availableDestinations}
           />
         </div>
 
@@ -167,7 +321,57 @@ export default function SearchFormV2({ onSearch }) {
             value={date}
             onChange={(e) => setDate(e.target.value)}
             className="homev2sf__dateInput"
+            min={availableDates[0] || undefined}
+            max={availableDates[availableDates.length - 1] || undefined}
           />
+          {availableDates.length > 0 && (
+            <div ref={dateDropdownRef} className="homev2sf__dateHints">
+              <button
+                type="button"
+                className="homev2__destPrice"
+                onClick={() => setDateOpen((current) => !current)}
+              >
+                {date ? `Выбрана дата: ${formatDate(date)}` : 'Выбрать дату'}
+              </button>
+
+              {dateOpen && (
+                <div className="homev2sf__dropdown homev2sf__dateDropdown">
+                  <div className="homev2sf__searchRow">
+                    <Calendar className="homev2sf__searchIcon" />
+                    <input
+                      autoFocus
+                      value={dateQuery}
+                      onChange={(e) => setDateQuery(e.target.value)}
+                      placeholder="Фильтр даты"
+                      className="homev2sf__searchInput"
+                    />
+                  </div>
+
+                  <ul className="homev2sf__list">
+                    {filteredDates.map((availableDate) => (
+                      <li key={availableDate}>
+                        <button
+                          type="button"
+                          className={`homev2sf__item ${date === availableDate ? 'homev2sf__item--active' : ''}`}
+                          onClick={() => {
+                            setDate(availableDate);
+                            setDateOpen(false);
+                            setDateQuery('');
+                          }}
+                        >
+                          <span>{formatDate(availableDate)}</span>
+                        </button>
+                      </li>
+                    ))}
+
+                    {filteredDates.length === 0 && (
+                      <li className="homev2sf__empty">Нет доступных дат</li>
+                    )}
+                  </ul>
+                </div>
+              )}
+            </div>
+          )}
         </label>
 
         <div className="homev2sf__sep" aria-hidden />
@@ -187,7 +391,7 @@ export default function SearchFormV2({ onSearch }) {
             <span className="homev2sf__paxValue">{passengers}</span>
             <button
               type="button"
-              onClick={() => setPassengers((p) => Math.min(9, p + 1))}
+              onClick={() => setPassengers((p) => Math.min(5, p + 1))}
               className="homev2sf__paxBtn"
             >
               +
@@ -200,6 +404,7 @@ export default function SearchFormV2({ onSearch }) {
           <span>Поиск авиабилетов</span>
         </button>
       </div>
+      {error && <div className="homev2sf__error">{error}</div>}
     </form>
   );
 }
