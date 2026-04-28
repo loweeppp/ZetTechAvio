@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { createPayment } from '../../services/paymentService';
+import { createPayment } from './paymentService';
 import './BookingModal.css';
 
 // Маппинг между цифровым enum и названиями

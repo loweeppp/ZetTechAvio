@@ -1,12 +1,12 @@
 import React from 'react';
 import './HomePageV2.css';
 
-import SearchFormV2 from './components/SearchFormV2';
-import AISearch from './components/AISearch';
-import RecommendedFlights from './components/RecommendedFlights';
-import PopularDestinations from './components/PopularDestinations';
-import Benefits from './components/Benefits';
-import Results from './components/Results';
+import SearchFormV2 from '../../features/flights/SearchFormV2';
+import AISearch from '../../features/flights/AISearch';
+import RecommendedFlights from '../../features/flights/RecommendedFlights';
+import PopularDestinations from '../../features/flights/PopularDestinations';
+import Benefits from '../../features/flights/Benefits';
+import Results from '../../features/flights/Results';
 
 export default function HomePageV2() {
   const [query, setQuery] = React.useState(null);

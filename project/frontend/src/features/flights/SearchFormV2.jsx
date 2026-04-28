@@ -7,20 +7,9 @@ import {
   Search,
 } from 'lucide-react';
 
-const API_URL = process.env.REACT_APP_API_URL || 'https://api.zettechavio.ru';
+import { CITIES } from './cities';
 
-const CITIES = [
-  { code: 'MOW', name: 'Москва', airport: 'SVO/DME/VKO', query: 'Москва' },
-  { code: 'LED', name: 'Санкт-Петербург', airport: 'LED', query: 'Санкт-Петербург' },
-  { code: 'KZN', name: 'Казань', airport: 'KZN', query: 'Казань' },
-  { code: 'AER', name: 'Сочи', airport: 'AER', query: 'Сочи' },
-  { code: 'IST', name: 'Стамбул', airport: 'IST', query: 'Стамбул' },
-  { code: 'DXB', name: 'Дубай', airport: 'DXB', query: 'Дубай' },
-  { code: 'LON', name: 'Лондон', airport: 'LHR/LGW', query: 'Лондон' },
-  { code: 'PAR', name: 'Париж', airport: 'CDG/ORY', query: 'Париж' },
-  { code: 'BKK', name: 'Бангкок', airport: 'BKK', query: 'Бангкок' },
-  { code: 'NYC', name: 'Нью-Йорк', airport: 'JFK/LGA/EWR', query: 'Нью-Йорк' },
-];
+const API_URL = process.env.REACT_APP_API_URL || 'https://api.zettechavio.ru';
 
 const formatDate = (value) => {
   if (!value) return '';

@@ -1,27 +1,27 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, BarChart3, Lock, LogOut, User } from 'lucide-react';
-import { useAuth } from '../../hooks/useAuth';
-import AuthModal from '../../components/auth/AuthModal';
-import ProfileModal from '../../components/auth/ProfileModal';
+import { useAuth } from '../../features/auth/useAuth';
+import AuthModal from '../../features/auth/AuthModal';
+import ProfileModal from '../../features/auth/ProfileModal';
 import './UserProfile.css';
 
 const API_URL = process.env.REACT_APP_API_URL || 'https://api.zettechavio.ru';
 
 function formatMoney(value) {
-  return Number(value || 0).toLocaleString('ru-RU');
+    return Number(value || 0).toLocaleString('ru-RU');
 }
 
 function getUserInitials(fullName, email) {
-  if (fullName) {
-    return fullName
-      .split(' ')
-      .filter(Boolean)
-      .slice(0, 2)
-      .map((part) => part[0]?.toUpperCase())
-      .join('');
-  }
-  return email?.[0]?.toUpperCase() || 'U';
+    if (fullName) {
+        return fullName
+            .split(' ')
+            .filter(Boolean)
+            .slice(0, 2)
+            .map((part) => part[0]?.toUpperCase())
+            .join('');
+    }
+    return email?.[0]?.toUpperCase() || 'U';
 }
 
 export default function UserProfile() {
@@ -63,7 +63,7 @@ export default function UserProfile() {
 
                 const bookings = await response.json();
                 const now = new Date();
-                
+
                 // Подсчитываем статистику
                 let totalTickets = 0;
                 let spent = 0;
@@ -73,7 +73,7 @@ export default function UserProfile() {
                 bookings.forEach(booking => {
                     totalTickets += booking.quantity || 1;
                     spent += booking.totalPrice || 0;
-                    
+
                     const departureDate = new Date(booking.flight?.departureDt);
                     if (departureDate > now) {
                         activeFlights++;
@@ -115,6 +115,7 @@ export default function UserProfile() {
         if (window.confirm('Вы уверены, что хотите выйти?')) {
             logout();
             navigate('/');
+            setTimeout(() => window.location.reload(), 100);
         }
     };
 
@@ -143,7 +144,7 @@ export default function UserProfile() {
         <div className="profile-page">
             <div className="profile-shell">
                 <div className="profile-header">
-                    <button className="profile-back" onClick={() => navigate(-1)}>
+                    <button className="homev2res__back" onClick={() => navigate(-1)}>
                         <ArrowLeft className="profile-back-icon" />
                         Назад
                     </button>

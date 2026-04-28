@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Globe, Ticket, User } from 'lucide-react';
-import { useAuth } from '../../../hooks/useAuth';
-import AuthModal from '../../auth/AuthModal';
-import ProfileModal from '../../auth/ProfileModal';
+import { useAuth } from '../../../features/auth/useAuth';
+import AuthModal from '../../../features/auth/AuthModal';
+import ProfileModal from '../../../features/auth/ProfileModal';
 import './HeaderV2.css';
 
 const API_URL = process.env.REACT_APP_API_URL || 'https://api.zettechavio.ru';

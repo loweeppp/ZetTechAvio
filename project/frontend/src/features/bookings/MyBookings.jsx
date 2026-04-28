@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useAuth } from '../../hooks/useAuth';
-import { verifyPaymentStatus } from '../../services/paymentService';
+import { useAuth } from '../auth/useAuth';
+import { verifyPaymentStatus } from './paymentService';
 import './MyBookings.css';
 
 const API_URL = process.env.REACT_APP_API_URL || 'https://api.zettechavio.ru';

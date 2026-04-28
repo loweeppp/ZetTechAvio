@@ -1,7 +1,7 @@
 import React from 'react';
 import { Plane, ArrowLeft, Wifi, Utensils, Luggage } from 'lucide-react';
-import { useAuth } from '../../../hooks/useAuth';
-import BookingModal from '../../../components/booking/BookingModal';
+import { useAuth } from '../auth/useAuth';
+import BookingModal from '../bookings/BookingModal';
 import ResultsFilters from './ResultsFilters';
 import SearchFormV2 from './SearchFormV2';
 
