@@ -37,34 +37,30 @@ builder.Services.AddScoped<IConfirmationService>(sp =>
 
 
 // Конфигурация HttpClient для внутренних запросов (Blazor компоненты) и YooKassa
-if (builder.Environment.IsDevelopment())
+var httpClientBaseAddress = builder.Configuration["HttpClient:BaseAddress"] ?? "http://localhost:5151/";
+if (!httpClientBaseAddress.EndsWith("/"))
 {
-    builder.Services.AddScoped<HttpClient>(sp =>
+    httpClientBaseAddress += "/";
+}
+
+builder.Services.AddScoped<HttpClient>(sp =>
+{
+    var handler = new HttpClientHandler();
+    if (builder.Environment.IsDevelopment())
     {
-        var handler = new HttpClientHandler();
         handler.ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => true;
-        handler.AutomaticDecompression = System.Net.DecompressionMethods.GZip | System.Net.DecompressionMethods.Deflate;
-        var client = new HttpClient(handler);
-        // Для локального запуска - относительные URL будут указывать на localhost:5151
-        client.BaseAddress = new Uri("http://localhost:5151");
-        return client;
-    });
-}
-else
-{
-    // Production: используем стандартный HttpClient с поддержкой DNS
-    builder.Services.AddScoped<HttpClient>(sp =>
+    }
+
+    handler.AutomaticDecompression = System.Net.DecompressionMethods.GZip | System.Net.DecompressionMethods.Deflate;
+    handler.UseCookies = true;
+
+    var client = new HttpClient(handler)
     {
-        var handler = new HttpClientHandler();
-        handler.AutomaticDecompression = System.Net.DecompressionMethods.GZip | System.Net.DecompressionMethods.Deflate;
-        // Используем системные DNS resolver
-        handler.UseCookies = true;
-        var client = new HttpClient(handler) { Timeout = TimeSpan.FromSeconds(30) };
-        // В Production - указываем на внешний API
-        client.BaseAddress = new Uri("https://api.zettechavio.ru");
-        return client;
-    });
-}
+        BaseAddress = new Uri(httpClientBaseAddress),
+        Timeout = TimeSpan.FromSeconds(30)
+    };
+    return client;
+});
 
 // Также зарегистрируем стандартный HttpClientFactory
 builder.Services.AddHttpClient();

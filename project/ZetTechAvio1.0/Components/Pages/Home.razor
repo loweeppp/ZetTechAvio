@@ -263,7 +263,7 @@
     private List<Flight> Flights = new List<Flight>();
     protected override async Task OnInitializedAsync()
     {
-        Flights = await Http.GetFromJsonAsync<List<Flight>>("api/flights") ?? new List<Flight>();
+        Flights = await Http.GetFromJsonAsync<List<Flight>>("/api/flights") ?? new List<Flight>();
         
     }
 
