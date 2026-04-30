@@ -41,6 +41,30 @@ namespace ZetTechAvio1._0.Services
         private readonly string _apiKey;
         private readonly string _modelName;
 
+        // Static readonly Regex patterns for performance
+        private static readonly Regex DateRegex = new Regex(@"\b(\d{4}-\d{2}-\d{2})\b", RegexOptions.Compiled);
+        private static readonly Regex PassengerNumberRegex = new Regex(@"(\d+)\s*(чел|пасс|человек|пассажир)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        private static readonly Regex PassengerPhrasesRegex = new Regex(@"\b(двоих|двух|вдвоем|вдвоём|на двоих)\b", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        private static readonly Regex PassengerTripleRegex = new Regex(@"\b(троих|трех|трёх|на троих)\b", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        private static readonly Regex ReasoningRegex = new Regex(@"reasoning\s*[:\-]\s*(.+)$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        private static readonly Regex RussianTextRegex = new Regex(@"[а-яА-ЯёЁ]", RegexOptions.Compiled);
+
+        // Static readonly city data
+        private static readonly string[] SupportedCityCodes = { "MOW", "LED", "KZN", "AER", "IST", "DXB", "LON", "PAR", "BKK", "NYC" };
+        private static readonly (string Code, string[] Names)[] KnownCities = new[]
+        {
+            ("MOW", new[] { "москв", "moscow" }),
+            ("LED", new[] { "петербург", "санкт-петербург", "питер", "спб", "petersburg" }),
+            ("KZN", new[] { "казань", "kazan" }),
+            ("AER", new[] { "сочи", "sochi" }),
+            ("IST", new[] { "стамбул", "istanbul" }),
+            ("DXB", new[] { "дубай", "dubai" }),
+            ("LON", new[] { "лондон", "london" }),
+            ("PAR", new[] { "париж", "paris" }),
+            ("BKK", new[] { "бангкок", "bangkok" }),
+            ("NYC", new[] { "нью-йорк", "нью йорк", "new york" })
+        };
+
         public LLMService(IHttpClientFactory httpClientFactory, IConfiguration configuration)
         {
             _httpClientFactory = httpClientFactory;
@@ -54,6 +78,10 @@ namespace ZetTechAvio1._0.Services
                 throw new ArgumentException("Text must be provided", nameof(text));
 
             var client = _httpClientFactory.CreateClient("OpenAI");
+            
+            if (client.BaseAddress == null)
+                throw new InvalidOperationException("HttpClient BaseAddress is not configured.");
+            
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _apiKey);
 
             var messages = new[]
@@ -203,7 +231,7 @@ namespace ZetTechAvio1._0.Services
 
         private static bool IsRussianText(string? text)
         {
-            return !string.IsNullOrWhiteSpace(text) && Regex.IsMatch(text, "[а-яА-ЯёЁ]");
+            return !string.IsNullOrWhiteSpace(text) && RussianTextRegex.IsMatch(text);
         }
 
         private static bool TryExtractJson(string text, out string jsonText)
@@ -258,11 +286,6 @@ namespace ZetTechAvio1._0.Services
             );
         }
 
-        private static readonly string[] SupportedCityCodes =
-        {
-            "MOW", "LED", "KZN", "AER", "IST", "DXB", "LON", "PAR", "BKK", "NYC"
-        };
-
         private static string? ExtractIataCode(string text, string label)
         {
             foreach (var code in SupportedCityCodes)
@@ -278,45 +301,28 @@ namespace ZetTechAvio1._0.Services
         private static string? ExtractAnySupportedCode(string text, string? skipCode = null)
         {
             var found = SupportedCityCodes
-                .Where(code => !string.Equals(code, skipCode, StringComparison.OrdinalIgnoreCase))
-                .Where(code => Regex.IsMatch(text, $"\\b{Regex.Escape(code)}\\b", RegexOptions.IgnoreCase))
+                .Where(code => !string.Equals(code, skipCode, StringComparison.OrdinalIgnoreCase) &&
+                               Regex.IsMatch(text, $"\\b{Regex.Escape(code)}\\b", RegexOptions.IgnoreCase | RegexOptions.Compiled))
                 .ToList();
 
-            if (found.Count == 1)
-                return found[0];
-
-            return null;
+            return found.Count == 1 ? found[0] : null;
         }
 
         private static string? ExtractDate(string text)
         {
-            var match = Regex.Match(text, "\\b(\\d{4}-\\d{2}-\\d{2})\\b");
+            var match = DateRegex.Match(text);
             return match.Success ? match.Groups[1].Value : null;
         }
 
         private static string? ExtractCityCodeByName(string text, string? skipCode = null)
         {
             var lower = text.ToLowerInvariant();
-            var knownCities = new[]
+            foreach (var (code, names) in KnownCities)
             {
-                (Code: "MOW", Names: new[] { "москв", "moscow" }),
-                (Code: "LED", Names: new[] { "петербург", "санкт-петербург", "спб", "petersburg" }),
-                (Code: "KZN", Names: new[] { "казань", "kazan" }),
-                (Code: "AER", Names: new[] { "сочи", "sochi" }),
-                (Code: "IST", Names: new[] { "стамбул", "istanbul" }),
-                (Code: "DXB", Names: new[] { "дубай", "dubai" }),
-                (Code: "LON", Names: new[] { "лондон", "london" }),
-                (Code: "PAR", Names: new[] { "париж", "paris" }),
-                (Code: "BKK", Names: new[] { "бангкок", "bangkok" }),
-                (Code: "NYC", Names: new[] { "нью-йорк", "нью йорк", "new york" })
-            };
-
-            foreach (var city in knownCities)
-            {
-                if (!string.Equals(city.Code, skipCode, StringComparison.OrdinalIgnoreCase) &&
-                    city.Names.Any(name => lower.Contains(name)))
+                if (!string.Equals(code, skipCode, StringComparison.OrdinalIgnoreCase) &&
+                    names.Any(name => lower.Contains(name)))
                 {
-                    return city.Code;
+                    return code;
                 }
             }
 
@@ -325,13 +331,13 @@ namespace ZetTechAvio1._0.Services
 
         private static int ExtractPassengerCount(string text)
         {
-            var match = Regex.Match(text, "(\\d+)\\s*(чел|пасс|человек|пассажир)", RegexOptions.IgnoreCase);
+            var match = PassengerNumberRegex.Match(text);
             if (match.Success && int.TryParse(match.Groups[1].Value, out var count))
                 return Math.Clamp(count, 1, 9);
 
-            if (Regex.IsMatch(text, "\\b(двоих|двух|вдвоем|вдвоём|на двоих)\\b", RegexOptions.IgnoreCase))
+            if (PassengerPhrasesRegex.IsMatch(text))
                 return 2;
-            if (Regex.IsMatch(text, "\\b(троих|трех|трёх|на троих)\\b", RegexOptions.IgnoreCase))
+            if (PassengerTripleRegex.IsMatch(text))
                 return 3;
 
             return 1;
@@ -339,11 +345,8 @@ namespace ZetTechAvio1._0.Services
 
         private static string? ExtractReasoning(string text)
         {
-            var match = Regex.Match(text, "reasoning\\s*[:\\-]\\s*(.+)$", RegexOptions.IgnoreCase);
-            if (match.Success)
-                return match.Groups[1].Value.Trim();
-
-            return null;
+            var match = ReasoningRegex.Match(text);
+            return match.Success ? match.Groups[1].Value.Trim() : null;
         }
     }
 }

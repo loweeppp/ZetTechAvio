@@ -143,6 +143,7 @@ export default function AISearch({ onSearch }) {
               passengers: payload?.passengers || 1,
               explicitPassengers,
             }),
+        isValid: true, // Пометить что результат от API
       };
 
       if (parsed.from && parsed.to) {
@@ -180,7 +181,7 @@ export default function AISearch({ onSearch }) {
     } catch (err) {
       console.error('AI parse error:', err);
       setError(err instanceof Error ? err.message : 'Не удалось распознать запрос');
-      setResult(parseLLMResponse(query));
+      setResult(null); // Не показывать результат при ошибке
     } finally {
       setLoading(false);
     }
