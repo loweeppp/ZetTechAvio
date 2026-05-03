@@ -77,6 +77,7 @@ jobs:
             cd /root/ZetTechAvio
             # если на VPS есть репозиторий
             git pull origin main
+            git reset --hard origin/main
             
             # Обновить Docker образы из registry
             echo "Pulling latest images from ghcr.io..."
