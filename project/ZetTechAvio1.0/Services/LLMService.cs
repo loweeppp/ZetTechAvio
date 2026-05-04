@@ -86,7 +86,7 @@ namespace ZetTechAvio1._0.Services
 
             var messages = new[]
             {
-                new ChatMessage("system", "Вы — парсер запросов на поиск авиабилетов. Преобразуйте пользовательский запрос в корректный JSON, используя только поддерживаемые коды городов."),
+                new ChatMessage("system", "Вы — парсер запросов на поиск авиабилетов. Отвечайте ТОЛЬКО JSON без размышлений. /no-thinking"),
                 new ChatMessage("system", "Поддерживаемые коды и города: MOW (Москва), LED (Санкт-Петербург), KZN (Казань), AER (Сочи), IST (Стамбул), DXB (Дубай), LON (Лондон), PAR (Париж), BKK (Бангкок), NYC (Нью-Йорк)."),
                 new ChatMessage("system", "Ответ должен быть только JSON-объектом с ключами: from, to, date, passengers, reasoning. Никаких пояснений, markdown, кавычек или текста вне JSON."),
                 new ChatMessage("system", "from и to должны быть поддерживаемыми IATA-кодами или null. date должен быть в формате YYYY-MM-DD или null, если не указан. passengers должен быть числом от 1 до 9 или null, если не указан. reasoning должен быть коротким пояснением на русском языке."),
@@ -240,20 +240,28 @@ namespace ZetTechAvio1._0.Services
             if (string.IsNullOrWhiteSpace(text))
                 return false;
 
-            var start = text.IndexOf('{');
+            // Убираем thinking блоки Qwen3.6
+            var cleanText = Regex.Replace(
+                text,
+                @"<think>[\s\S]*?</think>",
+                string.Empty,
+                RegexOptions.IgnoreCase
+            ).Trim();
+
+            var start = cleanText.IndexOf('{');
             if (start < 0)
                 return false;
 
             var depth = 0;
-            for (var i = start; i < text.Length; i++)
+            for (var i = start; i < cleanText.Length; i++)
             {
-                if (text[i] == '{') depth++;
-                else if (text[i] == '}')
+                if (cleanText[i] == '{') depth++;
+                else if (cleanText[i] == '}')
                 {
                     depth--;
                     if (depth == 0)
                     {
-                        jsonText = text[start..(i + 1)];
+                        jsonText = cleanText[start..(i + 1)];
                         return true;
                     }
                 }

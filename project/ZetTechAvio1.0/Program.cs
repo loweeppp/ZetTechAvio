@@ -65,11 +65,13 @@ builder.Services.AddScoped<HttpClient>(sp =>
 // Также зарегистрируем стандартный HttpClientFactory
 builder.Services.AddHttpClient();
 
-var llmApiBase = builder.Configuration["LLM:ApiBase"] ?? "http://10.8.1.1:1234/v1";
+var llmApiBase = builder.Configuration["LLM:BaseUrl"]
+    ?? "https://gives-controllers-fine-remedies.trycloudflare.com";
 builder.Services.AddHttpClient("OpenAI", client =>
 {
     client.BaseAddress = new Uri(llmApiBase);
-    client.Timeout = TimeSpan.FromSeconds(60);
+    client.Timeout = TimeSpan.FromSeconds(120);
+    client.DefaultRequestHeaders.Add("Accept", "application/json");
 });
 
 builder.Services.AddScoped<ILLMService, LLMService>();
