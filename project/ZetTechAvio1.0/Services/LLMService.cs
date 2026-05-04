@@ -86,11 +86,7 @@ namespace ZetTechAvio1._0.Services
 
             var messages = new[]
             {
-                new ChatMessage("system", "Вы — парсер запросов на поиск авиабилетов. Отвечайте ТОЛЬКО JSON без размышлений. /no-thinking"),
-                new ChatMessage("system", "Поддерживаемые коды и города: MOW (Москва), LED (Санкт-Петербург), KZN (Казань), AER (Сочи), IST (Стамбул), DXB (Дубай), LON (Лондон), PAR (Париж), BKK (Бангкок), NYC (Нью-Йорк)."),
-                new ChatMessage("system", "Ответ должен быть только JSON-объектом с ключами: from, to, date, passengers, reasoning. Никаких пояснений, markdown, кавычек или текста вне JSON."),
-                new ChatMessage("system", "from и to должны быть поддерживаемыми IATA-кодами или null. date должен быть в формате YYYY-MM-DD или null, если не указан. passengers должен быть числом от 1 до 9 или null, если не указан. reasoning должен быть коротким пояснением на русском языке."),
-                new ChatMessage("system", "Не используйте reasoning_content для окончательного ответа. Отвечайте только JSON-объектом в поле content."),
+                new ChatMessage("system", "Вы — парсер запросов на поиск авиабилетов. Отвечайте ТОЛЬКО JSON без размышлений. /no-thinking. Поддерживаемые коды и города: MOW (Москва), LED (Санкт-Петербург), KZN (Казань), AER (Сочи), IST (Стамбул), DXB (Дубай), LON (Лондон), PAR (Париж), BKK (Бангкок), NYC (Нью-Йорк). Ответ должен быть только JSON-объектом с ключами: from, to, date, passengers, reasoning. Никаких пояснений, markdown, кавычек или текста вне JSON. from и to должны быть поддерживаемыми IATA-кодами или null. date должен быть в формате YYYY-MM-DD или null, если не указан. passengers должен быть числом от 1 до 5 или null, если не указан. reasoning должен быть коротким пояснением на русском языке. Не используйте reasoning_content для окончательного ответа. Отвечайте только JSON-объектом в поле content."),
                 new ChatMessage("user", $"Разберите запрос пользователя:\n{text}")
             };
 
