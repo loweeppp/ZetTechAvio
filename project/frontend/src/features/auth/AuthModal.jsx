@@ -223,7 +223,6 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess }) {
         const data = await response.json();
         onLoginSuccess(data);
         onClose();
-        setTimeout(() => window.location.reload(), 100);
       } else {
         const errorData = await response.json().catch(() => ({}));
         setError(errorData.message || 'Неверный email или пароль');
@@ -257,7 +256,6 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess }) {
         const data = await response.json();
         onLoginSuccess(data);
         onClose();
-        setTimeout(() => window.location.reload(), 100);
       } else {
         const errorData = await response.json().catch(() => ({}));
         setError(errorData.message || 'Ошибка при регистрации');

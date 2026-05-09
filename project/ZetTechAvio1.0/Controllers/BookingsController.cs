@@ -130,17 +130,15 @@ namespace ZetTechAvio1._0.Controllers
         {
             try
             {
+                if (!this.TryGetUserId(out int userId))
+                    return Unauthorized("Пользователь не идентифицирован");
+
+                if (!await _bookingsService.IsBookingOwnedByUserAsync(bookingId, userId))
+                    return Forbid();
+
                 var booking = await _bookingsService.GetBookingAsync(bookingId);
                 if (booking == null)
                     return NotFound("Бронирование не найдено");
-
-                // Проверяем доступ
-                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
-                if (userIdClaim != null && int.TryParse(userIdClaim.Value, out int userId))
-                {
-                    // Здесь нужно добавить проверку, что бронирование принадлежит текущему пользователю
-                    // TODO: Вернуть информацию о пользователе вместе с бронированием
-                }
 
                 return Ok(booking);
             }

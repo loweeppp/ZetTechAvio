@@ -1,6 +1,9 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using System.IO;
 using System.Security.Claims;
 using ZetTechAvio1._0.Services;
 
@@ -11,11 +14,13 @@ namespace ZetTechAvio1._0.Controllers
     public class PaymentController : ControllerBase
     {
         private readonly IPaymentService _paymentService;
+        private readonly IBookingsService _bookingsService;
         private readonly ILogger<PaymentController> _logger;
 
-        public PaymentController(IPaymentService paymentService, ILogger<PaymentController> logger)
+        public PaymentController(IPaymentService paymentService, IBookingsService bookingsService, ILogger<PaymentController> logger)
         {
             _paymentService = paymentService;
+            _bookingsService = bookingsService;
             _logger = logger;
         }
 
@@ -38,11 +43,8 @@ namespace ZetTechAvio1._0.Controllers
 
             try
             {
-                // Проверка: пользователь создал это бронирование?
-                // (Раскомментировать после реализации проверки доступа к бронированию)
-                // var booking = await _bookingsService.GetBookingAsync(request.BookingId);
-                // if (booking?.UserId != userId)
-                //     return Forbid(new { message = "Только свои бронирования!" });
+                if (!await _bookingsService.IsBookingOwnedByUserAsync(request.BookingId, userId))
+                    return Forbid();
 
                 string description = $"Оплата бронирования {request.BookingId}";
                 var payment = await _paymentService.CreatePaymentAsync(request.BookingId, description);
@@ -112,6 +114,52 @@ namespace ZetTechAvio1._0.Controllers
                 _logger.LogError($"[VERIFY] Ошибка: {ex.Message}");
                 return StatusCode(500, new { message = "Внутренняя ошибка сервера" });
             }
+        }
+
+        [HttpPost("webhook")]
+        [AllowAnonymous]
+        [EnableCors("AllowWebhook")]
+        public async Task<IActionResult> Webhook()
+        {
+            var body = await new StreamReader(Request.Body).ReadToEndAsync();
+            if (string.IsNullOrWhiteSpace(body))
+                return BadRequest(new { message = "Пустое тело запроса" });
+
+            JObject payload;
+            try
+            {
+                payload = JsonConvert.DeserializeObject<JObject>(body) ?? new JObject();
+            }
+            catch (JsonException ex)
+            {
+                _logger.LogWarning("Webhook: неверный JSON: {Message}", ex.Message);
+                return BadRequest(new { message = "Неверный JSON" });
+            }
+
+            var paymentObject = payload.SelectToken("object.payment") as JObject ?? payload.SelectToken("object") as JObject;
+            if (paymentObject == null)
+                return BadRequest(new { message = "Не найден объект payment" });
+
+            var yooKassaPaymentId = paymentObject.Value<string>("id");
+            var bookingId = paymentObject.SelectToken("metadata.booking_id")?.Value<int?>();
+            var eventType = payload.Value<string>("event") ?? payload.Value<string>("type");
+
+            if (string.IsNullOrWhiteSpace(yooKassaPaymentId))
+                return BadRequest(new { message = "Не найден payment id" });
+
+            _logger.LogInformation("Webhook received: event={Event}, paymentId={PaymentId}, bookingId={BookingId}", eventType, yooKassaPaymentId, bookingId);
+
+            if (!bookingId.HasValue)
+            {
+                _logger.LogWarning("Webhook payload не содержит metadata.booking_id");
+                return BadRequest(new { message = "metadata.booking_id не найден" });
+            }
+
+            var payment = await _paymentService.VerifyAndUpdatePaymentStatusAsync(bookingId.Value, yooKassaPaymentId);
+            if (payment == null)
+                return StatusCode(500, new { message = "Ошибка обработки webhook" });
+
+            return Ok(new { message = "Webhook processed", status = payment.Status.ToString() });
         }
     }
 

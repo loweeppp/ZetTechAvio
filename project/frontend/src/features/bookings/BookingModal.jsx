@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { useAuth } from '../auth/useAuth';
 import { createPayment } from './paymentService';
 import './BookingModal.css';
 
@@ -16,6 +17,7 @@ const classToNumber = {
 };
 
 export default function BookingModal({ flight, isOpen, onClose, onBook, user }) {
+  const { token } = useAuth();
   const [error, setError] = useState('');
   const [selectedClass, setSelectedClass] = useState('Economy');
   const [quantity, setQuantity] = useState(1);
@@ -248,7 +250,6 @@ export default function BookingModal({ flight, isOpen, onClose, onBook, user }) 
         'Content-Type': 'application/json'
       };
 
-      const token = localStorage.getItem('token');
       if (token) {
         headers['Authorization'] = `Bearer ${token}`;
       }
@@ -271,7 +272,6 @@ export default function BookingModal({ flight, isOpen, onClose, onBook, user }) 
 
       // ШАГ 2: Создаём платеж
       try {
-        const token = localStorage.getItem('token');
         const paymentData = await createPayment(booking.id, token);
         console.log('✅ Платеж создан:', paymentData);
 

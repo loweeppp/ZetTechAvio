@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useAuth } from './useAuth';
 import './ProfileModal.css';
 
 const API_URL = process.env.REACT_APP_API_URL || 'https://api.zettechavio.ru';
@@ -31,6 +32,7 @@ function FloatingInput({
 }
 
 export default function ProfileModal({ isOpen, onClose, user, onLogout, onChange }) {
+  const { token, login, logout } = useAuth();
 
   const [changeMode, setChangeMode] = useState(false);
   const [error, setError] = useState('');
@@ -44,18 +46,16 @@ export default function ProfileModal({ isOpen, onClose, user, onLogout, onChange
     setError('');
 
     try {
-      const token = localStorage.getItem('token');
       const response = await fetch(`${API_URL}/api/auth/logout`, {
         method: 'POST',
-        headers: {
+        headers: token ? {
           'Authorization': `Bearer ${token}`
-        }
+        } : {}
       });
       if (response.ok) {
+        logout();
         onLogout();
         onClose();
-        setTimeout(() => window.location.reload(), 100);
-
       } else {
         const errorData = await response.json().catch(() => ({}));
         setError(errorData.message || 'Ошибка при выходе');
@@ -70,7 +70,6 @@ export default function ProfileModal({ isOpen, onClose, user, onLogout, onChange
     setError('');
 
     try {
-      const token = localStorage.getItem('token');
       
       // Всегда отправляем пароль, но пустую строку если не изменялся
       const changeData = {
@@ -83,9 +82,9 @@ export default function ProfileModal({ isOpen, onClose, user, onLogout, onChange
       
       const response = await fetch(`${API_URL}/api/auth/change`, {
         method: 'POST',
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
         },
         body: JSON.stringify(changeData)
       });
@@ -93,13 +92,15 @@ export default function ProfileModal({ isOpen, onClose, user, onLogout, onChange
       if (response.ok) {
         const data = await response.json();
         if (data.token) {
-          localStorage.setItem('token', data.token);
+          login(data);
         }
-        onChange(data);
+        if (data.id) {
+          onChange(data);
+        } else {
+          onChange({ ...user, email, fullName, phone });
+        }
         setChangeMode(false);
         setPassword('');
-        setTimeout(() => window.location.reload(), 100);
-
       } else {
         const errorData = await response.json().catch(() => ({}));
         setError(errorData.message || "Ошибка при изменении профиля");

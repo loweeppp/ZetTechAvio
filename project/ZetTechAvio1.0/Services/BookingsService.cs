@@ -11,7 +11,7 @@ namespace ZetTechAvio1._0.Services
         Task<BookingResponse?> CreateBookingAsync(int userId, CreateBookingRequest request);
         Task<List<BookingResponse>> GetUserBookingsAsync(int userId);
         Task<BookingResponse?> GetBookingAsync(int bookingId);
-
+        Task<bool> IsBookingOwnedByUserAsync(int bookingId, int userId);
     }
     public interface IConfirmationService
     {
@@ -154,6 +154,7 @@ namespace ZetTechAvio1._0.Services
 
         public async Task<BookingResponse?> CreateBookingAsync(int userId, CreateBookingRequest request)
         {
+            using var transaction = await _dbContext.Database.BeginTransactionAsync();
             try
             {
                 // Получаем тариф и рейс
@@ -200,20 +201,27 @@ namespace ZetTechAvio1._0.Services
 
                 booking.TotalAmount = totalPrice;
 
-                // Сохраняем в БД
-                _dbContext.Bookings.Add(booking);
-                await _dbContext.SaveChangesAsync();
-
-                // Обновляем количество доступных мест
+                // Сохраняем в БД и уменьшаем количество мест в одной транзакции
                 fare.SeatsAvailable -= request.Quantity;
+                _dbContext.Bookings.Add(booking);
+
                 await _dbContext.SaveChangesAsync();
+                await transaction.CommitAsync();
 
                 return MapToResponse(booking);
             }
             catch (Exception ex)
             {
+                await transaction.RollbackAsync();
                 throw new InvalidOperationException($"Ошибка при создании бронирования: {ex.Message}");
             }
+        }
+
+        public async Task<bool> IsBookingOwnedByUserAsync(int bookingId, int userId)
+        {
+            return await _dbContext.Bookings
+                .AsNoTracking()
+                .AnyAsync(b => b.Id == bookingId && b.UserId == userId);
         }
 
         public async Task<List<BookingResponse>> GetUserBookingsAsync(int userId)
