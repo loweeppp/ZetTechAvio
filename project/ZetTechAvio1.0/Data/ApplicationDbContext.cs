@@ -59,6 +59,10 @@ namespace ZetTechAvio1._0.Data
                     .IsRequired()
                     .HasConversion<string>();
 
+                entity.Property(e => e.IsActive)
+                    .IsRequired()
+                    .HasDefaultValue(true);
+
                 entity.Property(e => e.CreatedAt);
 
                 entity.Property(e => e.UpdatedAt);

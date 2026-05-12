@@ -139,15 +139,28 @@ export default function HeaderV2() {
             </Link>
 
             {currentUser && (
-              <Link
-                className={`headerv2__navLink ${location.pathname === '/bookings'
-                  ? 'headerv2__navLink--active'
-                  : ''
-                  }`}
-                to="/bookings"
-              >
-                Мои билеты
-              </Link>
+              <>
+                <Link
+                  className={`headerv2__navLink ${location.pathname === '/bookings'
+                    ? 'headerv2__navLink--active'
+                    : ''
+                    }`}
+                  to="/bookings"
+                >
+                  Мои билеты
+                </Link>
+                {['Admin', 'Manager'].includes(currentUser.role) && (
+                  <Link
+                    className={`headerv2__navLink ${location.pathname === '/admin'
+                      ? 'headerv2__navLink--active'
+                      : ''
+                      }`}
+                    to="/admin"
+                  >
+                    Admin Panel
+                  </Link>
+                )}
+              </>
             )}
 
             <a className="headerv2__navLink" href="mailto:ZetTechAvioBot@mail.ru">
