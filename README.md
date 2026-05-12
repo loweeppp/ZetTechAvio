@@ -2,7 +2,7 @@
 ## О проекте
 
 Веб-приложение для поиска и бронирования авиабилетов. 
-<img width="1867" height="1039" alt="image" src="https://github.com/user-attachments/assets/01505fda-b998-4713-b4e8-5642f5ccd5b3" />
+<img width="1867" height="1038" alt="image" src="https://github.com/user-attachments/assets/550e841d-5901-43b6-b819-5eb49e4d2a24" />
 
 ## Технологии
 

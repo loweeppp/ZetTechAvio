@@ -25,7 +25,7 @@ function getUserInitials(fullName, email) {
 }
 
 export default function UserProfile() {
-    const { currentUser, logout, changeUser } = useAuth();
+    const { currentUser, logout, changeUser, token, login, fetchCurrentUser } = useAuth();
     const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
     const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
     const [stats, setStats] = useState({
@@ -47,11 +47,10 @@ export default function UserProfile() {
 
         const loadStats = async () => {
             try {
-                const token = localStorage.getItem('token');
                 const response = await fetch(`${API_URL}/api/users/${currentUser.id}/bookings`, {
-                    headers: {
+                    headers: token ? {
                         'Authorization': `Bearer ${token}`
-                    },
+                    } : {},
                     credentials: 'include'
                 });
 
@@ -104,6 +103,12 @@ export default function UserProfile() {
 
     const handleLoginSuccess = async (loginResponse) => {
         setIsAuthModalOpen(false);
+        if (loginResponse?.token) {
+            login(loginResponse);
+            await fetchCurrentUser();
+            return;
+        }
+
         if (loginResponse?.user) {
             changeUser(loginResponse.user);
         }
@@ -115,7 +120,6 @@ export default function UserProfile() {
         if (window.confirm('Вы уверены, что хотите выйти?')) {
             logout();
             navigate('/');
-            setTimeout(() => window.location.reload(), 100);
         }
     };
 

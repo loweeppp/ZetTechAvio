@@ -6,7 +6,7 @@ import './MyBookings.css';
 const API_URL = process.env.REACT_APP_API_URL || 'https://api.zettechavio.ru';
 
 export default function MyBookings() {
-  const { currentUser } = useAuth();
+  const { currentUser, token } = useAuth();
   const [bookings, setBookings] = useState([]);
   const [filter, setFilter] = useState('all'); // all, active, completed, cancelled
   const [loading, setLoading] = useState(false);
@@ -16,12 +16,12 @@ export default function MyBookings() {
     try {
       setLoading(true);
       setError(null);
-      const token = localStorage.getItem('token');
+      const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
       
       const response = await fetch(
         `${API_URL}/api/bookings/my`,
         {
-          headers: { 'Authorization': `Bearer ${token}` }
+          headers
         }
       );
 
@@ -37,7 +37,7 @@ export default function MyBookings() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [token]);
 
   useEffect(() => {
     if (!currentUser) return;
@@ -48,11 +48,9 @@ export default function MyBookings() {
         const pending = sessionStorage.getItem('pendingPaymentVerification');
         if (pending) {
           const { bookingId, yooKassaPaymentId } = JSON.parse(pending);
-          const token = localStorage.getItem('token');
 
           console.log('Проверка платежа после возврата из YooKassa...');
           const result = await verifyPaymentStatus(bookingId, yooKassaPaymentId, token);
-          
           console.log('Платеж проверен:', result.status);
           sessionStorage.removeItem('pendingPaymentVerification');
         }

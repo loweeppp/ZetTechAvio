@@ -1,135 +1,135 @@
-import { useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 
 const API_URL = process.env.REACT_APP_API_URL || 'https://api.zettechavio.ru';
+const STORAGE_KEY = 'token';
 
-export function useAuth() {
+const AuthContext = createContext(null);
+
+export function AuthProvider({ children }) {
   const [currentUser, setCurrentUser] = useState(null);
   const [token, setToken] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Загрузить пользователя и токен при первом рендере
-  useEffect(() => {
-    const initAuth = async () => {
-      try {
-        // Загружаем token 
-        const storedToken = localStorage.getItem('token');
-        
-        if (storedToken) {
-          setToken(storedToken);
-          
-          const response = await fetch(`${API_URL}/api/auth/current`, {
-            headers: {
-              'Authorization': `Bearer ${storedToken}`
-            }
-          });
-          
-          if (response.ok) {
-            const userData = await response.json();
-            setCurrentUser(userData);
-          } else {
-            // Токен невалиден, очищаем
-            localStorage.removeItem('token');
-            setToken(null);
-            setCurrentUser(null);
-          }
-        }
-      } catch (error) {
-        console.error('Error loading auth:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    initAuth();
+  const clearAuth = useCallback(() => {
+    localStorage.removeItem(STORAGE_KEY);
+    setToken(null);
+    setCurrentUser(null);
   }, []);
 
-  //  Функция для входа 
-  const login = (loginResponse) => {
-    // loginResponse содержит { token, userId, message }
-    localStorage.setItem('token', loginResponse.token);
-    setToken(loginResponse.token);
-    
-  };
+  const fetchCurrentUser = useCallback(async (currentToken) => {
+    const authToken = currentToken || token;
+    if (!authToken) {
+      setCurrentUser(null);
+      return null;
+    }
 
-  // Функция для обновления данных пользователя
-  const fetchCurrentUser = async () => {
-    if (!token) return;
-    
     try {
       const response = await fetch(`${API_URL}/api/auth/current`, {
         headers: {
-          'Authorization': `Bearer ${token}`
+          Authorization: `Bearer ${authToken}`
         }
       });
-      
-      if (response.ok) {
-        const userData = await response.json();
-        setCurrentUser(userData);
-        return userData;
-      } else {
-        console.error('Failed to fetch current user');
+
+      if (!response.ok) {
+        clearAuth();
         return null;
       }
+
+      const userData = await response.json();
+      setCurrentUser(userData);
+      return userData;
     } catch (error) {
       console.error('Error fetching current user:', error);
+      clearAuth();
       return null;
     }
-  };
+  }, [token, clearAuth]);
 
-  // Функция для изменения данных пользователя
-  const changeUser = async (userData) => {
-    try {
-      const response = await fetch(`${API_URL}/api/auth/change`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(userData)
-      });
-      
-      if (response.ok) {
-        const result = await response.json();
-        // Обновляем token если вернулся новый
-        if (result.token) {
-          localStorage.setItem('token', result.token);
-          setToken(result.token);
-        }
-        // Загружаем обновленные данные пользователя
-        await fetchCurrentUser();
+  useEffect(() => {
+    const initAuth = async () => {
+      const storedToken = localStorage.getItem(STORAGE_KEY);
+      if (storedToken) {
+        setToken(storedToken);
+        await fetchCurrentUser(storedToken);
       }
-    } catch (error) {
-      console.error('Error changing user:', error);
-    }
-  };
+      setIsLoading(false);
+    };
 
-  // Функция для выхода
-  const logout = async () => {
+    initAuth();
+
+    const handleStorage = (event) => {
+      if (event.key !== STORAGE_KEY) return;
+      if (event.newValue) {
+        setToken(event.newValue);
+        fetchCurrentUser(event.newValue);
+      } else {
+        clearAuth();
+      }
+    };
+
+    window.addEventListener('storage', handleStorage);
+    return () => window.removeEventListener('storage', handleStorage);
+  }, [fetchCurrentUser, clearAuth]);
+
+  const login = useCallback(async (loginResponse) => {
+    if (!loginResponse?.token) return;
+
+    localStorage.setItem(STORAGE_KEY, loginResponse.token);
+    setToken(loginResponse.token);
+    await fetchCurrentUser(loginResponse.token);
+  }, [fetchCurrentUser]);
+
+  const logout = useCallback(async () => {
     try {
-      await fetch(`${API_URL}/api/auth/logout`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
+      if (token) {
+        await fetch(`${API_URL}/api/auth/logout`, {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
+      }
     } catch (error) {
       console.error('Error logging out:', error);
     } finally {
-      // Очищаем ТОЛЬКО token 
-      localStorage.removeItem('token');
-      setToken(null);
-      setCurrentUser(null);
+      clearAuth();
     }
-  };
+  }, [token, clearAuth]);
 
-  return { 
-    currentUser, 
-    setCurrentUser, 
-    token,
-    isLoading, 
-    login, 
-    logout, 
-    changeUser,
-    fetchCurrentUser  // Экспортируем для явной загрузки данных
-  };
+  const changeUser = useCallback(async (userData) => {
+    if (userData?.token) {
+      localStorage.setItem(STORAGE_KEY, userData.token);
+      setToken(userData.token);
+      await fetchCurrentUser(userData.token);
+      return;
+    }
+
+    if (userData) {
+      setCurrentUser(userData);
+    }
+  }, [fetchCurrentUser]);
+
+  return (
+    <AuthContext.Provider
+      value={{
+        currentUser,
+        token,
+        isLoading,
+        login,
+        logout,
+        changeUser,
+        fetchCurrentUser
+      }}
+    >
+      {children}
+    </AuthContext.Provider>
+  );
+}
+
+export function useAuth() {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within AuthProvider');
+  }
+  return context;
 }

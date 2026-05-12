@@ -86,7 +86,7 @@ namespace ZetTechAvio1._0.Services
 
             var messages = new[]
             {
-                new ChatMessage("system", "Вы — парсер запросов на поиск авиабилетов. Отвечайте ТОЛЬКО JSON без размышлений. /no-thinking. Поддерживаемые коды и города: MOW (Москва), LED (Санкт-Петербург), KZN (Казань), AER (Сочи), IST (Стамбул), DXB (Дубай), LON (Лондон), PAR (Париж), BKK (Бангкок), NYC (Нью-Йорк). Ответ должен быть только JSON-объектом с ключами: from, to, date, passengers, reasoning. Никаких пояснений, markdown, кавычек или текста вне JSON. from и to должны быть поддерживаемыми IATA-кодами или null. date должен быть в формате YYYY-MM-DD или null, если не указан. passengers должен быть числом от 1 до 5 или null, если не указан. reasoning должен быть коротким пояснением на русском языке. Не используйте reasoning_content для окончательного ответа. Отвечайте только JSON-объектом в поле content."),
+                new ChatMessage("system", "Вы — парсер запросов на поиск авиабилетов. Отвечайте ровно одним JSON-объектом, без пояснений, markdown, списков, цитат или текста вне JSON. Ответ должен содержать только поля: from, to, date, passengers, reasoning. Если данные не определены, возвращайте null. from и to должны быть поддерживаемыми IATA-кодами из списка: MOW, LED, KZN, AER, IST, DXB, LON, PAR, BKK, NYC. date должен быть в формате YYYY-MM-DD или null. passengers должен быть числом от 1 до 5 или null. reasoning должен быть коротким пояснением на русском языке. Не добавляйте дополнительные поля. Не используйте reasoning_content для окончательного ответа."),
                 new ChatMessage("user", $"Разберите запрос пользователя:\n{text}")
             };
 
@@ -171,20 +171,18 @@ namespace ZetTechAvio1._0.Services
                 reasoningValue = null;
             }
 
-            var passengersValue = 1;
+            int? passengersValue = null;
             if (root.TryGetProperty("passengers", out var passengersElement))
             {
                 if (passengersElement.ValueKind == JsonValueKind.Number && passengersElement.TryGetInt32(out var parsedPassengers))
                 {
-                    passengersValue = parsedPassengers;
+                    passengersValue = Math.Clamp(parsedPassengers, 1, 5);
                 }
                 else if (passengersElement.ValueKind == JsonValueKind.String && int.TryParse(passengersElement.GetString(), out var parsedPassengersString))
                 {
-                    passengersValue = parsedPassengersString;
+                    passengersValue = Math.Clamp(parsedPassengersString, 1, 5);
                 }
             }
-
-            passengersValue = Math.Clamp(passengersValue, 1, 9);
 
             if (string.IsNullOrWhiteSpace(fromValue) && string.IsNullOrWhiteSpace(toValue) && string.IsNullOrWhiteSpace(dateValue))
                 throw new InvalidOperationException("LLM returned invalid parse result.");
@@ -200,7 +198,7 @@ namespace ZetTechAvio1._0.Services
             );
         }
 
-        private static string BuildReasoning(string? from, string? to, string? date, int passengers)
+        private static string BuildReasoning(string? from, string? to, string? date, int? passengers)
         {
             var parts = new List<string>();
             if (!string.IsNullOrWhiteSpace(from) && !string.IsNullOrWhiteSpace(to))
@@ -221,10 +219,13 @@ namespace ZetTechAvio1._0.Services
                 parts.Add($"дата {date}");
             }
 
-            parts.Add($"{passengers} пассажир{(passengers == 1 ? string.Empty : passengers < 5 ? "а" : "ов")}");
+            if (passengers.HasValue)
+            {
+                parts.Add($"{passengers.Value} пассажир{(passengers.Value == 1 ? string.Empty : passengers.Value < 5 ? "а" : "ов")}");
+            }
+
             return parts.Count > 0 ? $"Распознан запрос: {string.Join(", ", parts)}." : "Распознан запрос.";
         }
-
         private static bool IsRussianText(string? text)
         {
             return !string.IsNullOrWhiteSpace(text) && RussianTextRegex.IsMatch(text);
@@ -275,7 +276,7 @@ namespace ZetTechAvio1._0.Services
             var fromCode = ExtractIataCode(normalized, "from") ?? ExtractIataCode(normalized, "из") ?? ExtractCityCodeByName(normalized) ?? ExtractAnySupportedCode(normalized);
             var toCode = ExtractIataCode(normalized, "to") ?? ExtractIataCode(normalized, "в") ?? ExtractCityCodeByName(normalized, skipCode: fromCode) ?? ExtractAnySupportedCode(normalized, skipCode: fromCode);
             var dateValue = ExtractDate(normalized);
-            var passengersValue = ExtractPassengerCount(normalized);
+            int? passengersValue = ExtractPassengerCount(normalized);
             var reasoningValue = ExtractReasoning(normalized);
 
             if (string.IsNullOrWhiteSpace(fromCode) && string.IsNullOrWhiteSpace(toCode) && string.IsNullOrWhiteSpace(dateValue))
@@ -333,18 +334,18 @@ namespace ZetTechAvio1._0.Services
             return null;
         }
 
-        private static int ExtractPassengerCount(string text)
+        private static int? ExtractPassengerCount(string text)
         {
             var match = PassengerNumberRegex.Match(text);
             if (match.Success && int.TryParse(match.Groups[1].Value, out var count))
-                return Math.Clamp(count, 1, 9);
+                return Math.Clamp(count, 1, 5);
 
             if (PassengerPhrasesRegex.IsMatch(text))
                 return 2;
             if (PassengerTripleRegex.IsMatch(text))
                 return 3;
 
-            return 1;
+            return null;
         }
 
         private static string? ExtractReasoning(string text)

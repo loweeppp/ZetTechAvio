@@ -111,7 +111,8 @@ builder.Services.AddCors(options =>
 });
 
 // Добавляем JWT аутентификацию
-var jwtSecret = builder.Configuration["JWT_SECRET"] ?? "fallback-secret-key-for-development-only-12345678";
+var jwtSecret = builder.Configuration["JWT_SECRET"]
+    ?? throw new InvalidOperationException("JWT_SECRET must be configured.");
 var key = Encoding.ASCII.GetBytes(jwtSecret);
 
 builder.Services.AddAuthentication(options =>
@@ -127,9 +128,10 @@ builder.Services.AddAuthentication(options =>
         IssuerSigningKey = new SymmetricSecurityKey(key),
         ValidateIssuer = true,
         ValidIssuer = "ZetTechAvio",
-        ValidateAudience = false,
+        ValidateAudience = true,
+        ValidAudience = "ZetTechAvioClient",
         ValidateLifetime = true,
-        ClockSkew = TimeSpan.Zero
+        ClockSkew = TimeSpan.FromMinutes(5)
     };
 });
 
