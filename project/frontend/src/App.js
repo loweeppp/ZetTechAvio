@@ -5,6 +5,7 @@ import HomePageV2 from './pages/homeV2/HomePageV2';
 import MyBookings from './features/bookings/MyBookings';
 import UserProfile from './pages/profile/UserProfile';
 import PrivacyPolicy from './pages/privacy/PrivacyPolicy';
+import AdminUsersPage from './features/admin/AdminUsersPage';
 import HeaderV2 from './components/layout/header/HeaderV2';
 import FooterV2 from './components/layout/footer/FooterV2';
 
@@ -19,6 +20,7 @@ function App() {
             <Route path="/bookings" element={<MyBookings />} />
             <Route path="/profile" element={<UserProfile />} />
             <Route path="/privacy" element={<PrivacyPolicy />} />
+            <Route path="/admin" element={<AdminUsersPage />} />
           </Routes>
         </main>
         <FooterV2 />

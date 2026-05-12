@@ -21,15 +21,17 @@ namespace ZetTechAvio1._0.Services
         private readonly ILogger<PaymentService> _logger;
         private readonly IConfiguration _config;
         private readonly HttpClient _httpClient;
+        private readonly IEmailService _emailService;
         private readonly string _shopId;
         private readonly string _apiKey;
 
-        public PaymentService(ApplicationDbContext context, IConfiguration config, ILogger<PaymentService> logger, HttpClient httpClient)
+        public PaymentService(ApplicationDbContext context, IConfiguration config, ILogger<PaymentService> logger, HttpClient httpClient, IEmailService emailService)
         {
             _context = context;
             _logger = logger;
             _config = config;
             _httpClient = httpClient;
+            _emailService = emailService;
 
             _shopId = _config["YOOKASSA_SHOP_ID"] ?? "";
             _apiKey = _config["YOOKASSA_API_KEY"] ?? "";
@@ -193,14 +195,7 @@ namespace ZetTechAvio1._0.Services
                     // Генерируем QR-код (заглушка)
                     var qrCodeData = GenerateQRCodeAsText(booking.BookingReference);
 
-                    var mail = new MailMessage
-                    {
-                        From = new MailAddress(senderEmail),
-                        Subject = $"Подтверждение платежа - Бронирование {booking.BookingReference}",
-                        IsBodyHtml = true
-                    };
-
-                    // HTML письмо с информацией о платеже и "QR-кодом"
+                    var subject = $"Подтверждение платежа - Бронирование {booking.BookingReference}";
                     var emailBody = $@"
                     <html>
                     <head><meta charset='utf-8'></head>
@@ -229,7 +224,7 @@ namespace ZetTechAvio1._0.Services
                                     Письмо отправлено автоматически. Пожалуйста, не отвечайте на это письмо.
                                 </p>
                                 <p style='color: #999; font-size: 12px;'>
-                                    При возникновении вопросов обратитесь в служу поддержки: ZetTechAvioBot@mail.ru
+                                    При возникновении вопросов обратитесь в службу поддержки: ZetTechAvioBot@mail.ru
                                 </p>
                             </div>
                         </div>
@@ -237,12 +232,15 @@ namespace ZetTechAvio1._0.Services
                     </html>
                     ";
 
-                    mail.Body = emailBody;
-                    mail.To.Add(userEmail);
-
-                    _logger.LogInformation($"[PAYMENT_EMAIL] Отправка письма на {userEmail}");
-                    await smtp.SendMailAsync(mail);
-                    _logger.LogInformation($"[PAYMENT_EMAIL] Письмо успешно отправлено на {userEmail}");
+                    var emailSent = await _emailService.SendEmailAsync(userEmail, subject, emailBody, isHtml: true);
+                    if (emailSent)
+                    {
+                        _logger.LogInformation($"[PAYMENT_EMAIL] Письмо успешно отправлено на {userEmail}");
+                    }
+                    else
+                    {
+                        _logger.LogWarning($"[PAYMENT_EMAIL] Не удалось отправить письмо подтверждения платежа на {userEmail}");
+                    }
                 }
             }
             catch (Exception ex)

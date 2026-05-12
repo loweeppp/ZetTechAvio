@@ -1,0 +1,279 @@
+.admin-panel__container {
+  max-width: 1160px;
+  margin: 0 auto;
+  padding: 2rem 1rem 3rem;
+  font-family: inherit;
+}
+
+.admin-panel__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.5rem;
+}
+
+.admin-panel__title {
+  font-size: 2rem;
+  margin: 0 0 0.25rem;
+  color: #10162d;
+}
+
+.admin-panel__subtitle {
+  margin: 0;
+  color: #5f637c;
+  font-size: 0.98rem;
+}
+
+.admin-panel__controls {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.admin-panel__search {
+  min-width: 240px;
+  padding: 0.85rem 1rem;
+  border: 1px solid #d9dde6;
+  border-radius: 12px;
+  outline: none;
+  font-size: 0.95rem;
+}
+
+.admin-panel__paging {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.admin-panel__btn {
+  border: 1px solid #d9dde6;
+  background: #ffffff;
+  color: #212b36;
+  padding: 0.7rem 1rem;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.admin-panel__btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.admin-panel__page {
+  min-width: 2rem;
+  text-align: center;
+  font-weight: 600;
+}
+
+.admin-panel__table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  background: #ffffff;
+  border-radius: 18px;
+  box-shadow: 0 12px 40px rgba(15, 23, 42, 0.08);
+}
+
+.admin-panel__table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.admin-panel__table th,
+.admin-panel__table td {
+  padding: 1rem 1.1rem;
+  border-bottom: 1px solid #eef2f7;
+  vertical-align: middle;
+  text-align: left;
+  font-size: 0.95rem;
+}
+
+.admin-panel__table th {
+  background: #f8faff;
+  color: #334155;
+  font-weight: 700;
+}
+
+.admin-panel__row--disabled {
+  background: #fff5f5;
+}
+
+.admin-panel__status {
+  font-weight: 600;
+}
+
+.admin-panel__status--active {
+  color: #165f3d;
+}
+
+.admin-panel__status--blocked {
+  color: #b91c1c;
+}
+
+.admin-panel__action {
+  border: 1px solid #cbd5e1;
+  background: #f8fafc;
+  border-radius: 10px;
+  padding: 0.55rem 0.85rem;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.admin-panel__action:hover {
+  background: #eff6ff;
+}
+
+.admin-panel__empty {
+  padding: 2.5rem;
+  text-align: center;
+  color: #64748b;
+}
+
+.admin-panel__error {
+  margin-bottom: 1rem;
+  padding: 1rem 1.2rem;
+  border-radius: 12px;
+  background: #fff1f2;
+  color: #b91c1c;
+}
+
+.admin-panel__loading {
+  padding: 2rem;
+  text-align: center;
+  color: #334155;
+}
+
+/* Modal styles */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1200;
+}
+
+.admin-modal__box {
+  width: min(540px, calc(100% - 2rem));
+  background: #ffffff;
+  border-radius: 24px;
+  padding: 1.75rem;
+  box-shadow: 0 35px 80px rgba(15, 23, 42, 0.12);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.modal-header h2 {
+  margin: 0;
+  font-size: 1.25rem;
+  color: #0f172a;
+}
+
+.modal-close-btn {
+  border: none;
+  background: transparent;
+  font-size: 1.25rem;
+  cursor: pointer;
+}
+
+.admin-modal__form {
+  display: grid;
+  gap: 1rem;
+}
+
+.floating-input-wrapper {
+  position: relative;
+}
+
+.floating-input-wrapper input {
+  width: 100%;
+  padding: 1rem 1rem 0.85rem;
+  border: 1px solid #d9dde6;
+  border-radius: 14px;
+  outline: none;
+  font-size: 0.95rem;
+  background: #ffffff;
+}
+
+.floating-input-wrapper input:focus {
+  border-color: #3b82f6;
+}
+
+.floating-input-wrapper .floating-label {
+  position: absolute;
+  top: 0.9rem;
+  left: 1rem;
+  pointer-events: none;
+  transition: transform 0.18s ease, font-size 0.18s ease, color 0.18s ease;
+  color: #64748b;
+  font-size: 0.95rem;
+}
+
+.floating-input-wrapper input:not(:placeholder-shown) + .floating-label,
+.floating-input-wrapper input:focus + .floating-label {
+  transform: translateY(-1.35rem);
+  font-size: 0.82rem;
+  color: #2563eb;
+}
+
+.admin-modal__select-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.admin-modal__select-wrapper select {
+  width: 100%;
+  padding: 0.95rem 1rem;
+  border: 1px solid #d9dde6;
+  border-radius: 14px;
+  background: #ffffff;
+  font-size: 0.95rem;
+  color: #0f172a;
+}
+
+.admin-modal__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.btn {
+  min-width: 120px;
+  border: none;
+  border-radius: 14px;
+  padding: 0.95rem 1rem;
+  cursor: pointer;
+  font-weight: 600;
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+
+.btn:hover {
+  transform: translateY(-1px);
+}
+
+.btn-submit {
+  background: #2563eb;
+  color: #ffffff;
+}
+
+.btn-danger {
+  background: #ef4444;
+  color: #ffffff;
+}
+
+.btn-secondary {
+  background: #f8fafc;
+  color: #0f172a;
+  border: 1px solid #d1d5db;
+}

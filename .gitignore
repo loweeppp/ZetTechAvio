@@ -6,7 +6,13 @@
 appsettings.Development.json
 appsettings.Production.json
 
-ssl/
+# Secrets and env files
+.env
+.env.local
+
+Migration files
+Migrations/
+
 *.pem
 *.key
 

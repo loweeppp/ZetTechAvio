@@ -23,6 +23,7 @@ builder.Services.AddScoped<IUserValidationService, UserValidationService>();
 builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
 builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
 builder.Services.AddScoped<IAuthStateService, AuthStateService>();
+builder.Services.AddScoped<IUserManagementService, UserManagementService>();
 builder.Services.AddScoped<IFaresService, FaresService>();
 builder.Services.AddScoped<IFlightsService, FlightsService>();
 builder.Services.AddScoped<IBookingsService, BookingsService>();
@@ -32,7 +33,8 @@ builder.Services.AddScoped<IConfirmationService>(sp =>
     sp.GetRequiredService<ApplicationDbContext>(),
     sp.GetRequiredService<IConfiguration>(),
     sp.GetRequiredService<IWebHostEnvironment>(),
-    sp.GetRequiredService<ILogger<ConfirmationService>>()));
+    sp.GetRequiredService<ILogger<ConfirmationService>>(),
+    sp.GetRequiredService<IEmailService>()));
         //  builder.Configuration));
 
 
@@ -64,6 +66,7 @@ builder.Services.AddScoped<HttpClient>(sp =>
 
 // Также зарегистрируем стандартный HttpClientFactory
 builder.Services.AddHttpClient();
+builder.Services.AddHttpClient<IEmailService, EmailService>();
 
 var llmApiBase = builder.Configuration["LLM:BaseUrl"]
     ?? "https://gives-controllers-fine-remedies.trycloudflare.com";

@@ -25,13 +25,15 @@ namespace ZetTechAvio1._0.Services
         private readonly IConfiguration _config;
         private readonly IWebHostEnvironment _env;
         private readonly ILogger<ConfirmationService> _logger;
+        private readonly IEmailService _emailService;
 
-        public ConfirmationService(ApplicationDbContext dbContext, IConfiguration config, IWebHostEnvironment env, ILogger<ConfirmationService> logger)
+        public ConfirmationService(ApplicationDbContext dbContext, IConfiguration config, IWebHostEnvironment env, ILogger<ConfirmationService> logger, IEmailService emailService)
         {
             _dbContext = dbContext;
             _config = config;
             _env = env;
             _logger = logger;
+            _emailService = emailService;
         }
 
         public async Task<bool> GenerateCodeAsync(string email, HttpResponse response)
@@ -51,78 +53,30 @@ namespace ZetTechAvio1._0.Services
                 Expires = DateTimeOffset.UtcNow.AddMinutes(10)
             });
 
-
-            // Отправка письма
             try
             {
-                var smtpHost = _config["SmtpSettings:Host"] ?? _config["SMTP_HOST"];
-                var smtpPortStr = _config["SmtpSettings:Port"] ?? _config["SMTP_PORT"];
-                var senderEmail = _config["SmtpSettings:Email"] ?? _config["SMTP_USER"];
-                var senderPassword = _config["SmtpSettings:Password"] ?? _config["SMTP_PASSWORD"];
+                var emailBody = $"Ваш код подтверждения: {code}\nКод действителен 10 минут.";
+                var emailSent = await _emailService.SendEmailAsync(email,
+                    "Код подтверждения ZetTechAvio",
+                    emailBody,
+                    isHtml: false);
 
-                // Debug логирование
-                _logger.LogInformation($"SMTP Debug: Host={smtpHost}, Port={smtpPortStr}, Email='{senderEmail}', HasPassword={!string.IsNullOrWhiteSpace(senderPassword)}");
-
-                // Валидация SMTP параметров
-                if (string.IsNullOrWhiteSpace(smtpHost) || string.IsNullOrWhiteSpace(senderEmail) || string.IsNullOrWhiteSpace(senderPassword))
+                if (!emailSent)
                 {
-                    _logger.LogWarning($"SMTP параметры не установлены. Host={smtpHost}, Email={senderEmail}. Email не отправлен.");
-                    return false;
+                    _logger.LogWarning("Не удалось отправить код подтверждения на {Email}", email);
+                }
+                else
+                {
+                    _logger.LogInformation("Email отправлен на {Email}", email);
                 }
 
-                // Безопасный парсинг порта
-                if (!int.TryParse(smtpPortStr, out int smtpPort))
-                {
-                    smtpPort = 25; // Дефолтный порт SMTP
-                }
-
-                using (var smtp = new SmtpClient(smtpHost, smtpPort))
-                {
-                    smtp.Credentials = new NetworkCredential(senderEmail, senderPassword);
-                    
-                    // Настройка SSL/TLS в зависимости от порта
-                    if (smtpPort == 25)
-                    {
-                        smtp.EnableSsl = false; // Порт 25 - обычный SMTP без SSL
-                    }
-                    else if (smtpPort == 587)
-                    {
-                        smtp.EnableSsl = true; // Порт 587 - STARTTLS
-                    }
-                    else if (smtpPort == 465)
-                    {
-                        smtp.EnableSsl = true; // Порт 465 - SMTPS (SSL)
-                    }
-                    else
-                    {
-                        smtp.EnableSsl = true; // Для других портов включаем SSL
-                    }
-
-                    _logger.LogInformation($"SMTP подключение: Host={smtpHost}, Port={smtpPort}, SSL={smtp.EnableSsl}, User={senderEmail}");
-                    
-                    _logger.LogInformation($"Создание MailMessage с From={senderEmail}");
-                    var mail = new MailMessage
-                    {
-                        From = new MailAddress(senderEmail),
-                        Subject = "Код подтверждения ZetTechAvio",
-                        Body = $"Ваш код подтверждения: {code}\nКод действителен 10 минут.",
-                        IsBodyHtml = false
-                    };
-                    mail.To.Add(email);
-
-                    await smtp.SendMailAsync(mail);
-                    _logger.LogInformation($"Email отправлен на {email}");
-                }
+                return emailSent;
             }
             catch (Exception ex)
             {
-                // Логирование ошибки
-                _logger.LogWarning($"Ошибка отправки письма: {ex.Message}");
-                // Не выбрасываем исключение - бронирование уже создано
-                Console.WriteLine($"Ошибка отправки письма: {ex.Message}");
+                _logger.LogWarning(ex, "Ошибка отправки письма подтверждения на {Email}", email);
+                return false;
             }
-
-            return true;
         }
 
         public Task<bool> VerifyCodeAsync(string email, string code, HttpRequest request, HttpResponse response)
