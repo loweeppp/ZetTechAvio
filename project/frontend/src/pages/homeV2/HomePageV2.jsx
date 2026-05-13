@@ -1,5 +1,6 @@
 import React from 'react';
 import './HomePageV2.css';
+import { useTranslation } from '../../i18n/TranslationProvider';
 
 import SearchFormV2 from '../../features/flights/SearchFormV2';
 import AISearch from '../../features/flights/AISearch';
@@ -9,6 +10,7 @@ import Benefits from '../../features/flights/Benefits';
 import Results from '../../features/flights/Results';
 
 export default function HomePageV2() {
+  const { t } = useTranslation();
   const [query, setQuery] = React.useState(null);
 
   return (
@@ -29,16 +31,13 @@ export default function HomePageV2() {
             <div className="homev2__container homev2__heroInner">
               <div className="homev2__heroText">
                 <h1 className="homev2__headline">
-                  Найдите свой ближайший рейс.
+                  {t('home.headlineLine1')}
                   <br />
                   <span className="homev2__headlineAccent">
-                    Путешествуйте без компромиссов.
+                    {t('home.headlineAccent')}
                   </span>
                 </h1>
-                <p className="homev2__lead">
-                  Начните поиск — затем сможете выбрать места и оформить покупку
-                  билета.
-                </p>
+                <p className="homev2__lead">{t('home.lead')}</p>
               </div>
 
               <div className="homev2__formWrap">

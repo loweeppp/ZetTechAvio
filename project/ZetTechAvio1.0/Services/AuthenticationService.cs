@@ -139,7 +139,7 @@ namespace ZetTechAvio1._0.Services
 
                 if (!user.IsActive)
                     return (false, "Account is blocked. Обратитесь к администратору.", null);
-
+                    
                 Console.WriteLine($"[LOGIN] Login successful!");
                 return (true, "Login successful", user);
             }

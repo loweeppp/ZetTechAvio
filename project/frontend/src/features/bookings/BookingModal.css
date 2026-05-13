@@ -282,6 +282,16 @@
   margin-bottom: 0;
 }
 
+.\.passenger-form-selector {
+  width: 100%;
+  padding: 8px;
+  margin-bottom: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+  font-family: inherit;
+}
+
 @media (max-width: 600px) {
   .modal-content {
     padding: 20px;

@@ -414,7 +414,7 @@ export default function BookingModal({ flight, isOpen, onClose, onBook, user }) 
                 value={email} 
                 type="email" 
                 onChange={(e) => setEmail(e.target.value)}  
-                className=".passenger-form input" 
+                className=".passenger-form-selector" 
                 placeholder="Введите email" 
               /></p>
 
@@ -427,7 +427,7 @@ export default function BookingModal({ flight, isOpen, onClose, onBook, user }) 
                     setCode(value)}} 
                   value={code} 
                   type="text" 
-                  className=".passenger-form input" 
+                  className=".passenger-form-selector" 
                   placeholder="Введите код подтверждения" 
                 />
                 </p>

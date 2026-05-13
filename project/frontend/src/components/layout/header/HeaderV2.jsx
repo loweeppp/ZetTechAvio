@@ -1,16 +1,18 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Globe, Ticket, User } from 'lucide-react';
 import { useAuth } from '../../../features/auth/useAuth';
+import { useTranslation } from '../../../i18n/TranslationProvider';
 import AuthModal from '../../../features/auth/AuthModal';
 import ProfileModal from '../../../features/auth/ProfileModal';
 import './HeaderV2.css';
 
 const API_URL = process.env.REACT_APP_API_URL || 'https://api.zettechavio.ru';
 
-function FlightTicker() {
-  const [items, setItems] = useState([]);
-  const [loading, setLoading] = useState(true);
+function FlightTicker({ language }) {
+  const { t } = useTranslation();
+  const [items, setItems] = React.useState([]);
+  const [loading, setLoading] = React.useState(true);
 
 function getUserInitials(fullName, email) {
   if (fullName) {
@@ -37,31 +39,35 @@ function getUserInitials(fullName, email) {
         if (!active) return;
         const visible = (data || [])
           .slice(0, 8)
-          .map((flight) => ({
-            id: flight.id,
-            text: `${flight.originAirport?.city || flight.originAirport?.iata || '—'} → ${flight.destAirport?.city || flight.destAirport?.iata || '—'} от ${Number(flight.minPrice || 0).toLocaleString('ru-RU')} ₽`,
-          }));
-        setItems(visible.length ? visible : [{ id: 'empty', text: 'Рейсы не найдены' }]);
+          .map((flight) => {
+            const locale = language === 'ru' ? 'ru-RU' : 'en-US';
+            const currency = language === 'ru' ? '₽' : 'RUB';
+            return {
+              id: flight.id,
+              text: `${flight.originAirport?.city || flight.originAirport?.iata || '—'} → ${flight.destAirport?.city || flight.destAirport?.iata || '—'} ${t('ticker.from')} ${Number(flight.minPrice || 0).toLocaleString(locale)} ${currency}`,
+            };
+          });
+        setItems(visible.length ? visible : [{ id: 'empty', text: t('ticker.empty') }]);
       })
       .catch((error) => {
         console.error('Flight ticker error:', error);
         if (!active) return;
-        setItems([{ id: 'error', text: 'Не удалось загрузить рейсы' }]);
+        setItems([{ id: 'error', text: t('ticker.error') }]);
       })
       .finally(() => active && setLoading(false));
 
     return () => {
       active = false;
     };
-  }, []);
+  }, [language]);
 
   return (
-    <div className="ticker-wrapper" aria-label="Рейсы">
+    <div className="ticker-wrapper" aria-label={t('ticker.ariaLabel')}>
       <div className="ticker-fade ticker-fade--left" />
       <div className="ticker-fade ticker-fade--right" />
       <div className="ticker-inner">
         {loading ? (
-          <span className="ticker-loading">Загрузка рейсов...</span>
+          <span className="ticker-loading">{t('ticker.loading')}</span>
         ) : (
           <div className="ticker-track">
             {[...items, ...items].map((item, index) => {
@@ -88,6 +94,7 @@ export default function HeaderV2() {
   const { currentUser, isLoading, login, logout, changeUser, fetchCurrentUser } =
     useAuth();
 
+  const { t, language, toggleLanguage } = useTranslation();
   const [isAuthModalOpen, setIsAuthModalOpen] = React.useState(false);
   const [isProfileModalOpen, setIsProfileModalOpen] = React.useState(false);
 
@@ -116,7 +123,7 @@ export default function HeaderV2() {
 
   return (
     <>
-      <FlightTicker />
+      <FlightTicker language={language} />
 
       <header className="headerv2">
         <div className="headerv2__container">
@@ -135,7 +142,7 @@ export default function HeaderV2() {
                 }`}
               to="/"
             >
-              Поиск билетов
+              {t('header.searchTickets')}
             </Link>
 
             {currentUser && (
@@ -147,7 +154,7 @@ export default function HeaderV2() {
                     }`}
                   to="/bookings"
                 >
-                  Мои билеты
+                  {t('header.myBookings')}
                 </Link>
                 {['Admin', 'Manager'].includes(currentUser.role) && (
                   <Link
@@ -157,21 +164,26 @@ export default function HeaderV2() {
                       }`}
                     to="/admin"
                   >
-                    Admin Panel
+                    {t('header.adminPanel')}
                   </Link>
                 )}
               </>
             )}
 
             <a className="headerv2__navLink" href="mailto:ZetTechAvioBot@mail.ru">
-              Поддержка
+              {t('header.support')}
             </a>
           </nav>
 
           <div className="headerv2__actions">
-            <button className="headerv2__lang" type="button">
+            <button
+              className="headerv2__lang"
+              type="button"
+              onClick={toggleLanguage}
+              aria-label={t('header.toggleLanguage')}
+            >
               <Globe className="headerv2__icon" />
-              RU
+              {language.toUpperCase()}
             </button>
 
             {currentUser ? (
@@ -179,7 +191,7 @@ export default function HeaderV2() {
                 <Link
                   to="/profile"
                   className={`headerv2__user ${location.pathname === '/profile' ? 'headerv2__navLink--active' : ''}`}
-                  title="Профиль"
+                  title={t('header.profile')}
                 >
                   <User className="headerv2__icon" />
                   {currentUser.fullName || currentUser.email}
@@ -192,7 +204,7 @@ export default function HeaderV2() {
                 onClick={() => setIsAuthModalOpen(true)}
               >
                 <User className="headerv2__icon" />
-                Войти
+                {t('header.login')}
               </button>
             )}
           </div>

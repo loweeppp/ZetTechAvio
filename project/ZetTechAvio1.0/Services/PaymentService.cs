@@ -66,7 +66,7 @@ namespace ZetTechAvio1._0.Services
                 }
 
                 // 2. Создать платеж в YooKassa через REST API 
-                
+
                 var requestBody = new
                 {
                     amount = new
@@ -93,7 +93,7 @@ namespace ZetTechAvio1._0.Services
 
                 var jsonPayload = JsonConvert.SerializeObject(requestBody);
                 _logger.LogInformation($"[PAYMENT DEBUG] JSON Request Payload:\n{jsonPayload}");
-                
+
                 var jsonContent = new StringContent(
                     jsonPayload,
                     Encoding.UTF8,
@@ -159,10 +159,10 @@ namespace ZetTechAvio1._0.Services
             try
             {
                 _logger.LogInformation($"[PAYMENT_EMAIL] Начало отправки письма для бронирования {booking.Id}");
-                
+
                 var userEmail = booking.User?.Email;
                 _logger.LogInformation($"[PAYMENT_EMAIL] Email пользователя: {userEmail ?? "ПУСТО"}");
-                
+
                 if (string.IsNullOrWhiteSpace(userEmail))
                 {
                     _logger.LogWarning("Email пользователя не найден для бронирования {BookingId}", booking.Id);
@@ -189,7 +189,7 @@ namespace ZetTechAvio1._0.Services
                 {
                     smtp.Credentials = new NetworkCredential(senderEmail, senderPassword);
                     smtp.EnableSsl = smtpPort == 587 || smtpPort == 465;
-                    
+
                     _logger.LogInformation($"[PAYMENT_EMAIL] SMTP клиент создан - EnableSSL: {smtp.EnableSsl}");
 
                     // Генерируем QR-код (заглушка)
@@ -259,7 +259,7 @@ namespace ZetTechAvio1._0.Services
             // Простая текстовая заглушка QR-кода
             // В реальном приложении здесь был бы реальный QR-код
             var qrData = $"BOOKING:{bookingReference}|AIRLINE:ZetTechAvio|TIME:{DateTime.UtcNow:yyyy-MM-dd}";
-            
+
             // Генерируем простой паттерн в стиле ASCII QR-кода
             var ascii = @"
 █████████████████████████████████████
@@ -271,7 +271,7 @@ namespace ZetTechAvio1._0.Services
 █                                   █
 █████████████████████████████████████
             ";
-            
+
             return ascii;
         }
 
@@ -365,7 +365,7 @@ namespace ZetTechAvio1._0.Services
                     else if (status == "failed" || status == "canceled")
                     {
                         _logger.LogWarning($"[PAYMENT_VERIFY] Платеж {yooKassaPaymentId} отклонён: {status}");
-                        
+
                         payment.Status = Payment.PaymentStatus.Failed;
                         payment.UpdatedAt = DateTime.UtcNow;
 

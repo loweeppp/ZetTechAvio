@@ -7,6 +7,7 @@ import {
   Search,
 } from 'lucide-react';
 
+import { useTranslation } from '../../i18n/TranslationProvider';
 import { CITIES } from './cities';
 
 const API_URL = process.env.REACT_APP_API_URL || 'https://api.zettechavio.ru';
@@ -18,6 +19,7 @@ const formatDate = (value) => {
 };
 
 function CityInput({ label, value, onChange, placeholder, items = CITIES }) {
+  const { t } = useTranslation();
   const [open, setOpen] = React.useState(false);
   const [query, setQuery] = React.useState('');
   const ref = React.useRef(null);
@@ -65,7 +67,7 @@ function CityInput({ label, value, onChange, placeholder, items = CITIES }) {
               autoFocus
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Поиск города или аэропорта"
+              placeholder={t('searchForm.cityPlaceholder')}
               className="homev2sf__searchInput"
             />
           </div>
@@ -93,7 +95,7 @@ function CityInput({ label, value, onChange, placeholder, items = CITIES }) {
             ))}
 
             {filtered.length === 0 && (
-              <li className="homev2sf__empty">Нет совпадений</li>
+              <li className="homev2sf__empty">{t('searchForm.noMatches')}</li>
             )}
           </ul>
         </div>
@@ -103,6 +105,7 @@ function CityInput({ label, value, onChange, placeholder, items = CITIES }) {
 }
 
 export default function SearchFormV2({ onSearch }) {
+  const { t } = useTranslation();
   const [from, setFrom] = React.useState(CITIES[0]);
   const [to, setTo] = React.useState(CITIES[4]);
   const [date, setDate] = React.useState('');
@@ -260,7 +263,7 @@ export default function SearchFormV2({ onSearch }) {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!from && !to && !date) {
-      setError('Выберите маршрут, пункт назначения или дату вылета');
+      setError(t('searchForm.errorMissingRoute'));
       return;
     }
     setError('');
@@ -272,10 +275,10 @@ export default function SearchFormV2({ onSearch }) {
       <div className="homev2sf__row">
         <div className="homev2sf__pair">
           <CityInput
-            label="Откуда"
+            label={t('searchForm.from')}
             value={from}
             onChange={setFrom}
-            placeholder="Город или аэропорт"
+            placeholder={t('searchForm.cityPlaceholder')}
             items={cities}
           />
 
@@ -283,7 +286,7 @@ export default function SearchFormV2({ onSearch }) {
             type="button"
             onClick={swap}
             className="homev2sf__swap"
-            aria-label="Swap"
+            aria-label={t('searchForm.swap')}
           >
             <ArrowLeftRight
               className={`homev2sf__swapIcon ${swapping ? 'homev2sf__swapIcon--spin' : ''}`}
@@ -291,10 +294,10 @@ export default function SearchFormV2({ onSearch }) {
           </button>
 
           <CityInput
-            label="Куда"
+            label={t('searchForm.to')}
             value={to}
             onChange={setTo}
-            placeholder="Город или аэропорт"
+            placeholder={t('searchForm.cityPlaceholder')}
             items={availableDestinations}
           />
         </div>
@@ -303,7 +306,7 @@ export default function SearchFormV2({ onSearch }) {
 
         <label className="homev2sf__date">
           <span className="homev2sf__dateLabel">
-            <Calendar className="homev2sf__dateIcon" /> Дата вылета
+            <Calendar className="homev2sf__dateIcon" /> {t('searchForm.departureDate')}
           </span>
           <input
             type="date"
@@ -320,7 +323,7 @@ export default function SearchFormV2({ onSearch }) {
                 className="homev2__destPrice"
                 onClick={() => setDateOpen((current) => !current)}
               >
-                {date ? `Выбрана дата: ${formatDate(date)}` : 'Выбрать дату'}
+                {date ? `${t('searchForm.selectedDate')}: ${formatDate(date)}` : t('searchForm.chooseDate')}
               </button>
 
               {dateOpen && (
@@ -331,7 +334,7 @@ export default function SearchFormV2({ onSearch }) {
                       autoFocus
                       value={dateQuery}
                       onChange={(e) => setDateQuery(e.target.value)}
-                      placeholder="Фильтр даты"
+                      placeholder={t('searchForm.filterDate')}
                       className="homev2sf__searchInput"
                     />
                   </div>
@@ -354,7 +357,7 @@ export default function SearchFormV2({ onSearch }) {
                     ))}
 
                     {filteredDates.length === 0 && (
-                      <li className="homev2sf__empty">Нет доступных дат</li>
+                      <li className="homev2sf__empty">{t('searchForm.noDates')}</li>
                     )}
                   </ul>
                 </div>
@@ -367,7 +370,7 @@ export default function SearchFormV2({ onSearch }) {
 
         <div className="homev2sf__pax">
           <div className="homev2sf__paxLabel">
-            <Users className="homev2sf__paxIcon" /> Пассажиры
+            <Users className="homev2sf__paxIcon" /> {t('searchForm.passengers')}
           </div>
           <div className="homev2sf__paxCtrls">
             <button
@@ -390,7 +393,7 @@ export default function SearchFormV2({ onSearch }) {
 
         <button type="submit" className="homev2sf__submit">
           <Search className="homev2sf__submitIcon" />
-          <span>Поиск авиабилетов</span>
+          <span>{t('searchForm.searchFlights')}</span>
         </button>
       </div>
       {error && <div className="homev2sf__error">{error}</div>}

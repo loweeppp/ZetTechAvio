@@ -26,7 +26,6 @@ namespace ZetTechAvio1._0.Services
         private readonly IWebHostEnvironment _env;
         private readonly ILogger<ConfirmationService> _logger;
         private readonly IEmailService _emailService;
-
         public ConfirmationService(ApplicationDbContext dbContext, IConfiguration config, IWebHostEnvironment env, ILogger<ConfirmationService> logger, IEmailService emailService)
         {
             _dbContext = dbContext;
@@ -67,9 +66,8 @@ namespace ZetTechAvio1._0.Services
                 }
                 else
                 {
-                    _logger.LogInformation("Email отправлен на {Email}", email);
+                    _logger.LogInformation("Код подтверждения отправлен на {Email}", email);
                 }
-
                 return emailSent;
             }
             catch (Exception ex)
@@ -83,7 +81,7 @@ namespace ZetTechAvio1._0.Services
         {
             // Пытаемся получить куки
             var safeCookieName = $"ConfirmationCode_{email.Replace("@", "_").Replace(".", "_")}";
-            
+
             if (!request.Cookies.TryGetValue(safeCookieName, out var storedCode))
                 return Task.FromResult(false);  // куки не найдена или истекла
 

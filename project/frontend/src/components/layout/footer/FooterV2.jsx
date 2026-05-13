@@ -1,9 +1,16 @@
 import React from 'react';
 import { Plane } from 'lucide-react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link } from 'react-router-dom';
+import { useTranslation } from '../../../i18n/TranslationProvider';
 import './FooterV2.css';
 
 export default function FooterV2() {
+  const { t } = useTranslation();
+  const columns = [
+    { title: t('footer.company'), links: [t('footer.about')] },
+    { title: t('footer.support'), links: [t('footer.contacts'), t('footer.privacy'), t('footer.terms')] },
+  ];
+
   return (
     <footer className="footerv2">
       <div className="footerv2__container">
@@ -21,20 +28,10 @@ export default function FooterV2() {
                 </Link>
               </div>
             </div>
-            <p className="footerv2__desc">
-              Веб-сервис для поиска и покупки авиабилетов. Форма поиска представляет формы
-              поиска по городу отправления/прибытия и дате, позволяет сразу рейсов, оформить покупку и
-              получить электронный билет.
-            </p>
+            <p className="footerv2__desc">{t('footer.description')}</p>
           </div>
 
-          {[
-            { title: 'Компания', links: ['О нас'] },
-            {
-              title: 'Поддержка',
-              links: ['Контакты', 'Конфиденциальность', 'Условия'],
-            },
-          ].map((col) => (
+          {columns.map((col) => (
             <div key={col.title}>
               <div className="footerv2__title">{col.title}</div>
               <ul className="footerv2__links">
@@ -51,16 +48,16 @@ export default function FooterV2() {
         </div>
 
         <div className="footerv2__bottom">
-          <div>© {new Date().getFullYear()} ZetTechAvio. Все права защищены.</div>
+          <div>© {new Date().getFullYear()} ZetTechAvio. {t('footer.copyright')}</div>
           <div className="footerv2__bottomLinks">
             <a href="/privacy" target="_blank" className="footerv2__bottomLink">
-              Cookies
+              {t('footer.cookies')}
             </a>
             <a href="/privacy" target="_blank" className="footerv2__bottomLink">
-              Конфиденциальность
+              {t('footer.privacy')}
             </a>
-            <a href="/privacy" target="_blank"  className="footerv2__bottomLink">
-              Условия
+            <a href="/privacy" target="_blank" className="footerv2__bottomLink">
+              {t('footer.terms')}
             </a>
           </div>
         </div>
