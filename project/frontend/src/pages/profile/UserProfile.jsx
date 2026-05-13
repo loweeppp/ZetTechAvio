@@ -36,8 +36,6 @@ export default function UserProfile() {
     });
     const [loadingStats, setLoadingStats] = useState(true);
 
-    const API_URL = process.env.REACT_APP_API_URL || 'https://api.zettechavio.ru';
-
     // Загружаем статистику при загрузке страницы
     useEffect(() => {
         if (!currentUser?.id) {
@@ -48,7 +46,7 @@ export default function UserProfile() {
         const loadStats = async () => {
             try {
                 const token = localStorage.getItem('token');
-                const response = await fetch(`${API_URL}/api/users/${currentUser.id}/bookings`, {
+                const response = await fetch(`${API_URL}/api/bookings/my`, {
                     headers: {
                         'Authorization': `Bearer ${token}`
                     },
@@ -64,22 +62,24 @@ export default function UserProfile() {
                 const bookings = await response.json();
                 const now = new Date();
 
-                // Подсчитываем статистику
                 let totalTickets = 0;
                 let spent = 0;
                 let activeFlights = 0;
                 let completed = 0;
 
                 bookings.forEach(booking => {
-                    totalTickets += booking.quantity || 1;
-                    spent += booking.totalPrice || 0;
+                    const ticketList = Array.isArray(booking.tickets) ? booking.tickets : [];
+                    totalTickets += ticketList.length;
+                    spent += ticketList.reduce((sum, ticket) => sum + (ticket.price || 0), 0) || (booking.totalAmount || 0);
 
-                    const departureDate = new Date(booking.flight?.departureDt);
-                    if (departureDate > now) {
-                        activeFlights++;
-                    } else {
-                        completed++;
-                    }
+                    ticketList.forEach(ticket => {
+                        const departureDate = new Date(ticket.flight?.departureTime || ticket.flight?.departureDt);
+                        if (!isNaN(departureDate.getTime()) && departureDate > now) {
+                            activeFlights++;
+                        } else {
+                            completed++;
+                        }
+                    });
                 });
 
                 setStats({
