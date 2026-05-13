@@ -18,6 +18,11 @@ export default function Results({ query, onBack, onSearch }) {
   const [sort, setSort] = React.useState('cheapest');
   const [loading, setLoading] = React.useState(true);
   const [flights, setFlights] = React.useState([]);
+  const [priceBounds, setPriceBounds] = React.useState({ min: 3000, max: 9999 });
+  const [maxPrice, setMaxPrice] = React.useState(9999);
+  const [durationBounds, setDurationBounds] = React.useState({ min: 60, max: 720 });
+  const [maxDuration, setMaxDuration] = React.useState(720);
+  const [baggageOnly, setBaggageOnly] = React.useState(false);
   const [error, setError] = React.useState(null);
   const [selectedFlight, setSelectedFlight] = React.useState(null);
   const [isBookingOpen, setIsBookingOpen] = React.useState(false);
@@ -52,7 +57,25 @@ export default function Results({ query, onBack, onSearch }) {
         }
 
         const data = await response.json();
-        setFlights(data || []);
+        const flightsData = data || [];
+        setFlights(flightsData);
+        if (flightsData.length > 0) {
+          const prices = flightsData.map((flight) => flight.minPrice);
+          const durations = flightsData.map((flight) => flight.durationMinutes);
+          const minPrice = Math.min(...prices);
+          const maxPriceValue = Math.max(...prices);
+          const minDuration = Math.min(...durations);
+          const maxDurationValue = Math.max(...durations);
+          setPriceBounds({ min: minPrice, max: maxPriceValue });
+          setMaxPrice(maxPriceValue);
+          setDurationBounds({ min: Math.max(30, minDuration), max: maxDurationValue });
+          setMaxDuration(maxDurationValue);
+        } else {
+          setPriceBounds({ min: 50, max: 1500 });
+          setMaxPrice(1500);
+          setDurationBounds({ min: 60, max: 720 });
+          setMaxDuration(720);
+        }
       } catch (err) {
         console.error('Results fetch error:', err);
         setError(err instanceof Error ? err.message : 'Ошибка сети');
@@ -65,17 +88,34 @@ export default function Results({ query, onBack, onSearch }) {
     fetchFlights();
   }, [query]);
 
+  const filteredFlights = React.useMemo(() => {
+    return flights.filter((flight) => {
+      const priceOk = flight.minPrice <= maxPrice;
+      const durationOk = flight.durationMinutes <= maxDuration;
+      const baggageOk =
+        !baggageOnly ||
+        String(flight.baggageInfo).toLowerCase().includes('включен');
+      return priceOk && durationOk && baggageOk;
+    });
+  }, [flights, maxPrice, maxDuration, baggageOnly]);
+
   const sortedFlights = React.useMemo(() => {
     if (sort === 'fastest') {
-      return [...flights].sort((a, b) => a.durationMinutes - b.durationMinutes);
+      return [...filteredFlights].sort((a, b) => a.durationMinutes - b.durationMinutes);
     }
     if (sort === 'best') {
-      return [...flights].sort((a, b) => a.minPrice - b.minPrice);
+      return [...filteredFlights].sort((a, b) => a.minPrice - b.minPrice);
     }
-    return [...flights].sort((a, b) => a.minPrice - b.minPrice);
-  }, [flights, sort]);
+    return [...filteredFlights].sort((a, b) => a.minPrice - b.minPrice);
+  }, [filteredFlights, sort]);
 
-  const resultCount = flights.length;
+  const resultCount = filteredFlights.length;
+
+  const resetFilters = () => {
+    setMaxPrice(priceBounds.max);
+    setMaxDuration(durationBounds.max);
+    setBaggageOnly(false);
+  };
 
   const handleBuyClick = (flight) => {
     setSelectedFlight(flight);
@@ -109,7 +149,19 @@ export default function Results({ query, onBack, onSearch }) {
         </div>
 
         <div className="homev2res__grid">
-          <ResultsFilters />
+          <ResultsFilters
+            price={maxPrice}
+            minPrice={priceBounds.min}
+            maxPrice={priceBounds.max}
+            duration={maxDuration}
+            minDuration={durationBounds.min}
+            maxDuration={durationBounds.max}
+            onPriceChange={setMaxPrice}
+            onDurationChange={setMaxDuration}
+            baggageOnly={baggageOnly}
+            onBaggageChange={() => setBaggageOnly((current) => !current)}
+            onReset={resetFilters}
+          />
 
           <div>
             <div className="homev2res__sorts">

@@ -1,78 +1,52 @@
 import React from 'react';
 
-const AIRLINES = [
-  'Aeroflot',
-  'Turkish Airlines',
-  'Emirates',
-  'Air France',
-  'Lufthansa',
-];
-
-export default function ResultsFilters() {
-  const [price, setPrice] = React.useState(800);
-  const [direct, setDirect] = React.useState(false);
-  const [times, setTimes] = React.useState([]);
-  const [airlines, setAirlines] = React.useState([]);
-
-  const toggle = (arr, v, set) =>
-    set(arr.includes(v) ? arr.filter((x) => x !== v) : [...arr, v]);
-
+export default function ResultsFilters({ price,minDurration, maxDuration, minPrice, maxPrice, onPriceChange, duration, onDurationChange, baggageOnly, onBaggageChange, onReset }) {
   return (
     <aside className="homev2res__filters">
       <div className="homev2res__filtersHead">
         <div className="homev2res__filtersTitle">Фильтры</div>
-        <button className="homev2res__filtersReset" type="button">
+        <button className="homev2res__filtersReset" type="button" onClick={onReset}>
           Сбросить
         </button>
       </div>
 
       <FilterGroup title="Цена">
         <div className="homev2res__priceRow">
-          <span>$50</span>
-          <span className="homev2res__priceValue">до ${price}</span>
+          <span>{minPrice} ₽</span>
+          <span className="homev2res__priceValue">до {price} ₽</span>
         </div>
         <input
           type="range"
-          min={50}
-          max={1500}
+          min={minPrice}
+          max={maxPrice}
           value={price}
-          onChange={(e) => setPrice(Number(e.target.value))}
+          onChange={(e) => onPriceChange(Number(e.target.value))}
           className="homev2res__range"
         />
       </FilterGroup>
 
-      <FilterGroup title="Пересадки">
-        <Checkbox
-          label="Только прямые рейсы"
-          checked={direct}
-          onChange={() => setDirect(!direct)}
+      <FilterGroup title="Продолжительность">
+        <div className="homev2res__priceRow">
+          <span>до {Math.floor(duration / 60)} ч</span>
+          <span className="homev2res__priceValue">{duration} мин</span>
+        </div>
+        <input
+          type="range"
+          min={60}
+          max={720}
+          step={30}
+          value={duration}
+          onChange={(e) => onDurationChange(Number(e.target.value))}
+          className="homev2res__range"
         />
       </FilterGroup>
 
-      <FilterGroup title="Время вылета">
-        <div className="homev2res__timeGrid">
-          {[
-            { id: 'morning', label: 'Утро', sub: '06–12' },
-            { id: 'afternoon', label: 'День', sub: '12–18' },
-            { id: 'evening', label: 'Вечер', sub: '18–00' },
-            { id: 'night', label: 'Ночь', sub: '00–06' },
-          ].map((t) => {
-            const active = times.includes(t.id);
-            return (
-              <button
-                key={t.id}
-                type="button"
-                onClick={() => toggle(times, t.id, setTimes)}
-                className={`homev2res__timeBtn ${
-                  active ? 'homev2res__timeBtn--active' : ''
-                }`}
-              >
-                <div className="homev2res__timeLbl">{t.label}</div>
-                <div className="homev2res__timeSub">{t.sub}</div>
-              </button>
-            );
-          })}
-        </div>
+      <FilterGroup title="Багаж">
+        <Checkbox
+          label="Только с багажом"
+          checked={baggageOnly}
+          onChange={onBaggageChange}
+        />
       </FilterGroup>
 
     </aside>

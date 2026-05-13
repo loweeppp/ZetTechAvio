@@ -1,5 +1,8 @@
 import React from 'react';
 import { Zap, Clock, Award, ArrowRight } from 'lucide-react';
+import { CITIES } from './cities';
+
+const getCity = (code) => CITIES.find((city) => city.code === code) || { code, name: code, query: code };
 
 const ITEMS = [
   {
@@ -10,7 +13,13 @@ const ITEMS = [
     airline: 'Turkish Airlines',
     time: '06:40 — 10:25',
     duration: '3ч 45м · Прямой',
-    price: 189,
+    price: 3189,
+    search: {
+      from: getCity('MOW'),
+      to: getCity('IST'),
+      date: '2026-05-20',
+      passengers: 1,
+    },
   },
   {
     label: 'Лучшее время',
@@ -20,7 +29,13 @@ const ITEMS = [
     airline: 'Emirates',
     time: '11:15 — 19:50',
     duration: '5ч 35м · Прямой',
-    price: 412,
+    price: 3412,
+    search: {
+      from: getCity('LED'),
+      to: getCity('DXB'),
+      date: '2026-06-10',
+      passengers: 1,
+    },
   },
   {
     label: 'Самый быстрый',
@@ -30,11 +45,17 @@ const ITEMS = [
     airline: 'Air France',
     time: '09:20 — 12:10',
     duration: '3ч 50м · Прямой',
-    price: 298,
+    price: 3298,
+    search: {
+      from: getCity('MOW'),
+      to: getCity('PAR'),
+      date: '2026-06-05',
+      passengers: 1,
+    },
   },
 ];
 
-export default function RecommendedFlights() {
+export default function RecommendedFlights({ onSearch }) {
   return (
     <section className="homev2__section homev2__section--recommended">
       <div className="homev2__container">
@@ -45,7 +66,7 @@ export default function RecommendedFlights() {
 
         <div className="homev2__cards3">
           {ITEMS.map((it) => (
-            <RecommendedCard key={it.label} item={it} />
+            <RecommendedCard key={it.label} item={it} onSearch={onSearch} />
           ))}
         </div>
       </div>
@@ -53,7 +74,7 @@ export default function RecommendedFlights() {
   );
 }
 
-function RecommendedCard({ item }) {
+function RecommendedCard({ item, onSearch }) {
   const { Icon } = item;
 
   return (
@@ -75,11 +96,15 @@ function RecommendedCard({ item }) {
         </div>
         <div className="homev2__recPrice">
           <div className="homev2__recPriceLabel">от</div>
-          <div className="homev2__recPriceValue">${item.price}</div>
+          <div className="homev2__recPriceValue">{item.price} ₽</div>
         </div>
       </div>
 
-      <button className="homev2__recBtn" type="button">
+      <button
+        className="homev2__recBtn"
+        type="button"
+        onClick={() => onSearch?.(item.search)}
+      >
         Смотреть предложение <ArrowRight className="homev2__recBtnIcon" />
       </button>
     </div>

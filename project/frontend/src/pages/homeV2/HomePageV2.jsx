@@ -47,8 +47,8 @@ export default function HomePageV2() {
             </div>
           </div>
 
-          <RecommendedFlights />
-          <PopularDestinations />
+          <RecommendedFlights onSearch={(q) => setQuery(q)} />
+          <PopularDestinations onSearch={(q) => setQuery(q)} />
           <Benefits />
         </>
       )}
