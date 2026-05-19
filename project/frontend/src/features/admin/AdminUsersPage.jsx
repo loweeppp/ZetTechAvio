@@ -18,7 +18,7 @@ export default function AdminUsersPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [totalCount, setTotalCount] = useState(0);
 
-  const isAdmin = currentUser && ['Admin', 'Manager'].includes(currentUser.role);
+  const isAdmin = currentUser?.role === 'Admin';
 
   useEffect(() => {
     if (isLoading) return;

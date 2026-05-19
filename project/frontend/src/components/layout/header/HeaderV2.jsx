@@ -156,7 +156,7 @@ export default function HeaderV2() {
                 >
                   {t('header.myBookings')}
                 </Link>
-                {['Admin', 'Manager'].includes(currentUser.role) && (
+                {currentUser.role === 'Admin' && (
                   <Link
                     className={`headerv2__navLink ${location.pathname === '/admin'
                       ? 'headerv2__navLink--active'

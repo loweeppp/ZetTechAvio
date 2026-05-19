@@ -7,7 +7,7 @@ namespace ZetTechAvio1._0.Controllers
 {
     [ApiController]
     [Route("api/admin/users")]
-    [Authorize(Roles = "Admin,Manager")]
+    [Authorize(Roles = "Admin")]
     public class AdminUsersController : ControllerBase
     {
         private readonly IUserManagementService _managementService;
