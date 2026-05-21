@@ -2,6 +2,7 @@ using ZetTechAvio1._0.Data;
 using ZetTechAvio1._0.Models;
 using Newtonsoft.Json;
 using Microsoft.EntityFrameworkCore;
+using QRCoder;
 using System.Text;
 using System.Net.Http.Headers;
 using System.Net.Mail;
@@ -192,8 +193,8 @@ namespace ZetTechAvio1._0.Services
 
                     _logger.LogInformation($"[PAYMENT_EMAIL] SMTP клиент создан - EnableSSL: {smtp.EnableSsl}");
 
-                    // Генерируем QR-код (заглушка)
-                    var qrCodeData = GenerateQRCodeAsText(booking.BookingReference);
+                    // Генерируем настоящий QR-код как base64 PNG
+                    var qrCodeBase64 = GenerateQRCodeBase64(booking.BookingReference);
 
                     var subject = $"Подтверждение платежа - Бронирование {booking.BookingReference}";
                     var emailBody = $@"
@@ -210,9 +211,9 @@ namespace ZetTechAvio1._0.Services
                                 <p><strong>Дата/время платежа:</strong> {payment.UpdatedAt:dd.MM.yyyy HH:mm:ss}</p>
                             </div>
 
-                            <h3 style='color: #333;'> Ваш QR-код билета:</h3>
-                            <div style='background: #fff; padding: 15px; border: 1px solid #ddd; border-radius: 5px; margin: 20px 0; font-family: monospace; font-size: 10px; line-height: 1.2; white-space: pre;'>
-{qrCodeData}
+                            <h3 style='color: #333;'>Ваш QR-код билета:</h3>
+                            <div style='background: #fff; padding: 15px; border: 1px solid #ddd; border-radius: 5px; margin: 20px 0; text-align: center;'>
+                                <img src='data:image/png;base64,{qrCodeBase64}' alt='QR-код билета' style='width: 240px; height: 240px; display: block; margin: 0 auto;' />
                             </div>
 
                             <p style='color: #666; font-size: 12px;'>
@@ -251,28 +252,16 @@ namespace ZetTechAvio1._0.Services
         }
 
         /// <summary>
-        /// Генерирует простой QR-код в виде текста (заглушка)
-        /// В продакшене можно использовать библиотеку QRCoder для генерирования реального QR-кода
+        /// Генерирует QR-код в формате base64 PNG для встраивания в HTML-письмо.
         /// </summary>
-        private string GenerateQRCodeAsText(string bookingReference)
+        private string GenerateQRCodeBase64(string bookingReference)
         {
-            // Простая текстовая заглушка QR-кода
-            // В реальном приложении здесь был бы реальный QR-код
             var qrData = $"BOOKING:{bookingReference}|AIRLINE:ZetTechAvio|TIME:{DateTime.UtcNow:yyyy-MM-dd}";
-
-            // Генерируем простой паттерн в стиле ASCII QR-кода
-            var ascii = @"
-█████████████████████████████████████
-█                                   █
-█  ██████  ██  ██  ██████  ██████   █
-█  ██      ██████  ██  ██  ██  ██   █
-█  ██████  ██  ██  ██████  ██████   █
-█           " + bookingReference.PadRight(14) + @" █
-█                                   █
-█████████████████████████████████████
-            ";
-
-            return ascii;
+            using var generator = new QRCodeGenerator();
+            using var qrCodeData = generator.CreateQrCode(qrData, QRCodeGenerator.ECCLevel.Q);
+            using var qrCode = new PngByteQRCode(qrCodeData);
+            var qrCodeBytes = qrCode.GetGraphic(20);
+            return Convert.ToBase64String(qrCodeBytes);
         }
 
         /// <summary>

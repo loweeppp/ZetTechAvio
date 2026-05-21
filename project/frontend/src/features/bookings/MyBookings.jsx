@@ -1,4 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
+import { jsPDF } from 'jspdf';
+import QRCode from 'qrcode';
 import { useAuth } from '../auth/useAuth';
 import { verifyPaymentStatus } from './paymentService';
 import './MyBookings.css';
@@ -85,8 +87,8 @@ export default function MyBookings() {
           {[
             { id: 'all', label: 'Все',  },
             { id: 'active', label: 'Активные',  },
-            { id: 'completed', label: '✅ Завершенные', icon: '✅' },
-            { id: 'cancelled', label: '❌ Отменены', icon: '❌' }
+            { id: 'completed', label: 'Завершенные', icon: '✅' },
+            { id: 'cancelled', label: 'Отменены', icon: '❌' }
           ].map(f => (
             <button
               key={f.id}
@@ -131,6 +133,121 @@ function BookingCard({ booking }) {
       'Cancelled': { label: '❌ Отменено', color: '#f44336' }
     };
     return statusMap[status] || { label: status, color: '#999' };
+  };
+
+  const downloadBookingPdf = async (booking) => {
+    const transliterate = (value) => {
+      if (!value) return '';
+      const map = {
+        А: 'A', Б: 'B', В: 'V', Г: 'G', Д: 'D', Е: 'E', Ё: 'E', Ж: 'ZH', З: 'Z', И: 'I', Й: 'Y', К: 'K', Л: 'L', М: 'M', Н: 'N', О: 'O', П: 'P', Р: 'R', С: 'S', Т: 'T', У: 'U', Ф: 'F', Х: 'KH', Ц: 'TS', Ч: 'CH', Ш: 'SH', Щ: 'SHCH', Ъ: '', Ы: 'Y', Ь: '', Э: 'E', Ю: 'YU', Я: 'YA',
+        а: 'a', б: 'b', в: 'v', г: 'g', д: 'd', е: 'e', ё: 'e', ж: 'zh', з: 'z', и: 'i', й: 'y', к: 'k', л: 'l', м: 'm', н: 'n', о: 'o', п: 'p', р: 'r', с: 's', т: 't', у: 'u', ф: 'f', х: 'kh', ц: 'ts', ч: 'ch', ш: 'sh', щ: 'shch', ъ: '', ы: 'y', ь: '', э: 'e', ю: 'yu', я: 'ya'
+      };
+      return value.split('').map((ch) => map[ch] ?? ch).join('');
+    };
+
+    const normalize = (value) => transliterate(String(value || ''));
+    const doc = new jsPDF({ unit: 'px', format: 'a4' });
+    const padding = 30;
+    let y = padding;
+    const pageWidth = 450;
+    const contentWidth = pageWidth - padding * 2;
+
+    const headerHeight = 90;
+    doc.setFillColor(36, 103, 255);
+    doc.roundedRect(padding, y, contentWidth, headerHeight, 12, 12, 'F');
+
+    doc.setTextColor('#ffffff');
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(28);
+    doc.text('ZetTechAvio', padding + 18, y + 38);
+
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(11);
+    doc.text('Electronic Boarding Pass', padding + 18, y + 55);
+    doc.setFontSize(10);
+    doc.text(`Booking Ref: ${normalize(booking.bookingReference)}`, padding + 300, y + 28);
+    doc.text(`Status: ${normalize(booking.status)}`, padding + 300, y + 44);
+    doc.text(`Amount: ${booking.totalAmount?.toLocaleString('ru-RU') || '0'} RUB`, padding + 300, y + 60);
+    y += headerHeight + 20;
+
+    doc.setTextColor('#000000');
+    doc.setLineWidth(0.75);
+    doc.line(padding, y, padding + contentWidth, y);
+    y += 22;
+
+    const firstTicket = booking.tickets?.[0];
+    const flight = firstTicket?.flight;
+    const departure = flight?.departureAirport?.code || 'N/A';
+    const arrival = flight?.arrivalAirport?.code || 'N/A';
+    const departureCity = normalize(flight?.departureAirport?.city || 'Unknown');
+    const arrivalCity = normalize(flight?.arrivalAirport?.city || 'Unknown');
+    const flightDate = flight?.departureTime ? new Date(flight.departureTime).toLocaleDateString('ru-RU') : 'Unknown';
+    const flightTime = flight?.departureTime ? new Date(flight.departureTime).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' }) : 'Unknown';
+    const ticketCount = booking.tickets?.length || 0;
+    const seatValue = normalize(firstTicket?.seat || 'N/A');
+    const gateValue = normalize(flight?.gate || 'N/A');
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(12);
+    doc.text('Flight details', padding, y);
+    doc.text('Ticket info', padding + 320, y);
+    y += 18;
+
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(11);
+    doc.text(`Route: ${departure} - ${arrival}`, padding, y);
+    doc.text(`Passengers: ${ticketCount}`, padding + 320, y);
+    y += 16;
+    doc.text(`Cities: ${departureCity} - ${arrivalCity}`, padding, y);
+    doc.text(`Departure: ${flightTime}`, padding + 320, y);
+    y += 16;
+    doc.text(`Date: ${flightDate}`, padding, y);
+    doc.text(`Seat: ${seatValue}`, padding + 320, y);
+    y += 16;
+    doc.text(`Gate: ${gateValue}`, padding, y);
+    y += 24;
+
+    doc.setDrawColor(220);
+    doc.line(padding, y, padding + contentWidth, y);
+    y += 22;
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(12);
+    doc.text('Passenger details', padding, y);
+    y += 18;
+
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(11);
+    (booking.tickets || []).forEach((ticket, index) => {
+      const passengerName = normalize(ticket.passengerName || `Passenger ${index + 1}`);
+      const seat = normalize(ticket.seat || 'N/A');
+      doc.text(`${index + 1}. ${passengerName}`, padding, y);
+      doc.text(`Seat: ${seat}`, padding + 320, y);
+      y += 16;
+      if (y > 760) {
+        doc.addPage();
+        y = padding;
+      }
+    });
+
+    if (y + 70 > 840) {
+      doc.addPage();
+      y = padding;
+    }
+
+    const qrText = `BOOKING:${normalize(booking.bookingReference)}`;
+    const qrDataUrl = await QRCode.toDataURL(qrText, { margin: 1, width: 140 });
+    const qrX = padding;
+    const qrY = y;
+    doc.addImage(qrDataUrl, 'PNG', qrX, qrY, 120, 120);
+
+
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(10);
+    doc.setTextColor('#666666');
+    doc.text('Please keep this PDF ticket for airport registration.', padding, qrY + 140 + 20);
+
+    doc.save(`ZetTechAvio_Ticket_${normalize(booking.bookingReference)}.pdf`);
   };
 
   // Получаем информацию о полете из первого билета
@@ -181,27 +298,31 @@ function BookingCard({ booking }) {
 
         <div className="flight-details">
           <div className="detail">
-            <span className="label">📅 Дата:</span>
+            <span className="label">Дата</span>
             <span className="value">{flightDate}</span>
           </div>
           <div className="detail">
-            <span className="label">🕐 Время:</span>
+            <span className="label">Время</span>
             <span className="value">{flightTime}</span>
           </div>
           <div className="detail">
-            <span className="label">🎫 Билеты:</span>
+            <span className="label">Пассажиры</span>
             <span className="value">{booking.tickets?.length || 0} шт.</span>
           </div>
           <div className="detail">
-            <span className="label">💵 Сумма:</span>
+            <span className="label">Сумма</span>
             <span className="value">{booking.totalAmount.toLocaleString('ru-RU')} ₽</span>
           </div>
         </div>
       </div>
 
       <div className="card-footer">
-        <button className="btn btn-primary">
-          Посмотреть билеты →
+        <button
+          className="btn btn-primary"
+          onClick={() => downloadBookingPdf(booking)}
+          type="button"
+        >
+          Скачать билет PDF
         </button>
       </div>
     </div>
