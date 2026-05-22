@@ -90,7 +90,7 @@ namespace ZetTechAvio1._0.Services
                 new ChatMessage("user", $"Разберите запрос пользователя:\n{text}")
             };
 
-            var request = new ChatCompletionsRequest(_modelName, messages, temperature: 0.0, max_tokens: 200);
+            var request = new ChatCompletionsRequest(_modelName, messages, temperature: 0.0, max_tokens: 1200);
             var endpoint = new Uri(client.BaseAddress, "/v1/chat/completions");
             using var response = await client.PostAsJsonAsync(endpoint, request);
             var responseBody = await response.Content.ReadAsStringAsync();
