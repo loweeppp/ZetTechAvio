@@ -14,7 +14,7 @@ Backend: C#, ASP.NET Core 8.0, Entity Framework Core
 
 ## Архитектурная диаграмма
 
-<img width="3114" height="767" alt="4" src="https://github.com/user-attachments/assets/fefda67d-53df-4deb-ba42-e2cfde1dc534" />
+<img width="3845" height="920" alt="3" src="https://github.com/user-attachments/assets/9451bfeb-a430-439b-b97c-c116f1fe6506" />
 
 ## Что реализовано
 
