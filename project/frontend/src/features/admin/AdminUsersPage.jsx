@@ -8,10 +8,12 @@ const API_URL = process.env.REACT_APP_API_URL || 'https://api.zettechavio.ru';
 
 export default function AdminUsersPage() {
   const { currentUser, token, isLoading } = useAuth();
+  const currentUserId = currentUser?.id;
   const navigate = useNavigate();
   const [users, setUsers] = useState([]);
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
+  const [sortConfig, setSortConfig] = useState({ field: 'id', direction: 'asc' });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedUser, setSelectedUser] = useState(null);
@@ -103,6 +105,11 @@ export default function AdminUsersPage() {
 
   const handleToggleBlock = async (isBlocked) => {
     if (!selectedUser) return;
+    if (selectedUser.id === currentUserId) {
+      alert('Нельзя заблокировать или разблокировать собственный аккаунт');
+      return;
+    }
+
     setLoading(true);
     try {
       const response = await fetch(`${API_URL}/api/admin/users/${selectedUser.id}/toggle-block`, {
@@ -126,6 +133,85 @@ export default function AdminUsersPage() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleDelete = async (idToDelete) => {
+    if (!token) return;
+    if (idToDelete === currentUserId) {
+      alert('Нельзя удалить собственный аккаунт');
+      return;
+    }
+
+    if (!window.confirm('Вы уверены, что хотите удалить этот аккаунт?')) {
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await fetch(`${API_URL}/api/admin/users/${idToDelete}`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => null);
+        throw new Error(data?.message || 'Ошибка удаления аккаунта');
+      }
+
+      await loadUsers();
+      if (selectedUser?.id === idToDelete) {
+        handleCloseModal();
+      }
+    } catch (err) {
+      alert(err.message || 'Ошибка удаления аккаунта');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const sortedUsers = users.slice().sort((a, b) => {
+    const { field, direction } = sortConfig;
+    const aValue = a[field];
+    const bValue = b[field];
+
+    if (aValue == null && bValue == null) return 0;
+    if (aValue == null) return 1;
+    if (bValue == null) return -1;
+
+    let compareValue = 0;
+
+    if (field === 'createdAt') {
+      compareValue = new Date(aValue) - new Date(bValue);
+    } else if (field === 'id') {
+      compareValue = Number(aValue) - Number(bValue);
+    } else {
+      compareValue = String(aValue).localeCompare(String(bValue), 'ru', { sensitivity: 'base' });
+    }
+
+    return direction === 'asc' ? compareValue : -compareValue;
+  });
+
+  const requestSort = (field) => {
+    setSortConfig((prev) => {
+      if (prev.field === field) {
+        return {
+          field,
+          direction: prev.direction === 'asc' ? 'desc' : 'asc'
+        };
+      }
+      return {
+        field,
+        direction: 'asc'
+      };
+    });
+  };
+
+  const renderSortIcon = (field) => {
+    if (sortConfig.field !== field) return '';
+    return sortConfig.direction === 'asc' ? ' ↑' : ' ↓';
   };
 
   if (isLoading) {
@@ -168,23 +254,37 @@ export default function AdminUsersPage() {
           <table className="admin-panel__table">
             <thead>
               <tr>
-                <th>ID</th>
-                <th>Email</th>
-                <th>ФИО</th>
-                <th>Телефон</th>
-                <th>Роль</th>
-                <th>Статус</th>
-                <th>Создан</th>
+                <th className="sortable" onClick={() => requestSort('id')}>
+                  ID{renderSortIcon('id')}
+                </th>
+                <th className="sortable" onClick={() => requestSort('email')}>
+                  Email{renderSortIcon('email')}
+                </th>
+                <th className="sortable" onClick={() => requestSort('fullName')}>
+                  ФИО{renderSortIcon('fullName')}
+                </th>
+                <th className="sortable" onClick={() => requestSort('phone')}>
+                  Телефон{renderSortIcon('phone')}
+                </th>
+                <th className="sortable" onClick={() => requestSort('role')}>
+                  Роль{renderSortIcon('role')}
+                </th>
+                <th className="sortable" onClick={() => requestSort('isActive')}>
+                  Статус{renderSortIcon('isActive')}
+                </th>
+                <th className="sortable" onClick={() => requestSort('createdAt')}>
+                  Создан{renderSortIcon('createdAt')}
+                </th>
                 <th>Действия</th>
               </tr>
             </thead>
             <tbody>
-              {users.length === 0 && (
+              {sortedUsers.length === 0 && (
                 <tr>
                   <td colSpan="8" className="admin-panel__empty">Пользователи не найдены</td>
                 </tr>
               )}
-              {users.map((user) => (
+              {sortedUsers.map((user) => (
                 <tr key={user.id} className={!user.isActive ? 'admin-panel__row--disabled' : ''}>
                   <td>{user.id}</td>
                   <td>{user.email}</td>
@@ -197,10 +297,19 @@ export default function AdminUsersPage() {
                     </span>
                   </td>
                   <td>{new Date(user.createdAt).toLocaleDateString('ru-RU')}</td>
-                  <td>
-                    <button className="admin-panel__action" type="button" onClick={() => handleOpenModal(user)}>
-                      Редактировать
-                    </button>
+                  <td className="admin-panel__action-group">
+                    {user.id === currentUserId ? (
+                      <span>⠀</span>
+                    ) : (
+                      <>
+                        <button className="admin-panel__action" type="button" onClick={() => handleOpenModal(user)}>
+                          Редактировать
+                        </button>
+                        <button className="admin-panel__action admin-panel__action--danger" type="button" onClick={() => handleDelete(user.id)}>
+                          Удалить
+                        </button>
+                      </>
+                    )}
                   </td>
                 </tr>
               ))}
@@ -213,8 +322,10 @@ export default function AdminUsersPage() {
         isOpen={isModalOpen}
         onClose={handleCloseModal}
         user={selectedUser}
+        currentUserId={currentUserId}
         onSave={handleSave}
         onToggleBlock={handleToggleBlock}
+        onDelete={handleDelete}
       />
     </div>
   );

@@ -334,8 +334,32 @@
   color: #ffffff;
 }
 
-.btn-secondary {
-  background: #f8fafc;
-  color: #0f172a;
-  border: 1px solid #d1d5db;
+.btn-delete {
+  background: #ef4444;
+  color: #ffffff;
+}
+
+.admin-modal__warning {
+  padding: 0.95rem 1rem;
+  background: #fef3c7;
+  color: #92400e;
+  border-radius: 14px;
+  font-size: 0.95rem;
+}
+
+.admin-panel__action-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.admin-panel__action--danger {
+  background: #fef2f2;
+  border-color: #fecaca;
+  color: #b91c1c;
+}
+
+.admin-panel__action--disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
 }

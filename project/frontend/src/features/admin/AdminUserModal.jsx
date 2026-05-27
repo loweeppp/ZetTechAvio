@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import './admin-panel.css';
 
-export default function AdminUserModal({ isOpen, onClose, user, onSave, onToggleBlock }) {
+export default function AdminUserModal({ isOpen, onClose, user, currentUserId, onSave, onToggleBlock, onDelete }) {
+  const isSelfUser = user?.id === currentUserId;
   const [formState, setFormState] = useState({
     email: '',
     fullName: '',
@@ -59,6 +60,7 @@ export default function AdminUserModal({ isOpen, onClose, user, onSave, onToggle
               value={formState.email}
               onChange={(e) => handleChange('email', e.target.value)}
               placeholder=" "
+              disabled={isSelfUser}
             />
             <label htmlFor="admin-email" className="floating-label">Email</label>
           </div>
@@ -70,6 +72,7 @@ export default function AdminUserModal({ isOpen, onClose, user, onSave, onToggle
               value={formState.fullName}
               onChange={(e) => handleChange('fullName', e.target.value)}
               placeholder=" "
+              disabled={isSelfUser}
             />
             <label htmlFor="admin-fullname" className="floating-label">ФИО</label>
           </div>
@@ -81,19 +84,9 @@ export default function AdminUserModal({ isOpen, onClose, user, onSave, onToggle
               value={formState.phone}
               onChange={(e) => handleChange('phone', e.target.value)}
               placeholder=" "
+              disabled={isSelfUser}
             />
             <label htmlFor="admin-phone" className="floating-label">Телефон</label>
-          </div>
-
-          <div className="floating-input-wrapper">
-            <input
-              id="admin-password"
-              type="password"
-              value={formState.password}
-              onChange={(e) => handleChange('password', e.target.value)}
-              placeholder=" "
-            />
-            <label htmlFor="admin-password" className="floating-label">Новый пароль</label>
           </div>
 
           <div className="admin-modal__select-wrapper">
@@ -102,6 +95,7 @@ export default function AdminUserModal({ isOpen, onClose, user, onSave, onToggle
               id="admin-role"
               value={formState.role}
               onChange={(e) => handleChange('role', e.target.value)}
+              disabled={isSelfUser}
             >
               <option value="User">User</option>
               <option value="Manager">Manager</option>
@@ -109,16 +103,29 @@ export default function AdminUserModal({ isOpen, onClose, user, onSave, onToggle
             </select>
           </div>
 
+          {isSelfUser && (
+            <div className="admin-modal__warning">Нельзя редактировать, блокировать или удалять собственный аккаунт</div>
+          )}
+
           <div className="admin-modal__actions">
-            <button type="button" className="btn btn-danger" onClick={() => onToggleBlock(!user.isActive)}>
+            <button type="button" className="btn btn-delete" onClick={() => onDelete(user.id)} disabled={isSelfUser}>
+              Удалить
+            </button>
+            <button
+              type="button"
+              className="btn btn-danger"
+              onClick={() => onToggleBlock(!user.isActive)}
+              disabled={isSelfUser}
+            >
               {user.isActive ? 'Заблокировать' : 'Разблокировать'}
             </button>
-            <button type="submit" className="btn btn-submit">
+            <button type="submit" className="btn btn-submit" disabled={isSelfUser}>
               Сохранить
             </button>
             <button type="button" className="btn btn-secondary" onClick={onClose}>
               Отмена
             </button>
+
           </div>
         </form>
       </div>

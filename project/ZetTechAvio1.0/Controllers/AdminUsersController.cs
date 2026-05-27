@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using System.Security.Claims;
 using ZetTechAvio1._0.Services;
 
 namespace ZetTechAvio1._0.Controllers
@@ -44,6 +45,13 @@ namespace ZetTechAvio1._0.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateUser(int id, [FromBody] AdminUserUpdateRequest request)
         {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrWhiteSpace(userIdClaim) || !int.TryParse(userIdClaim, out var currentUserId))
+                return Unauthorized(new { success = false, message = "Не удалось определить текущего пользователя" });
+
+            if (currentUserId == id)
+                return BadRequest(new { success = false, message = "Нельзя редактировать собственный аккаунт" });
+
             var (success, message) = await _managementService.UpdateUserAsync(id, request);
             if (!success)
                 return BadRequest(new { success, message });
@@ -54,7 +62,31 @@ namespace ZetTechAvio1._0.Controllers
         [HttpPost("{id}/toggle-block")]
         public async Task<IActionResult> ToggleBlock(int id)
         {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrWhiteSpace(userIdClaim) || !int.TryParse(userIdClaim, out var currentUserId))
+                return Unauthorized(new { success = false, message = "Не удалось определить текущего пользователя" });
+
+            if (currentUserId == id)
+                return BadRequest(new { success = false, message = "Нельзя заблокировать или разблокировать собственный аккаунт" });
+
             var (success, message) = await _managementService.ToggleUserActiveAsync(id);
+            if (!success)
+                return BadRequest(new { success, message });
+
+            return Ok(new { success, message });
+        }
+
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteUser(int id)
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrWhiteSpace(userIdClaim) || !int.TryParse(userIdClaim, out var currentUserId))
+                return Unauthorized(new { success = false, message = "Не удалось определить текущего пользователя" });
+
+            if (currentUserId == id)
+                return BadRequest(new { success = false, message = "Нельзя удалить собственный аккаунт" });
+
+            var (success, message) = await _managementService.DeleteUserAsync(id);
             if (!success)
                 return BadRequest(new { success, message });
 

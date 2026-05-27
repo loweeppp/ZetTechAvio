@@ -11,6 +11,7 @@ namespace ZetTechAvio1._0.Services
         Task<(bool Success, string Message, AdminUserDto? Data)> GetUserByIdAsync(int id);
         Task<(bool Success, string Message)> UpdateUserAsync(int id, AdminUserUpdateRequest request);
         Task<(bool Success, string Message)> ToggleUserActiveAsync(int id, bool? isActive = null);
+        Task<(bool Success, string Message)> DeleteUserAsync(int id);
     }
 
     public sealed record AdminUserDto(
@@ -185,5 +186,23 @@ namespace ZetTechAvio1._0.Services
                 return (false, "Ошибка смены статуса пользователя");
             }
         }
-    }
+        public async Task<(bool Success, string Message)> DeleteUserAsync(int id)
+        {
+            try
+            {
+                var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == id);
+                if (user == null)
+                    return (false, "Пользователь не найден");
+
+                _context.Users.Remove(user);
+                await _context.SaveChangesAsync();
+
+                return (true, "Пользователь удалён");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error deleting user");
+                return (false, "Ошибка удаления пользователя");
+            }
+        }    }
 }

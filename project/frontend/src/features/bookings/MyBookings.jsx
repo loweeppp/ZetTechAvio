@@ -87,8 +87,8 @@ export default function MyBookings() {
           {[
             { id: 'all', label: 'Все',  },
             { id: 'active', label: 'Активные',  },
-            { id: 'completed', label: 'Завершенные', icon: '✅' },
-            { id: 'cancelled', label: 'Отменены', icon: '❌' }
+            { id: 'completed', label: 'Завершенные', },
+            { id: 'cancelled', label: 'Отменены', }
           ].map(f => (
             <button
               key={f.id}
@@ -102,12 +102,12 @@ export default function MyBookings() {
 
         {/* Статус загрузки */}
         {loading && <p className="status-message loading">⏳ Загрузка...</p>}
-        {error && <p className="status-message error">❌ {error}</p>}
+        {error && <p className="status-message error"> {error}</p>}
 
         {/* Список билетов */}
         {!loading && filteredBookings.length === 0 && (
           <p className="status-message empty">
-            {bookings.length === 0 ? '📭 У вас пока нет билетов' : `📭 Нет билетов в категории "${filter}"`}
+            {bookings.length === 0 ? 'У вас пока нет билетов' : ` Нет билетов в категории "${filter}"`}
           </p>
         )}
 
@@ -128,9 +128,9 @@ function BookingCard({ booking }) {
   const getStatusBadge = (status) => {
     const statusMap = {
       'Created': { label: '⏳ Ожидание оплаты', color: '#ff9800' },
-      'Confirmed': { label: '✅ Подтверждено', color: '#4caf50' },
-      'Completed': { label: '✈️ Завершено', color: '#2196f3' },
-      'Cancelled': { label: '❌ Отменено', color: '#f44336' }
+      'Confirmed': { label: 'Подтверждено', color: '#4caf50' },
+      'Completed': { label: 'Завершено', color: '#2196f3' },
+      'Cancelled': { label: 'Отменено', color: '#f44336' }
     };
     return statusMap[status] || { label: status, color: '#999' };
   };
