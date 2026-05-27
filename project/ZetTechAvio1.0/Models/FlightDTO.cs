@@ -14,4 +14,9 @@ public class FlightDto
     public required string BaggageInfo { get; set; }  // ← Информация о включенном багаже
     public required Airport OriginAirport { get; set; }
     public required Airport DestAirport { get; set; }
+    public int AirlineId { get; set; }
+    public int AircraftId { get; set; }
+    public int OriginAirportId { get; set; }
+    public int DestAirportId { get; set; }
+    public required string Status { get; set; }
 }

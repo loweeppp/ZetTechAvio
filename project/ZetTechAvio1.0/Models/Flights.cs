@@ -38,10 +38,10 @@ namespace ZetTechAvio1._0.Models
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
 
-        public required Airline Airline { get; set; }
-        public required Aircraft Aircraft { get; set; }
-        public required Airport OriginAirport { get; set; }
-        public required Airport DestAirport { get; set; }
+        public Airline Airline { get; set; } = null!;
+        public Aircraft Aircraft { get; set; } = null!;
+        public Airport OriginAirport { get; set; } = null!;
+        public Airport DestAirport { get; set; } = null!;
         public FlightStatus Status { get; set; } = FlightStatus.Scheduled;
 
 

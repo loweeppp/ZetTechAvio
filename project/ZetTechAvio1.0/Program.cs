@@ -29,6 +29,7 @@ builder.Services.AddScoped<IUserManagementService, UserManagementService>();
 builder.Services.AddScoped<IFlightsService, FlightsService>();
 builder.Services.AddScoped<IBookingsService, BookingsService>();
 builder.Services.AddScoped<IPaymentService, PaymentService>();
+builder.Services.AddHostedService<FlightStatusUpdateService>();
 builder.Services.AddScoped<IConfirmationService>(sp => 
     new ConfirmationService(
     sp.GetRequiredService<ApplicationDbContext>(),

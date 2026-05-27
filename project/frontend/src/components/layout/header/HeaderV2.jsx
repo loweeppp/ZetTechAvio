@@ -167,6 +167,17 @@ export default function HeaderV2() {
                     {t('header.adminPanel')}
                   </Link>
                 )}
+                {(currentUser.role === 'Manager' || currentUser.role === 'Admin') && (
+                  <Link
+                    className={`headerv2__navLink ${location.pathname === '/manager'
+                      ? 'headerv2__navLink--active'
+                      : ''
+                      }`}
+                    to="/manager"
+                  >
+                    Панель менеджера
+                  </Link>
+                )}
               </>
             )}
 

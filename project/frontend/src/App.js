@@ -6,6 +6,7 @@ import MyBookings from './features/bookings/MyBookings';
 import UserProfile from './pages/profile/UserProfile';
 import PrivacyPolicy from './pages/privacy/PrivacyPolicy';
 import AdminUsersPage from './features/admin/AdminUsersPage.jsx';
+import ManagerFlightsPage from './features/manager/ManagerFlightsPage.jsx';
 import HeaderV2 from './components/layout/header/HeaderV2';
 import FooterV2 from './components/layout/footer/FooterV2';
 
@@ -21,6 +22,7 @@ function App() {
             <Route path="/profile" element={<UserProfile />} />
             <Route path="/privacy" element={<PrivacyPolicy />} />
             <Route path="/admin" element={<AdminUsersPage />} />
+            <Route path="/manager" element={<ManagerFlightsPage />} />
           </Routes>
         </main>
         <FooterV2 />
