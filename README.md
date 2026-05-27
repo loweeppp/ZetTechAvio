@@ -12,6 +12,10 @@ Backend: C#, ASP.NET Core 8.0, Entity Framework Core
 
 БД: MySQL 8.0
 
+## Архитектурная диаграмма
+
+<img width="3114" height="767" alt="4" src="https://github.com/user-attachments/assets/fefda67d-53df-4deb-ba42-e2cfde1dc534" />
+
 ## Что реализовано
 
 - **Интеллектуальный поиск рейсов** - AI парсер запросов на естественном языке (LLMService) для удобного поиска
