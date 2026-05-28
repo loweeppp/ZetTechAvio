@@ -62,6 +62,18 @@ export default function UserProfile() {
                 const bookings = await response.json();
                 const now = new Date();
 
+                const parseDepartureDate = (ticket) => {
+                    const value = ticket?.flight?.departureTime
+                        || ticket?.flight?.departureDt
+                        || ticket?.flight?.DepartureTime
+                        || ticket?.flight?.DepartureDt;
+                    if (!value) return null;
+                    const parsed = new Date(value);
+                    return Number.isNaN(parsed.getTime()) ? null : parsed;
+                };
+
+                const normalizeStatus = (status) => String(status || '').toLowerCase();
+
                 let totalTickets = 0;
                 let spent = 0;
                 let activeFlights = 0;
@@ -72,14 +84,34 @@ export default function UserProfile() {
                     totalTickets += ticketList.length;
                     spent += ticketList.reduce((sum, ticket) => sum + (ticket.price || 0), 0) || (booking.totalAmount || 0);
 
-                    ticketList.forEach(ticket => {
-                        const departureDate = new Date(ticket.flight?.departureTime || ticket.flight?.departureDt);
-                        if (!isNaN(departureDate.getTime()) && departureDate > now) {
-                            activeFlights++;
-                        } else {
-                            completed++;
-                        }
+                    const bookingStatus = normalizeStatus(booking.status);
+                    const bookingActive = bookingStatus === 'created' || bookingStatus === 'confirmed';
+                    const bookingCompleted = bookingStatus === 'completed' || bookingStatus === 'cancelled';
+
+                    const hasFutureTicket = ticketList.some(ticket => {
+                        if (!ticket) return false;
+                        const status = normalizeStatus(ticket.status);
+                        const departureDate = parseDepartureDate(ticket);
+                        return status === 'active' && departureDate && departureDate > now;
                     });
+
+                    const hasPastTicket = ticketList.some(ticket => {
+                        if (!ticket) return false;
+                        const departureDate = parseDepartureDate(ticket);
+                        return departureDate && departureDate <= now;
+                    });
+
+                    const hasCancelledOrUsedTicket = ticketList.some(ticket => {
+                        if (!ticket) return false;
+                        const status = normalizeStatus(ticket.status);
+                        return status === 'cancelled' || status === 'used';
+                    });
+
+                    if (bookingActive && hasFutureTicket) {
+                        activeFlights += 1;
+                    } else if (bookingCompleted || hasPastTicket || hasCancelledOrUsedTicket) {
+                        completed += 1;
+                    }
                 });
 
                 setStats({

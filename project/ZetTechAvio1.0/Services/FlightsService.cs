@@ -102,6 +102,9 @@ namespace ZetTechAvio1._0.Services
                     query = query.Where(f => f.DepartureDt.Date == parsedDate.Date);
                 }
 
+                // Only return flights that are still active/current in search results.
+                query = query.Where(f => f.Status != FlightStatus.Cancelled && f.Status != FlightStatus.Completed);
+
                 var flights = await query.ToListAsync();
                 return flights.Select(MapToDto).ToList();
             }

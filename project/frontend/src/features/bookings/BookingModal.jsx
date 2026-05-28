@@ -9,11 +9,7 @@ const CLASS_NAMES = {
   2: 'First'
 };
 
-const classToNumber = {
-  'Economy': 0,
-  'Business': 1,
-  'First': 2
-};
+const CHILD_DISCOUNT = 0.7;
 
 export default function BookingModal({ flight, isOpen, onClose, onBook, user }) {
   const [error, setError] = useState('');
@@ -39,7 +35,7 @@ export default function BookingModal({ flight, isOpen, onClose, onBook, user }) 
   const API_URL = process.env.REACT_APP_API_URL || 'https://api.zettechavio.ru';
 
   // Валидация данных 
-  const validateBooking = () => {
+  const validateBooking = useCallback(() => {
     function isvalidateEmail(e) {
       return /\S+@\S+\.\S+/.test(e);
     }
@@ -53,12 +49,44 @@ export default function BookingModal({ flight, isOpen, onClose, onBook, user }) 
       return false;
     }
 
-    if( !email || !passengers[0]?.fullName || !passengers[0]?.passportSeries || !passengers[0]?.passportNumber) {
-      setError('Поля не могут быть пустыми');
+    if (!passengers || passengers.length < quantity) {
+      setError('Необходимо заполнить данные всех пассажиров');
       return false;
     }
+
+    let adultCount = 0;
+    let childCount = 0;
+
+    for (let i = 0; i < quantity; i++) {
+      const passenger = passengers[i];
+      if (!passenger || !passenger.fullName?.trim()) {
+        setError(`Введите полное имя для пассажира ${i + 1}`);
+        return false;
+      }
+
+      if (passenger.passengerType === 'Adult') {
+        adultCount += 1;
+        if (!passenger.passportSeries || passenger.passportSeries.length !== 4 || !passenger.passportNumber || passenger.passportNumber.length !== 6) {
+          setError(`Введите корректные паспортные данные для взрослого пассажира ${i + 1}`);
+          return false;
+        }
+      } else {
+        childCount += 1;
+        if ((passenger.passportSeries && passenger.passportSeries.length !== 4) ||
+            (passenger.passportNumber && passenger.passportNumber.length !== 6)) {
+          setError(`Серия и номер паспорта ребёнка ${i + 1} должны быть корректными или оставлены пустыми`);
+          return false;
+        }
+      }
+    }
+
+    if (childCount > 0 && adultCount === 0) {
+      setError('Ребёнок не может быть забронирован без взрослого пассажира');
+      return false;
+    }
+
     return true;
-  };
+  }, [email, quantity, passengers]);
 
   const confirmCode = useCallback(async (emailArg, codeArg) => {
     setError('');
@@ -152,20 +180,27 @@ export default function BookingModal({ flight, isOpen, onClose, onBook, user }) 
         console.error('Ошибка загрузки тарифов:', err);
         setLoading(false);
       });
-  }, [isOpen, flight]);
+  }, [API_URL, isOpen, flight]);
 
   // Инициализируем массив пассажиров при изменении количества или открытии модального окна
   useEffect(() => {
     if (!isOpen) return;
     
-    const newPassengers = Array(quantity).fill(null).map((_, i) =>
-      passengers[i] || { fullName: '', passengerType: 'Adult', passportSeries: '', passportNumber: '' }
-    );
-    setPassengers(newPassengers);
+    setPassengers(prevPassengers => Array(quantity).fill(null).map((_, i) =>
+      prevPassengers[i] || { fullName: '', passengerType: 'Adult', passportSeries: '', passportNumber: '' }
+    ));
   }, [quantity, isOpen]);
 
   const selectedFare = fares.find(f => CLASS_NAMES[f.class] === selectedClass);
-  const totalPrice = selectedFare ? selectedFare.price * quantity : 0;
+  const totalPrice = selectedFare
+    ? passengers.reduce((sum, passenger) => {
+        if (!passenger) return sum;
+        const basePrice = Number(selectedFare.price) || 0;
+        const isChild = passenger.passengerType === 'Child' || passenger.passengerType === 'Infant';
+        const price = isChild ? Math.round(basePrice * CHILD_DISCOUNT * 100) / 100 : basePrice;
+        return sum + price;
+      }, 0)
+    : 0;
 
   const handlePassengerChange = (index, field, value) => {
     const updated = [...passengers];
@@ -381,23 +416,30 @@ export default function BookingModal({ flight, isOpen, onClose, onBook, user }) 
                     <input
                       ref={(el) => passengerRefs.current[`passenger_${index}_passportSeries`] = el}
                       type="text"
-                      placeholder="Серия паспорта"
+                      placeholder={passenger.passengerType === 'Adult' ? 'Серия паспорта' : 'Серия паспорта (необязательно)'}
                       value={passenger.passportSeries}
                       onChange={(e) => {
                         const value = e.target.value.replace(/\D/g, '');
                         handlePassengerChange(index, 'passportSeries', value)}}
                       maxLength="4"
+                      required={passenger.passengerType === 'Adult'}
                     />
                     <input
                       ref={(el) => passengerRefs.current[`passenger_${index}_passportNumber`] = el}
                       type="text"
-                      placeholder="Номер паспорта"
+                      placeholder={passenger.passengerType === 'Adult' ? 'Номер паспорта' : 'Номер паспорта (необязательно)'}
                       value={passenger.passportNumber}
                       onChange={(e) => {
                         const value = e.target.value.replace(/\D/g, '');
                         handlePassengerChange(index, 'passportNumber', value)}}
                       maxLength="6"
+                      required={passenger.passengerType === 'Adult'}
                     />
+                    <small className="passport-note">
+                      {passenger.passengerType === 'Adult'
+                        ? 'Для взрослого пассажира серия и номер паспорта обязательны.'
+                        : 'Для ребёнка паспорт не обязателен, но можно указать данные при наличии.'}
+                    </small>
                   </div>
                 ))}
               </div>

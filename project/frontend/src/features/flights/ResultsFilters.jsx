@@ -1,6 +1,22 @@
 import React from 'react';
 
-export default function ResultsFilters({ price,minDurration, maxDuration, minPrice, maxPrice, onPriceChange, duration, onDurationChange, baggageOnly, onBaggageChange, onReset }) {
+export default function ResultsFilters({
+  price,
+  minDuration,
+  maxDuration,
+  minPrice,
+  maxPrice,
+  dateFrom,
+  dateTo,
+  onDateFromChange,
+  onDateToChange,
+  onPriceChange,
+  duration,
+  onDurationChange,
+  baggageOnly,
+  onBaggageChange,
+  onReset,
+}) {
   return (
     <aside className="homev2res__filters">
       <div className="homev2res__filtersHead">
@@ -39,6 +55,23 @@ export default function ResultsFilters({ price,minDurration, maxDuration, minPri
           onChange={(e) => onDurationChange(Number(e.target.value))}
           className="homev2res__range"
         />
+      </FilterGroup>
+
+      <FilterGroup title="Диапазон дат вылета">
+        <div className="resultfilter__timeGrid">
+          <input
+            type="date"
+            value={dateFrom}
+            onChange={(e) => onDateFromChange(e.target.value)}
+            className="homev2res__timeBtn"
+          />
+          <input
+            type="date"
+            value={dateTo}
+            onChange={(e) => onDateToChange(e.target.value)}
+            className="homev2res__timeBtn"
+          />
+        </div>
       </FilterGroup>
 
       <FilterGroup title="Багаж">

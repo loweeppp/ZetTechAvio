@@ -23,6 +23,8 @@ export default function Results({ query, onBack, onSearch }) {
   const [durationBounds, setDurationBounds] = React.useState({ min: 60, max: 720 });
   const [maxDuration, setMaxDuration] = React.useState(720);
   const [baggageOnly, setBaggageOnly] = React.useState(false);
+  const [departureFrom, setDepartureFrom] = React.useState('');
+  const [departureTo, setDepartureTo] = React.useState('');
   const [error, setError] = React.useState(null);
   const [selectedFlight, setSelectedFlight] = React.useState(null);
   const [isBookingOpen, setIsBookingOpen] = React.useState(false);
@@ -89,15 +91,38 @@ export default function Results({ query, onBack, onSearch }) {
   }, [query]);
 
   const filteredFlights = React.useMemo(() => {
+    const parseFilterDate = (value, endOfDay = false) => {
+      if (!value) return null;
+      const date = new Date(value);
+      if (Number.isNaN(date.getTime())) return null;
+      if (value.length === 10) {
+        if (endOfDay) {
+          date.setHours(23, 59, 59, 999);
+        } else {
+          date.setHours(0, 0, 0, 0);
+        }
+      }
+      return date;
+    };
+
+    const fromDate = parseFilterDate(departureFrom, false);
+    const toDate = parseFilterDate(departureTo, true);
+
     return flights.filter((flight) => {
+      const status = String(flight.status || flight.Status || '').toLowerCase();
+      const statusOk = status !== 'cancelled' && status !== 'completed';
       const priceOk = flight.minPrice <= maxPrice;
       const durationOk = flight.durationMinutes <= maxDuration;
       const baggageOk =
         !baggageOnly ||
         String(flight.baggageInfo).toLowerCase().includes('включен');
-      return priceOk && durationOk && baggageOk;
+      const departureDate = new Date(flight.departureDt);
+      const dateOk =
+        (!fromDate || departureDate >= fromDate) &&
+        (!toDate || departureDate <= toDate);
+      return statusOk && priceOk && durationOk && baggageOk && dateOk;
     });
-  }, [flights, maxPrice, maxDuration, baggageOnly]);
+  }, [flights, maxPrice, maxDuration, baggageOnly, departureFrom, departureTo]);
 
   const sortedFlights = React.useMemo(() => {
     if (sort === 'fastest') {
@@ -115,6 +140,8 @@ export default function Results({ query, onBack, onSearch }) {
     setMaxPrice(priceBounds.max);
     setMaxDuration(durationBounds.max);
     setBaggageOnly(false);
+    setDepartureFrom('');
+    setDepartureTo('');
   };
 
   const handleBuyClick = (flight) => {
@@ -156,6 +183,10 @@ export default function Results({ query, onBack, onSearch }) {
             duration={maxDuration}
             minDuration={durationBounds.min}
             maxDuration={durationBounds.max}
+            dateFrom={departureFrom}
+            dateTo={departureTo}
+            onDateFromChange={setDepartureFrom}
+            onDateToChange={setDepartureTo}
             onPriceChange={setMaxPrice}
             onDurationChange={setMaxDuration}
             baggageOnly={baggageOnly}
@@ -222,6 +253,7 @@ function FlightCard({ flight, onSelect }) {
         <div className="homev2res__times">
           <div>
             <div className="homev2res__t">{formatTime(flight.departureDt)}</div>
+            <div className="homev2res__date">{formatDate(flight.departureDt)}</div>
             <div className="homev2res__code">{flight.originAirport?.iata}</div>
           </div>
           <div className="homev2res__line">
@@ -234,6 +266,7 @@ function FlightCard({ flight, onSelect }) {
           </div>
           <div className="homev2res__arr">
             <div className="homev2res__t">{formatTime(flight.arrivalDt)}</div>
+            <div className="homev2res__date">{formatDate(flight.arrivalDt)}</div>
             <div className="homev2res__code">{flight.destAirport?.iata}</div>
           </div>
         </div>
@@ -307,5 +340,17 @@ function formatTime(dateString) {
   const hours = String(date.getHours()).padStart(2, '0');
   const minutes = String(date.getMinutes()).padStart(2, '0');
   return `${hours}:${minutes}`;
+}
+
+function formatDate(dateString) {
+  const date = new Date(dateString);
+  if (Number.isNaN(date.getTime())) return '';
+  const day = date.getDate();
+  const monthNames = [
+    'янв', 'фев', 'мар', 'апр', 'май', 'июн',
+    'июл', 'авг', 'сен', 'окт', 'ноя', 'дек'
+  ];
+  const month = monthNames[date.getMonth()];
+  return `${day} ${month}`;
 }
 

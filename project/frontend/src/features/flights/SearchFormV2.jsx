@@ -133,6 +133,18 @@ export default function SearchFormV2({ onSearch }) {
         if (!response.ok) return;
 
         const flights = await response.json();
+        const now = new Date();
+        const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        const activeFlights = Array.isArray(flights)
+          ? flights.filter((flight) => {
+              const status = String(flight.status || flight.Status || '').toLowerCase();
+              if (status === 'cancelled' || status === 'completed') return false;
+
+              const departureDate = flight.departureDt ? new Date(flight.departureDt) : null;
+              return departureDate && departureDate >= startOfToday;
+            })
+          : [];
+
         const cityMap = new Map(CITIES.map((item) => [item.code, item]));
         const map = {};
         const dates = {};
@@ -149,7 +161,7 @@ export default function SearchFormV2({ onSearch }) {
           dates[key].add(dateString);
         };
 
-        flights.forEach((flight) => {
+        activeFlights.forEach((flight) => {
           const origin = {
             code: flight.originAirport.iata,
             name: flight.originAirport.city,

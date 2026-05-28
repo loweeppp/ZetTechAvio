@@ -116,6 +116,16 @@ namespace ZetTechAvio1._0.Services
                 if (fare.SeatsAvailable < request.Quantity)
                     throw new InvalidOperationException("Недостаточно мест");
 
+                if (request.Passengers == null || request.Passengers.Count < request.Quantity)
+                    throw new InvalidOperationException("Недостаточно информации о пассажирах");
+
+                var adultCount = request.Passengers.Count(p => string.Equals(p.PassengerType, nameof(PassengerType.Adult), StringComparison.OrdinalIgnoreCase));
+                var childCount = request.Passengers.Count(p => string.Equals(p.PassengerType, nameof(PassengerType.Child), StringComparison.OrdinalIgnoreCase)
+                                                            || string.Equals(p.PassengerType, nameof(PassengerType.Infant), StringComparison.OrdinalIgnoreCase));
+
+                if (childCount > 0 && adultCount == 0)
+                    throw new InvalidOperationException("Ребёнок не может лететь без взрослого");
+
                 // Создаём бронирование
                 var booking = new Booking
                 {
@@ -133,21 +143,48 @@ namespace ZetTechAvio1._0.Services
                         throw new InvalidOperationException("Недостаточно информации о пассажирах");
 
                     var passenger = request.Passengers[i];
+                    if (passenger == null || string.IsNullOrWhiteSpace(passenger.FullName))
+                        throw new InvalidOperationException($"Укажите полное имя для пассажира {i + 1}");
+
+                    if (!Enum.TryParse<PassengerType>(passenger.PassengerType, true, out var passengerType))
+                        throw new InvalidOperationException($"Неверный тип пассажира для пассажира {i + 1}");
+
+                    if (passengerType == PassengerType.Adult)
+                    {
+                        if (string.IsNullOrWhiteSpace(passenger.PassportSeries) || passenger.PassportSeries.Length != 4
+                            || string.IsNullOrWhiteSpace(passenger.PassportNumber) || passenger.PassportNumber.Length != 6)
+                        {
+                            throw new InvalidOperationException($"Для взрослого пассажира {i + 1} требуется серия и номер паспорта");
+                        }
+                    }
+                    else
+                    {
+                        if ((!string.IsNullOrWhiteSpace(passenger.PassportSeries) && passenger.PassportSeries.Length != 4)
+                            || (!string.IsNullOrWhiteSpace(passenger.PassportNumber) && passenger.PassportNumber.Length != 6))
+                        {
+                            throw new InvalidOperationException($"Серия и номер паспорта ребёнка должны быть заполнены корректно или оставлены пустыми для пассажира {i + 1}");
+                        }
+                    }
+
+                    var passengerPrice = passengerType == PassengerType.Child || passengerType == PassengerType.Infant
+                        ? Math.Round(fare.Price * 0.7M, 2)
+                        : fare.Price;
+
                     var ticket = new Ticket
                     {
                         FlightId = request.FlightId,
                         FareId = request.FareId,
                         TicketNumber = GenerateTicketNumber(booking.BookingReference, i + 1),
                         PassengerName = passenger.FullName,
-                        PassengerType = (PassengerType)Enum.Parse(typeof(PassengerType), passenger.PassengerType),
+                        PassengerType = passengerType,
                         PassportSeries = passenger.PassportSeries,
                         PassportNumber = passenger.PassportNumber,
-                        Price = fare.Price,
+                        Price = passengerPrice,
                         Status = TicketStatus.Active
                     };
 
                     booking.Tickets.Add(ticket);
-                    totalPrice += fare.Price;
+                    totalPrice += passengerPrice;
                 }
 
                 booking.TotalAmount = totalPrice;

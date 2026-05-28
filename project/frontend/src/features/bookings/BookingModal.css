@@ -282,6 +282,14 @@
   margin-bottom: 0;
 }
 
+.passport-note {
+  display: block;
+  font-size: 12px;
+  color: #666;
+  margin-top: -4px;
+  margin-bottom: 8px;
+}
+
 .\.passenger-form-selector {
   width: 100%;
   padding: 8px;

@@ -7,6 +7,73 @@ import './MyBookings.css';
 
 const API_URL = process.env.REACT_APP_API_URL || 'https://api.zettechavio.ru';
 
+const normalizeStatus = (status) => String(status || '').trim().toLowerCase();
+
+const parseDepartureDate = (flight) => {
+  if (!flight?.departureTime) return null;
+  const date = new Date(flight.departureTime);
+  return Number.isNaN(date.getTime()) ? null : date;
+};
+
+const getBookingCategory = (booking) => {
+  const bookingStatus = normalizeStatus(booking.status);
+  if (bookingStatus === 'cancelled') return 'cancelled';
+  if (bookingStatus === 'completed') return 'completed';
+
+  const tickets = Array.isArray(booking.tickets) ? booking.tickets : [];
+  const now = new Date();
+
+  const hasActiveFutureTicket = tickets.some((ticket) => {
+    const ticketStatus = normalizeStatus(ticket.status);
+    const departureDate = parseDepartureDate(ticket.flight);
+    return ['active', 'confirmed', 'created'].includes(ticketStatus) && departureDate && departureDate >= now;
+  });
+
+  const hasCompletedTicket = tickets.some((ticket) => {
+    const ticketStatus = normalizeStatus(ticket.status);
+    const departureDate = parseDepartureDate(ticket.flight);
+    return ['used', 'completed'].includes(ticketStatus) || (departureDate && departureDate < now);
+  });
+
+  const hasCancelledTicket = tickets.some((ticket) => normalizeStatus(ticket.status) === 'cancelled');
+
+  if (hasActiveFutureTicket) return 'active';
+  if (hasCancelledTicket && !hasCompletedTicket) return 'cancelled';
+  if (hasCompletedTicket) return 'completed';
+
+  return bookingStatus || 'active';
+};
+
+const getStatusBadge = (status) => {
+  const normalized = normalizeStatus(status);
+  const statusMap = {
+    active: { label: 'Рейс активен', color: '#4caf50' },
+    completed: { label: 'Рейс завершен', color: '#2196f3' },
+    cancelled: { label: 'Рейс отменен', color: '#f44336' },
+  };
+  return statusMap[normalized] || { label: 'Статус рейса неизвестен', color: '#6b7280' };
+};
+
+const getTicketStatusLabel = (status) => {
+  const normalized = normalizeStatus(status);
+  if (normalized === 'active') return 'Рейс активен';
+  if (normalized === 'used') return 'Использован';
+  if (normalized === 'cancelled') return 'Отменен';
+  if (normalized === 'confirmed') return 'Подтвержден';
+  if (normalized === 'created') return 'В ожидании';
+  if (normalized === 'completed') return 'Завершен';
+  return status || 'Неизвестен';
+};
+
+const getPaymentStatusLabel = (status) => {
+  const normalized = normalizeStatus(status);
+  if (normalized === 'confirmed') return 'Оплата подтверждена';
+  if (normalized === 'created') return 'Оплата в ожидании';
+  if (normalized === 'cancelled') return 'Оплата отменена';
+  if (normalized === 'completed') return 'Оплата завершена';
+  return 'Статус оплаты неизвестен';
+};
+
 export default function MyBookings() {
   const { currentUser } = useAuth();
   const [bookings, setBookings] = useState([]);
@@ -70,10 +137,11 @@ export default function MyBookings() {
     init();
   }, [currentUser, loadBookings]);
 
-  const filteredBookings = bookings.filter(b => {
-    if (filter === 'active') return b.status === 'Confirmed' || b.status === 'Created';
-    if (filter === 'completed') return b.status === 'Completed';
-    if (filter === 'cancelled') return b.status === 'Cancelled';
+  const filteredBookings = bookings.filter((b) => {
+    const category = getBookingCategory(b);
+    if (filter === 'active') return category === 'active';
+    if (filter === 'completed') return category === 'completed';
+    if (filter === 'cancelled') return category === 'cancelled';
     return true;
   });
 
@@ -126,13 +194,16 @@ export default function MyBookings() {
 // Компонент карточки билета
 function BookingCard({ booking }) {
   const getStatusBadge = (status) => {
+    const normalized = normalizeStatus(status);
     const statusMap = {
-      'Created': { label: '⏳ Ожидание оплаты', color: '#ff9800' },
-      'Confirmed': { label: 'Подтверждено', color: '#4caf50' },
-      'Completed': { label: 'Завершено', color: '#2196f3' },
-      'Cancelled': { label: 'Отменено', color: '#f44336' }
+      created: { label: '⏳ Ожидание оплаты', color: '#ff9800' },
+      confirmed: { label: 'Подтверждено', color: '#4caf50' },
+      completed: { label: 'Завершено', color: '#2196f3' },
+      cancelled: { label: 'Отменено', color: '#f44336' },
+      active: { label: 'Активно', color: '#4caf50' },
+      used: { label: 'Использован', color: '#2196f3' },
     };
-    return statusMap[status] || { label: status, color: '#999' };
+    return statusMap[normalized] || { label: status || 'Неизвестно', color: '#999' };
   };
 
   const downloadBookingPdf = async (booking) => {
@@ -253,6 +324,8 @@ function BookingCard({ booking }) {
   // Получаем информацию о полете из первого билета
   const firstTicket = booking.tickets?.[0];
   const flight = firstTicket?.flight;
+  const ticketStatus = getTicketStatusLabel(firstTicket?.status);
+  const paymentStatusText = getPaymentStatusLabel(booking.status);
 
   // Парсим дату правильно
   const flightDate = flight?.departureTime 
@@ -266,7 +339,8 @@ function BookingCard({ booking }) {
     })
     : 'Unknown';
 
-  const status = getStatusBadge(booking.status);
+  const bookingCategory = getBookingCategory(booking);
+  const status = getStatusBadge(bookingCategory);
 
   return (
     <div className="booking-card">
@@ -279,6 +353,7 @@ function BookingCard({ booking }) {
           <span className="status-badge" style={{ backgroundColor: status.color }}>
             {status.label}
           </span>
+          <span className="payment-badge">{paymentStatusText}</span>
         </div>
       </div>
 

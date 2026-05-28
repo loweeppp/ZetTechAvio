@@ -1,6 +1,8 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { ArrowUpRight } from 'lucide-react';
 import ImageWithFallback from './ImageWithFallback';
+
+const API_URL = process.env.REACT_APP_API_URL || 'https://api.zettechavio.ru';
 
 const DESTINATIONS = [
   {
@@ -72,6 +74,54 @@ const DESTINATIONS = [
 ];
 
 export default function PopularDestinations({ onSearch }) {
+  const [destinationPrices, setDestinationPrices] = useState({});
+  const [pricesLoading, setPricesLoading] = useState(true);
+
+  useEffect(() => {
+    const loadDestinationPrices = async () => {
+      try {
+        const results = await Promise.all(
+          DESTINATIONS.map(async (destination) => {
+            const params = new URLSearchParams();
+            params.append('from', destination.search.from.query || destination.search.from.code);
+            params.append('to', destination.search.to.query || destination.search.to.code);
+
+            const response = await fetch(`${API_URL}/api/flights/search?${params.toString()}`);
+            if (!response.ok) {
+              return { city: destination.city, price: destination.price };
+            }
+
+            const flights = await response.json();
+            const activePrices = Array.isArray(flights)
+              ? flights
+                  .filter((flight) => {
+                    const status = String(flight.status || flight.Status || '').toLowerCase();
+                    return status !== 'cancelled' && status !== 'completed';
+                  })
+                  .map((flight) => Number(flight.minPrice || flight.MinPrice || 0))
+                  .filter(Boolean)
+              : [];
+            const price = activePrices.length ? Math.min(...activePrices) : destination.price;
+            return { city: destination.city, price };
+          }),
+        );
+
+        setDestinationPrices(
+          results.reduce((acc, item) => {
+            acc[item.city] = item.price;
+            return acc;
+          }, {}),
+        );
+      } catch (error) {
+        // keep default prices if backend fetch fails
+      } finally {
+        setPricesLoading(false);
+      }
+    };
+
+    loadDestinationPrices();
+  }, []);
+
   return (
     <section className="homev2__section homev2__section--popular">
       <div className="homev2__container">
@@ -82,9 +132,6 @@ export default function PopularDestinations({ onSearch }) {
               Направления, которые любят путешественники
             </h2>
           </div>
-          <button className="homev2__seeAll" type="button" onClick={() => {}}>
-            Смотреть все <ArrowUpRight className="homev2__seeAllIcon" />
-          </button>
         </div>
 
         <div className="homev2__destGrid">
