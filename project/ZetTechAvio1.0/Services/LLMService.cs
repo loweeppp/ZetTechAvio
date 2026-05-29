@@ -4,6 +4,9 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
+using System.Globalization;
+using System.Text;
+using ZetTechAvio1._0.Models;
 
 namespace ZetTechAvio1._0.Services
 {
@@ -16,61 +19,53 @@ namespace ZetTechAvio1._0.Services
         [property: JsonPropertyName("from")] string? From,
         [property: JsonPropertyName("to")] string? To,
         [property: JsonPropertyName("date")] string? Date,
-        [property: JsonPropertyName("passengers")] int? Passengers,
-        [property: JsonPropertyName("reasoning")] string? Reasoning
+        [property: JsonPropertyName("dateFrom")] string? DateFrom = null,
+        [property: JsonPropertyName("dateTo")] string? DateTo = null,
+        [property: JsonPropertyName("passengers")] int? Passengers = null,
+        [property: JsonPropertyName("minPrice")] int? MinPrice = null,
+        [property: JsonPropertyName("maxPrice")] int? MaxPrice = null,
+        [property: JsonPropertyName("maxDurationMinutes")] int? MaxDurationMinutes = null,
+        [property: JsonPropertyName("baggageRequired")] bool? BaggageRequired = null,
+        [property: JsonPropertyName("suggestAlternative")] bool? SuggestAlternative = null,
+        [property: JsonPropertyName("statusMessage")] string? StatusMessage = null,
+        [property: JsonPropertyName("reasoning")] string? Reasoning = null
     );
 
     public sealed record AiParseRequest([property: JsonPropertyName("text")] string Text);
 
     internal sealed record ChatMessage(string role, string content);
-    internal sealed record ChatCompletionsRequest(string model, ChatMessage[] messages, double temperature = 0.0, int max_tokens = 200);
+    internal sealed record ChatCompletionsRequest(string model, ChatMessage[] messages, double temperature = 0.0, int max_tokens = 400);
     internal sealed record ChatCompletionResponse(Choice[] choices);
-    internal sealed record Choice(Message message);
+    internal sealed record Choice(Message? message, string? text);
     internal sealed record Message(string role, string content, string? reasoning_content = null);
-    internal sealed record ParsedJsonResponse(
-        [property: JsonPropertyName("from")] string? from,
-        [property: JsonPropertyName("to")] string? to,
-        [property: JsonPropertyName("date")] string? date,
-        [property: JsonPropertyName("passengers")] int? passengers,
-        [property: JsonPropertyName("reasoning")] string? reasoning
-    );
 
     public class LLMService : ILLMService
     {
         private readonly IHttpClientFactory _httpClientFactory;
+        private readonly IFlightsService _flightsService;
         private readonly string _apiKey;
         private readonly string _modelName;
+        private readonly int _retryDelaySeconds;
+        private readonly int _maxTokens;
+        private readonly bool _logRawLlmResponse;
+        private static readonly Regex StripThink = new(@"<think>[\s\S]*?</think>", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
-        // Static readonly Regex patterns for performance
-        private static readonly Regex DateRegex = new Regex(@"\b(\d{4}-\d{2}-\d{2})\b", RegexOptions.Compiled);
-        private static readonly Regex PassengerNumberRegex = new Regex(@"(\d+)\s*(чел|пасс|человек|пассажир)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
-        private static readonly Regex PassengerPhrasesRegex = new Regex(@"\b(двоих|двух|вдвоем|вдвоём|на двоих)\b", RegexOptions.Compiled | RegexOptions.IgnoreCase);
-        private static readonly Regex PassengerTripleRegex = new Regex(@"\b(троих|трех|трёх|на троих)\b", RegexOptions.Compiled | RegexOptions.IgnoreCase);
-        private static readonly Regex ReasoningRegex = new Regex(@"reasoning\s*[:\-]\s*(.+)$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
-        private static readonly Regex RussianTextRegex = new Regex(@"[а-яА-ЯёЁ]", RegexOptions.Compiled);
-
-        // Static readonly city data
-        private static readonly string[] SupportedCityCodes = { "MOW", "LED", "KZN", "AER", "IST", "DXB", "LON", "PAR", "BKK", "NYC" };
-        private static readonly (string Code, string[] Names)[] KnownCities = new[]
-        {
-            ("MOW", new[] { "москв", "moscow" }),
-            ("LED", new[] { "петербург", "санкт-петербург", "питер", "спб", "petersburg" }),
-            ("KZN", new[] { "казань", "kazan" }),
-            ("AER", new[] { "сочи", "sochi" }),
-            ("IST", new[] { "стамбул", "istanbul" }),
-            ("DXB", new[] { "дубай", "dubai" }),
-            ("LON", new[] { "лондон", "london" }),
-            ("PAR", new[] { "париж", "paris" }),
-            ("BKK", new[] { "бангкок", "bangkok" }),
-            ("NYC", new[] { "нью-йорк", "нью йорк", "new york" })
-        };
-
-        public LLMService(IHttpClientFactory httpClientFactory, IConfiguration configuration)
+        public LLMService(IHttpClientFactory httpClientFactory, IFlightsService flightsService, IConfiguration configuration)
         {
             _httpClientFactory = httpClientFactory;
+            _flightsService = flightsService;
             _apiKey = configuration["LLM:ApiKey"] ?? configuration["OpenAI:ApiKey"] ?? "lm-studio";
             _modelName = configuration["LLM:Model"] ?? "qwen/qwen3.5-9b";
+            _retryDelaySeconds = int.TryParse(configuration["LLM:RetryDelaySeconds"], out var delay)
+                ? Math.Max(delay, 1)
+                : 5;
+            _maxTokens = int.TryParse(configuration["LLM:MaxTokens"], out var maxTokens)
+                ? Math.Clamp(maxTokens, 400, 2000)
+                : 1200;
+            _logRawLlmResponse = bool.TryParse(configuration["LLM:LogRawResponse"], out var logRaw) && logRaw;
         }
+
+        private const int MaxLlmRetries = 2;
 
         public async Task<AiParseResponse> ParseFlightSearchAsync(string text)
         {
@@ -78,27 +73,164 @@ namespace ZetTechAvio1._0.Services
                 throw new ArgumentException("Text must be provided", nameof(text));
 
             var client = _httpClientFactory.CreateClient("OpenAI");
-            
             if (client.BaseAddress == null)
                 throw new InvalidOperationException("HttpClient BaseAddress is not configured.");
-            
-            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _apiKey);
 
-            var messages = new[]
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _apiKey);
+            var endpoint = new Uri(client.BaseAddress, "/v1/chat/completions");
+
+            var messages = new List<ChatMessage>
             {
-                new ChatMessage("system", "Вы — парсер запросов на поиск авиабилетов. Отвечайте ТОЛЬКО JSON без размышлений. Ответ ограничен 400 токенами. /no-thinking. Поддерживаемые коды и города: MOW (Москва), LED (Санкт-Петербург), KZN (Казань), AER (Сочи), IST (Стамбул), DXB (Дубай), LON (Лондон), PAR (Париж), BKK (Бангкок), NYC (Нью-Йорк). Ответ должен быть только JSON-объектом с ключами: from, to, date, passengers, reasoning. Никаких пояснений, markdown, кавычек или текста вне JSON. from и to должны быть поддерживаемыми IATA-кодами или null. date должен быть в формате YYYY-MM-DD или null, если не указан. passengers должен быть числом от 1 до 5 или null, если не указан. reasoning должен быть коротким пояснением на русском языке. Не используйте reasoning_content для окончательного ответа. Отвечайте только JSON-объектом в поле content."),
-                new ChatMessage("user", $"Разберите запрос пользователя:\n{text}")
+                new ChatMessage("system", await BuildSystemPromptAsync()),
+                new ChatMessage("user", BuildUserPrompt(text))
             };
 
-            var request = new ChatCompletionsRequest(_modelName, messages, temperature: 0.0, max_tokens: 400);
-            var endpoint = new Uri(client.BaseAddress, "/v1/chat/completions");
+            string? lastError = null;
+            for (var attempt = 1; attempt <= MaxLlmRetries; attempt++)
+            {
+                var outputText = await SendChatCompletionRequestAsync(client, endpoint, messages);
+                if (TryParseAndValidateResponse(outputText, out var parsedResponse, out var validationError))
+                    return parsedResponse!;
+
+                lastError = validationError ?? "LLM returned an invalid response.";
+                if (attempt < MaxLlmRetries)
+                {
+                    await Task.Delay(TimeSpan.FromSeconds(_retryDelaySeconds));
+                    messages.Add(new ChatMessage("user", BuildRetryPrompt(lastError, text)));
+                }
+            }
+
+            throw new InvalidOperationException($"LLM did not return a valid JSON parse after {MaxLlmRetries} attempts: {lastError}");
+        }
+
+        private async Task<string> BuildSystemPromptAsync()
+        {
+            var now = DateTime.UtcNow;
+            var airportList = await BuildAirportListAsync();
+            var routeSummary = await BuildRouteSummaryAsync();
+            var flightSchedule = await BuildFlightScheduleAsync();
+
+            var promptBuilder = new StringBuilder();
+            promptBuilder.AppendLine($"Вы — агент парсинга запросов ZetTechAvio. Сегодня: {now:yyyy-MM-dd}, текущее время: {now:HH:mm} UTC.");
+            promptBuilder.AppendLine("Отвечайте ТОЛЬКО одним JSON-объектом без markdown, без code fence, без пояснений и без текста вне JSON.");
+            promptBuilder.AppendLine("Ответ должен начинаться с '{' и заканчиваться '}'.");
+            promptBuilder.AppendLine("Если нужно подумать, используйте <think>, но итоговый ответ должен быть валидным JSON.");
+            promptBuilder.AppendLine();
+            promptBuilder.AppendLine("Список аэропортов, которые доступны в системе:");
+            promptBuilder.AppendLine(airportList);
+            promptBuilder.AppendLine();
+            promptBuilder.AppendLine("Актуальное расписание доступных рейсов:");
+            promptBuilder.AppendLine(flightSchedule);
+            promptBuilder.AppendLine();
+            promptBuilder.AppendLine(routeSummary);
+            promptBuilder.AppendLine();
+            promptBuilder.AppendLine("Правила:");
+            promptBuilder.AppendLine("1. from — IATA-код аэропорта отправления или null.");
+            promptBuilder.AppendLine("2. to — IATA-код аэропорта назначения или null.");
+            promptBuilder.AppendLine("3. date — дата вылета в формате YYYY-MM-DD или YYYY-MM-DDTHH:mm, либо null.");
+            promptBuilder.AppendLine("4. dateFrom и dateTo — используйте только для диапазонов дат.");
+            promptBuilder.AppendLine("5. passengers — целое число от 1 до 5, или 1 если не указано.");
+            promptBuilder.AppendLine("6. reasoning — короткое русское пояснение, что было распознано.");
+            promptBuilder.AppendLine("7. minPrice, maxPrice, maxDurationMinutes, baggageRequired, suggestAlternative, statusMessage — заполняйте только при явной просьбе.");
+            promptBuilder.AppendLine("8. Если значение неизвестно, используйте null.");
+            promptBuilder.AppendLine("9. Если город задан русским именем, сопоставьте его с IATA-кодом из списка выше.");
+            promptBuilder.AppendLine("10. Если пользователь просит \"ближайшие рейсы\" или не указывает дату, оставьте date=null.");
+            promptBuilder.AppendLine("11. Относительные даты (сегодня, завтра, послезавтра, на следующей неделе, следующую пятницу, через 3 дня) разрешайте относительно текущей UTC-даты.");
+            promptBuilder.AppendLine($"12. Сегодня UTC-дата: {now:yyyy-MM-dd}.");
+            promptBuilder.AppendLine();
+            promptBuilder.AppendLine("Если запрос содержит условие вида 'если не получится, то ...', установите suggestAlternative:true и statusMessage с кратким объяснением альтернативы.");
+            promptBuilder.AppendLine("Используйте только поля: from, to, date, dateFrom, dateTo, passengers, minPrice, maxPrice, maxDurationMinutes, baggageRequired, suggestAlternative, statusMessage, reasoning.");
+            promptBuilder.AppendLine("Пример ответа:");
+            promptBuilder.AppendLine("{\"from\":\"DME\",\"to\":\"JFK\",\"date\":null,\"passengers\":1,\"suggestAlternative\":true,\"statusMessage\":\"если Нью-Йорк недоступен, предложить Москву\",\"reasoning\":\"Ближайшие рейсы в Нью-Йорк с альтернативой Москва\"}");
+
+            return promptBuilder.ToString();
+        }
+
+        private static string BuildUserPrompt(string text)
+        {
+            return $"Проанализируй запрос и верни строго один JSON-объект для поиска рейсов. Не добавляй пояснений и не используй markdown. Запрос: {text.Trim()}";
+        }
+
+        private async Task<string> BuildAirportListAsync()
+        {
+            var airports = await _flightsService.GetAirportsAsync();
+            if (airports == null || airports.Count == 0)
+                return "Доступных аэропортов нет.";
+
+            return string.Join(Environment.NewLine,
+                airports
+                    .OrderBy(a => a.Iata)
+                    .Select(a => $"{a.Iata} → {a.City} ({a.Name})")
+                    .Distinct());
+        }
+
+        private async Task<string> BuildRouteSummaryAsync()
+        {
+            var routes = await _flightsService.GetAllFlightsAsync();
+            var activeFlights = routes
+                .Where(f => !string.IsNullOrWhiteSpace(f.OriginAirport?.Iata) && !string.IsNullOrWhiteSpace(f.DestAirport?.Iata))
+                .ToList();
+
+            if (!activeFlights.Any())
+                return "Доступных маршрутов нет.";
+
+            var routeGroups = activeFlights
+                .GroupBy(f => new { Origin = f.OriginAirport!.Iata, Dest = f.DestAirport!.Iata })
+                .Select(g => new { Route = $"{g.Key.Origin}->{g.Key.Dest}", Count = g.Count() })
+                .OrderBy(r => r.Route)
+                .ToList();
+
+            var summary = string.Join(", ", routeGroups.Take(8).Select(r => $"{r.Route} ({r.Count})"));
+            if (routeGroups.Count > 8)
+            {
+                summary += $", и ещё {routeGroups.Count - 8} маршрутов";
+            }
+
+            var minPrice = activeFlights.Min(f => f.MinPrice);
+            var maxPrice = activeFlights.Max(f => f.MinPrice);
+            var minDuration = activeFlights.Min(f => f.DurationMinutes);
+            var maxDuration = activeFlights.Max(f => f.DurationMinutes);
+            var earliestDeparture = activeFlights.Min(f => f.DepartureDt).ToString("yyyy-MM-dd");
+            var latestDeparture = activeFlights.Max(f => f.DepartureDt).ToString("yyyy-MM-dd");
+
+            return $"Доступные направления: {summary}. Цены: от {minPrice} до {maxPrice} руб. Время в пути: от {minDuration} до {maxDuration} мин. Вылеты в диапазоне {earliestDeparture} — {latestDeparture}.";
+        }
+
+        private async Task<string> BuildFlightScheduleAsync()
+        {
+            var flights = await _flightsService.GetAllFlightsAsync();
+            var upcoming = flights
+                .Where(f => f.DepartureDt >= DateTime.UtcNow)
+                .OrderBy(f => f.DepartureDt)
+                .Take(100)
+                .ToList();
+
+            if (!upcoming.Any())
+                return "Актуальных рейсов нет.";
+
+            return string.Join(Environment.NewLine, upcoming.Select(f =>
+                $"{f.OriginAirport.City} ({f.OriginAirport.Iata}) -> {f.DestAirport.City} ({f.DestAirport.Iata}) | {f.DepartureDt:yyyy-MM-dd HH:mm} | цена от {f.MinPrice} руб. | {f.FlightNumber}"));
+        }
+
+        private static string BuildRetryPrompt(string error, string originalText)
+        {
+            return $"Предыдущий ответ был неверен: {error}. Верни строго один JSON-объект, начинающийся с '{{' и заканчивающийся '}}'. Используй только поля from/to/date/dateFrom/dateTo/passengers/minPrice/maxPrice/maxDurationMinutes/baggageRequired/suggestAlternative/statusMessage/reasoning. Запрос: {originalText}";
+        }
+
+        private async Task<string> SendChatCompletionRequestAsync(HttpClient client, Uri endpoint, List<ChatMessage> messages)
+        {
+            var request = new ChatCompletionsRequest(_modelName, messages.ToArray(), temperature: 0.0, max_tokens: _maxTokens);
             using var response = await client.PostAsJsonAsync(endpoint, request);
             var responseBody = await response.Content.ReadAsStringAsync();
 
-            if (!response.IsSuccessStatusCode)
+            if (_logRawLlmResponse)
             {
-                throw new InvalidOperationException($"LLM request failed: {response.StatusCode} - {responseBody}");
+                Console.WriteLine("LLM raw response:");
+                Console.WriteLine(responseBody);
             }
+
+            if (!response.IsSuccessStatusCode)
+                throw new InvalidOperationException($"LLM request failed: {response.StatusCode} - {responseBody}");
 
             var completion = JsonSerializer.Deserialize<ChatCompletionResponse>(responseBody, new JsonSerializerOptions
             {
@@ -108,142 +240,342 @@ namespace ZetTechAvio1._0.Services
             if (completion?.choices == null || completion.choices.Length == 0)
                 throw new InvalidOperationException($"LLM response is empty. Response body: {responseBody}");
 
-            var message = completion.choices[0]?.message;
-            var messageContent = message?.content;
-            var reasoningContent = message?.reasoning_content;
-            var outputText = messageContent ?? string.Empty;
+            var choice = completion.choices[0];
+            var message = choice.message;
+            var content = message?.content;
+            if (string.IsNullOrWhiteSpace(content))
+                content = message?.reasoning_content;
+            if (string.IsNullOrWhiteSpace(content))
+                content = choice.text;
+            if (string.IsNullOrWhiteSpace(content))
+                throw new InvalidOperationException($"LLM response content is empty. Response body: {responseBody}");
+
+            return content.Trim();
+        }
+
+        private static bool TryParseAndValidateResponse(string outputText, out AiParseResponse? response, out string? error)
+        {
+            response = null;
+            error = null;
 
             if (string.IsNullOrWhiteSpace(outputText))
             {
-                var fallback = TryParseFallbackResponse(text);
-                if (fallback != null)
-                    return fallback;
-
-                if (!string.IsNullOrWhiteSpace(reasoningContent))
-                {
-                    fallback = TryParseFallbackResponse(reasoningContent);
-                    if (fallback != null)
-                        return fallback;
-                }
-
-                throw new InvalidOperationException($"LLM returned empty content. Response body: {responseBody}");
+                error = "LLM returned empty content.";
+                return false;
             }
 
-            if (!TryExtractJson(outputText, out var jsonText))
+            if (!TryExtractJsonObject(outputText, out var jsonText))
             {
-                var fallback = TryParseFallbackResponse(text);
-                if (fallback != null)
-                    return fallback;
-
-                if (!string.IsNullOrWhiteSpace(reasoningContent))
-                {
-                    fallback = TryParseFallbackResponse(reasoningContent);
-                    if (fallback != null)
-                        return fallback;
-                }
-
-                throw new InvalidOperationException($"LLM output does not contain JSON object. Response body: {responseBody}");
+                error = "LLM output does not contain a valid JSON object.";
+                return false;
             }
 
-            using var document = JsonDocument.Parse(jsonText);
-            var root = document.RootElement;
-
-            root.TryGetProperty("from", out var fromElement);
-            root.TryGetProperty("to", out var toElement);
-            root.TryGetProperty("date", out var dateElement);
-
-            var fromValue = fromElement.ValueKind != JsonValueKind.Null && fromElement.ValueKind != JsonValueKind.Undefined
-                ? fromElement.GetString()?.Trim()
-                : null;
-            var toValue = toElement.ValueKind != JsonValueKind.Null && toElement.ValueKind != JsonValueKind.Undefined
-                ? toElement.GetString()?.Trim()
-                : null;
-            var dateValue = dateElement.ValueKind != JsonValueKind.Null && dateElement.ValueKind != JsonValueKind.Undefined
-                ? dateElement.GetString()?.Trim()
-                : null;
-
-            var reasoningValue = root.TryGetProperty("reasoning", out var reasoningElement)
-                ? reasoningElement.GetString()?.Trim()
-                : null;
-
-            if (!IsRussianText(reasoningValue))
+            if (!TryParseAndValidateJson(jsonText, out var parsed, out var validationError))
             {
-                reasoningValue = null;
+                error = validationError;
+                return false;
             }
 
-            var passengersValue = 1;
-            if (root.TryGetProperty("passengers", out var passengersElement))
-            {
-                if (passengersElement.ValueKind == JsonValueKind.Number && passengersElement.TryGetInt32(out var parsedPassengers))
-                {
-                    passengersValue = parsedPassengers;
-                }
-                else if (passengersElement.ValueKind == JsonValueKind.String && int.TryParse(passengersElement.GetString(), out var parsedPassengersString))
-                {
-                    passengersValue = parsedPassengersString;
-                }
-            }
-
-            passengersValue = Math.Clamp(passengersValue, 1, 9);
-
-            if (string.IsNullOrWhiteSpace(fromValue) && string.IsNullOrWhiteSpace(toValue) && string.IsNullOrWhiteSpace(dateValue))
-                throw new InvalidOperationException("LLM returned invalid parse result.");
-
-            return new AiParseResponse(
-                fromValue,
-                toValue,
-                !string.IsNullOrWhiteSpace(dateValue) ? dateValue : null,
-                passengersValue,
-                string.IsNullOrWhiteSpace(reasoningValue)
-                    ? BuildReasoning(fromValue, toValue, dateValue, passengersValue)
-                    : reasoningValue
-            );
+            response = parsed;
+            return true;
         }
 
-        private static string BuildReasoning(string? from, string? to, string? date, int passengers)
+        internal static bool TryParseAndValidateJson(string jsonText, out AiParseResponse? response, out string? error)
         {
-            var parts = new List<string>();
-            if (!string.IsNullOrWhiteSpace(from) && !string.IsNullOrWhiteSpace(to))
-            {
-                parts.Add($"маршрут {from} → {to}");
-            }
-            else if (!string.IsNullOrWhiteSpace(from))
-            {
-                parts.Add($"отправление из {from}");
-            }
-            else if (!string.IsNullOrWhiteSpace(to))
-            {
-                parts.Add($"прибытие в {to}");
-            }
+            response = null;
+            error = null;
 
-            if (!string.IsNullOrWhiteSpace(date))
+            try
             {
-                parts.Add($"дата {date}");
-            }
+                using var document = JsonDocument.Parse(jsonText);
+                var root = document.RootElement;
+                if (root.ValueKind != JsonValueKind.Object)
+                {
+                    error = "JSON root must be an object.";
+                    return false;
+                }
 
-            parts.Add($"{passengers} пассажир{(passengers == 1 ? string.Empty : passengers < 5 ? "а" : "ов")}");
-            return parts.Count > 0 ? $"Распознан запрос: {string.Join(", ", parts)}." : "Распознан запрос.";
+                if (!ValidateAllowedProperties(root, out var propertyError))
+                {
+                    error = propertyError;
+                    return false;
+                }
+
+                var fromValue = GetOptionalString(root, "from");
+                var toValue = GetOptionalString(root, "to");
+                var dateValue = GetOptionalString(root, "date");
+                var dateFromValue = GetOptionalString(root, "dateFrom");
+                var dateToValue = GetOptionalString(root, "dateTo");
+                var reasoningValue = GetOptionalString(root, "reasoning");
+                var statusMessageValue = GetOptionalString(root, "statusMessage");
+
+                if (fromValue != null && !IsValidIataCode(fromValue))
+                {
+                    error = "Поле from должно быть IATA-кодом из 3 латинских букв или null.";
+                    return false;
+                }
+
+                if (toValue != null && !IsValidIataCode(toValue))
+                {
+                    error = "Поле to должно быть IATA-кодом из 3 латинских букв или null.";
+                    return false;
+                }
+
+                var minPriceValue = GetOptionalInt(root, "minPrice");
+                var maxPriceValue = GetOptionalInt(root, "maxPrice");
+                var maxDurationMinutesValue = GetOptionalInt(root, "maxDurationMinutes");
+                if (!TryGetOptionalBool(root, "baggageRequired", out var baggageRequiredValue, out var baggageError))
+                {
+                    error = baggageError;
+                    return false;
+                }
+
+                if (!TryGetOptionalBool(root, "suggestAlternative", out var suggestAlternativeValue, out var suggestAlternativeError))
+                {
+                    error = suggestAlternativeError;
+                    return false;
+                }
+
+                if (!TryGetPassengers(root, out var passengersValue, out var passengersError))
+                {
+                    error = passengersError;
+                    return false;
+                }
+
+                var allowedDateFormats = new[] { "yyyy-MM-dd", "yyyy-MM-ddTHH:mm" };
+
+                if (dateValue != null && !DateTime.TryParseExact(dateValue, allowedDateFormats, CultureInfo.InvariantCulture, DateTimeStyles.None, out _))
+                {
+                    error = "Поле date должно быть в формате YYYY-MM-DD или YYYY-MM-DDTHH:mm или null.";
+                    return false;
+                }
+
+                if (dateFromValue != null && !DateTime.TryParseExact(dateFromValue, allowedDateFormats, CultureInfo.InvariantCulture, DateTimeStyles.None, out _))
+                {
+                    error = "Поле dateFrom должно быть в формате YYYY-MM-DD или YYYY-MM-DDTHH:mm или null.";
+                    return false;
+                }
+
+                if (dateToValue != null && !DateTime.TryParseExact(dateToValue, allowedDateFormats, CultureInfo.InvariantCulture, DateTimeStyles.None, out _))
+                {
+                    error = "Поле dateTo должно быть в формате YYYY-MM-DD или YYYY-MM-DDTHH:mm или null.";
+                    return false;
+                }
+
+                if (dateFromValue != null && dateToValue != null &&
+                    DateTime.ParseExact(dateFromValue, allowedDateFormats, CultureInfo.InvariantCulture) >
+                    DateTime.ParseExact(dateToValue, allowedDateFormats, CultureInfo.InvariantCulture))
+                {
+                    error = "Поле dateFrom не может быть позже dateTo.";
+                    return false;
+                }
+
+                if (minPriceValue != null && minPriceValue < 0)
+                {
+                    error = "minPrice должен быть положительным числом или null.";
+                    return false;
+                }
+
+                if (maxPriceValue != null && maxPriceValue < 0)
+                {
+                    error = "maxPrice должен быть положительным числом или null.";
+                    return false;
+                }
+
+                if (minPriceValue != null && maxPriceValue != null && minPriceValue > maxPriceValue)
+                {
+                    error = "minPrice не может быть больше maxPrice.";
+                    return false;
+                }
+
+                if (maxDurationMinutesValue != null && maxDurationMinutesValue < 1)
+                {
+                    error = "maxDurationMinutes должно быть положительным числом или null.";
+                    return false;
+                }
+
+                if (fromValue == null && toValue == null && dateValue == null && dateFromValue == null && dateToValue == null)
+                {
+                    error = "Результат парсинга не содержит ни from, ни to, ни date, ни dateFrom/dateTo.";
+                    return false;
+                }
+
+                response = new AiParseResponse(
+                    From: fromValue,
+                    To: toValue,
+                    Date: dateValue,
+                    DateFrom: dateFromValue,
+                    DateTo: dateToValue,
+                    Passengers: passengersValue,
+                    MinPrice: minPriceValue,
+                    MaxPrice: maxPriceValue,
+                    MaxDurationMinutes: maxDurationMinutesValue,
+                    BaggageRequired: baggageRequiredValue,
+                    SuggestAlternative: suggestAlternativeValue,
+                    StatusMessage: statusMessageValue,
+                    Reasoning: reasoningValue
+                );
+                return true;
+            }
+            catch (JsonException ex)
+            {
+                error = $"JSON parse error: {ex.Message}";
+                return false;
+            }
         }
 
-        private static bool IsRussianText(string? text)
+        private static bool ValidateAllowedProperties(JsonElement root, out string? error)
         {
-            return !string.IsNullOrWhiteSpace(text) && RussianTextRegex.IsMatch(text);
+            var allowed = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+            {
+                "from",
+                "to",
+                "date",
+                "dateFrom",
+                "dateTo",
+                "passengers",
+                "minPrice",
+                "maxPrice",
+                "maxDurationMinutes",
+                "baggageRequired",
+                "suggestAlternative",
+                "statusMessage",
+                "reasoning"
+            };
+
+            foreach (var property in root.EnumerateObject())
+            {
+                if (!allowed.Contains(property.Name))
+                {
+                    error = $"Unexpected field: {property.Name}.";
+                    return false;
+                }
+            }
+
+            error = null;
+            return true;
         }
 
-        private static bool TryExtractJson(string text, out string jsonText)
+        private static string? GetOptionalString(JsonElement root, string propertyName)
         {
-            jsonText = string.Empty;
+            if (!root.TryGetProperty(propertyName, out var element) || element.ValueKind == JsonValueKind.Null || element.ValueKind == JsonValueKind.Undefined)
+                return null;
+
+            return element.ValueKind == JsonValueKind.String ? element.GetString()?.Trim() : null;
+        }
+
+        private static int? GetOptionalInt(JsonElement root, string propertyName)
+        {
+            if (!root.TryGetProperty(propertyName, out var element) || element.ValueKind == JsonValueKind.Null || element.ValueKind == JsonValueKind.Undefined)
+                return null;
+
+            if (element.ValueKind == JsonValueKind.Number && element.TryGetInt32(out var numericValue))
+                return numericValue;
+
+            if (element.ValueKind == JsonValueKind.String && int.TryParse(element.GetString(), out var parsedValue))
+                return parsedValue;
+
+            return null;
+        }
+
+        private static bool TryGetOptionalBool(JsonElement root, string propertyName, out bool? value, out string? error)
+        {
+            value = null;
+            error = null;
+
+            if (!root.TryGetProperty(propertyName, out var element) || element.ValueKind == JsonValueKind.Null || element.ValueKind == JsonValueKind.Undefined)
+                return true;
+
+            if (element.ValueKind == JsonValueKind.True)
+            {
+                value = true;
+                return true;
+            }
+
+            if (element.ValueKind == JsonValueKind.False)
+            {
+                value = false;
+                return true;
+            }
+
+            if (element.ValueKind == JsonValueKind.String)
+            {
+                var text = element.GetString();
+                if (bool.TryParse(text, out var parsedBool))
+                {
+                    value = parsedBool;
+                    return true;
+                }
+
+                if (string.Equals(text, "да", StringComparison.OrdinalIgnoreCase) || string.Equals(text, "true", StringComparison.OrdinalIgnoreCase))
+                {
+                    value = true;
+                    return true;
+                }
+
+                if (string.Equals(text, "нет", StringComparison.OrdinalIgnoreCase) || string.Equals(text, "false", StringComparison.OrdinalIgnoreCase))
+                {
+                    value = false;
+                    return true;
+                }
+            }
+
+            error = $"{propertyName} должен быть true, false или null.";
+            return false;
+        }
+
+        private static bool TryGetPassengers(JsonElement root, out int passengers, out string? error)
+        {
+            passengers = 1;
+            error = null;
+
+            if (!root.TryGetProperty("passengers", out var passengersElement) || passengersElement.ValueKind == JsonValueKind.Null || passengersElement.ValueKind == JsonValueKind.Undefined)
+                return true;
+
+            if (passengersElement.ValueKind == JsonValueKind.Number && passengersElement.TryGetInt32(out var numericValue))
+            {
+                if (numericValue < 1 || numericValue > 5)
+                {
+                    error = "passengers должен быть числом от 1 до 5.";
+                    return false;
+                }
+
+                passengers = numericValue;
+                return true;
+            }
+
+            if (passengersElement.ValueKind == JsonValueKind.String && int.TryParse(passengersElement.GetString(), out var parsedValue))
+            {
+                if (parsedValue < 1 || parsedValue > 5)
+                {
+                    error = "passengers должен быть числом от 1 до 5.";
+                    return false;
+                }
+
+                passengers = parsedValue;
+                return true;
+            }
+
+            error = "passengers должен быть числом от 1 до 5 или null.";
+            return false;
+        }
+
+        private static bool IsValidIataCode(string? code)
+        {
+            return !string.IsNullOrWhiteSpace(code)
+                && code.Length == 3
+                && code.All(ch => ch >= 'A' && ch <= 'Z');
+        }
+
+        internal static bool TryExtractJsonObject(string text, out string json)
+        {
+            json = string.Empty;
             if (string.IsNullOrWhiteSpace(text))
                 return false;
 
-            // Убираем thinking блоки Qwen3.6
-            var cleanText = Regex.Replace(
-                text,
-                @"<think>[\s\S]*?</think>",
-                string.Empty,
-                RegexOptions.IgnoreCase
-            ).Trim();
-
+            var cleanText = StripThink.Replace(text, string.Empty);
+            cleanText = Regex.Replace(cleanText, "```(?:json)?\\s*|\\s*```", string.Empty, RegexOptions.IgnoreCase);
+            cleanText = cleanText.Trim();
             var start = cleanText.IndexOf('{');
             if (start < 0)
                 return false;
@@ -257,100 +589,13 @@ namespace ZetTechAvio1._0.Services
                     depth--;
                     if (depth == 0)
                     {
-                        jsonText = cleanText[start..(i + 1)];
+                        json = cleanText[start..(i + 1)];
                         return true;
                     }
                 }
             }
 
             return false;
-        }
-
-        private static AiParseResponse? TryParseFallbackResponse(string text)
-        {
-            if (string.IsNullOrWhiteSpace(text))
-                return null;
-
-            var normalized = text.Replace('\r', ' ').Replace('\n', ' ').Trim();
-            var fromCode = ExtractIataCode(normalized, "from") ?? ExtractIataCode(normalized, "из") ?? ExtractCityCodeByName(normalized) ?? ExtractAnySupportedCode(normalized);
-            var toCode = ExtractIataCode(normalized, "to") ?? ExtractIataCode(normalized, "в") ?? ExtractCityCodeByName(normalized, skipCode: fromCode) ?? ExtractAnySupportedCode(normalized, skipCode: fromCode);
-            var dateValue = ExtractDate(normalized);
-            var passengersValue = ExtractPassengerCount(normalized);
-            var reasoningValue = ExtractReasoning(normalized);
-
-            if (string.IsNullOrWhiteSpace(fromCode) && string.IsNullOrWhiteSpace(toCode) && string.IsNullOrWhiteSpace(dateValue))
-                return null;
-
-            return new AiParseResponse(
-                string.IsNullOrWhiteSpace(fromCode) ? null : fromCode,
-                string.IsNullOrWhiteSpace(toCode) ? null : toCode,
-                string.IsNullOrWhiteSpace(dateValue) ? null : dateValue,
-                passengersValue,
-                reasoningValue ?? BuildReasoning(fromCode, toCode, dateValue, passengersValue)
-            );
-        }
-
-        private static string? ExtractIataCode(string text, string label)
-        {
-            foreach (var code in SupportedCityCodes)
-            {
-                var pattern = $"\\b{Regex.Escape(label)}\\s*[:\\-]?\\s*{Regex.Escape(code)}\\b";
-                if (Regex.IsMatch(text, pattern, RegexOptions.IgnoreCase))
-                    return code;
-            }
-
-            return null;
-        }
-
-        private static string? ExtractAnySupportedCode(string text, string? skipCode = null)
-        {
-            var found = SupportedCityCodes
-                .Where(code => !string.Equals(code, skipCode, StringComparison.OrdinalIgnoreCase) &&
-                               Regex.IsMatch(text, $"\\b{Regex.Escape(code)}\\b", RegexOptions.IgnoreCase | RegexOptions.Compiled))
-                .ToList();
-
-            return found.Count == 1 ? found[0] : null;
-        }
-
-        private static string? ExtractDate(string text)
-        {
-            var match = DateRegex.Match(text);
-            return match.Success ? match.Groups[1].Value : null;
-        }
-
-        private static string? ExtractCityCodeByName(string text, string? skipCode = null)
-        {
-            var lower = text.ToLowerInvariant();
-            foreach (var (code, names) in KnownCities)
-            {
-                if (!string.Equals(code, skipCode, StringComparison.OrdinalIgnoreCase) &&
-                    names.Any(name => lower.Contains(name)))
-                {
-                    return code;
-                }
-            }
-
-            return null;
-        }
-
-        private static int ExtractPassengerCount(string text)
-        {
-            var match = PassengerNumberRegex.Match(text);
-            if (match.Success && int.TryParse(match.Groups[1].Value, out var count))
-                return Math.Clamp(count, 1, 9);
-
-            if (PassengerPhrasesRegex.IsMatch(text))
-                return 2;
-            if (PassengerTripleRegex.IsMatch(text))
-                return 3;
-
-            return 1;
-        }
-
-        private static string? ExtractReasoning(string text)
-        {
-            var match = ReasoningRegex.Match(text);
-            return match.Success ? match.Groups[1].Value.Trim() : null;
         }
     }
 }

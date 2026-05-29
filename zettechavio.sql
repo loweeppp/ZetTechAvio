@@ -24,13 +24,13 @@ CREATE DATABASE /*!32312 IF NOT EXISTS*/ `zettechaviodb` /*!40100 DEFAULT CHARAC
 USE `zettechaviodb`;
 
 --
--- Table structure for table `__EFMigrationsHistory`
+-- Table structure for table `__efmigrationshistory`
 --
 
-DROP TABLE IF EXISTS `__EFMigrationsHistory`;
+DROP TABLE IF EXISTS `__efmigrationshistory`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `__EFMigrationsHistory` (
+CREATE TABLE `__efmigrationshistory` (
   `MigrationId` varchar(150) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
   `ProductVersion` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
   PRIMARY KEY (`MigrationId`)
@@ -38,23 +38,23 @@ CREATE TABLE `__EFMigrationsHistory` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Dumping data for table `__EFMigrationsHistory`
+-- Dumping data for table `__efmigrationshistory`
 --
 
-LOCK TABLES `__EFMigrationsHistory` WRITE;
-/*!40000 ALTER TABLE `__EFMigrationsHistory` DISABLE KEYS */;
-INSERT INTO `__EFMigrationsHistory` VALUES ('20251118093212_InitialCreate','9.0.0'),('20251125142642_AddAviationTables','9.0.0'),('20251201144448_MakeLogoNullable','9.0.0'),('20251208194845_AddFares','9.0.0'),('20251208200730_FixPriceDecimalPrecision','9.0.0'),('20260130160630_FaresInFlights','9.0.0'),('20260130161424_FaresInFlights2','9.0.0'),('20260227163318_AddBookingsSeatsTicketsV2','9.0.0'),('20260227170926_AddPassportToTickets','9.0.0'),('20260312160422_AddConfirmationCodes','9.0.0'),('20260403064737_AddPaymentTable','9.0.0');
-/*!40000 ALTER TABLE `__EFMigrationsHistory` ENABLE KEYS */;
+LOCK TABLES `__efmigrationshistory` WRITE;
+/*!40000 ALTER TABLE `__efmigrationshistory` DISABLE KEYS */;
+INSERT INTO `__efmigrationshistory` VALUES ('20251118093212_InitialCreate','9.0.0'),('20251125142642_AddAviationTables','9.0.0'),('20251201144448_MakeLogoNullable','9.0.0'),('20251208194845_AddFares','9.0.0'),('20251208200730_FixPriceDecimalPrecision','9.0.0'),('20260130160630_FaresInFlights','9.0.0'),('20260130161424_FaresInFlights2','9.0.0'),('20260227163318_AddBookingsSeatsTicketsV2','9.0.0'),('20260227170926_AddPassportToTickets','9.0.0'),('20260312160422_AddConfirmationCodes','9.0.0'),('20260403064737_AddPaymentTable','9.0.0'),('20260511104725_AddIsActiveToUser','9.0.0'),('20260513091524_AddIsActiveToUser','9.0.0');
+/*!40000 ALTER TABLE `__efmigrationshistory` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
--- Table structure for table `Aircraft`
+-- Table structure for table `aircraft`
 --
 
-DROP TABLE IF EXISTS `Aircraft`;
+DROP TABLE IF EXISTS `aircraft`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `Aircraft` (
+CREATE TABLE `aircraft` (
   `Id` int NOT NULL AUTO_INCREMENT,
   `Model` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
   `Manufacturer` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
@@ -66,23 +66,23 @@ CREATE TABLE `Aircraft` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Dumping data for table `Aircraft`
+-- Dumping data for table `aircraft`
 --
 
-LOCK TABLES `Aircraft` WRITE;
-/*!40000 ALTER TABLE `Aircraft` DISABLE KEYS */;
-INSERT INTO `Aircraft` VALUES (1,'Boeing 737','Boeing',189,'2025-12-18 22:03:16.000000'),(2,'Airbus A320','Airbus',194,'2025-12-18 22:03:16.000000'),(3,'Boeing 777','Boeing',350,'2025-12-18 22:03:16.000000'),(4,'Airbus A330','Airbus',335,'2025-12-18 22:03:16.000000'),(5,'Embraer E190','Embraer',124,'2025-12-18 22:03:16.000000');
-/*!40000 ALTER TABLE `Aircraft` ENABLE KEYS */;
+LOCK TABLES `aircraft` WRITE;
+/*!40000 ALTER TABLE `aircraft` DISABLE KEYS */;
+INSERT INTO `aircraft` VALUES (1,'Boeing 737','Boeing',189,'2025-12-18 22:03:16.000000'),(2,'Airbus A320','Airbus',194,'2025-12-18 22:03:16.000000'),(3,'Boeing 777','Boeing',350,'2025-12-18 22:03:16.000000'),(4,'Airbus A330','Airbus',335,'2025-12-18 22:03:16.000000'),(5,'Embraer E190','Embraer',124,'2025-12-18 22:03:16.000000');
+/*!40000 ALTER TABLE `aircraft` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
--- Table structure for table `Airlines`
+-- Table structure for table `airlines`
 --
 
-DROP TABLE IF EXISTS `Airlines`;
+DROP TABLE IF EXISTS `airlines`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `Airlines` (
+CREATE TABLE `airlines` (
   `Id` int NOT NULL AUTO_INCREMENT,
   `IataCode` varchar(3) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
   `Name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
@@ -94,23 +94,23 @@ CREATE TABLE `Airlines` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Dumping data for table `Airlines`
+-- Dumping data for table `airlines`
 --
 
-LOCK TABLES `Airlines` WRITE;
-/*!40000 ALTER TABLE `Airlines` DISABLE KEYS */;
-INSERT INTO `Airlines` VALUES (1,'SU','Aeroflot',NULL,'2025-12-18 22:03:10.000000'),(2,'UT','Utair',NULL,'2025-12-18 22:03:10.000000'),(3,'S7','S7 Airlines',NULL,'2025-12-18 22:03:10.000000');
-/*!40000 ALTER TABLE `Airlines` ENABLE KEYS */;
+LOCK TABLES `airlines` WRITE;
+/*!40000 ALTER TABLE `airlines` DISABLE KEYS */;
+INSERT INTO `airlines` VALUES (1,'SU','Aeroflot',NULL,'2025-12-18 22:03:10.000000'),(2,'UT','Utair',NULL,'2025-12-18 22:03:10.000000'),(3,'S7','S7 Airlines',NULL,'2025-12-18 22:03:10.000000');
+/*!40000 ALTER TABLE `airlines` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
--- Table structure for table `Airports`
+-- Table structure for table `airports`
 --
 
-DROP TABLE IF EXISTS `Airports`;
+DROP TABLE IF EXISTS `airports`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `Airports` (
+CREATE TABLE `airports` (
   `Id` int NOT NULL AUTO_INCREMENT,
   `Iata` varchar(3) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
   `Name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
@@ -127,23 +127,23 @@ CREATE TABLE `Airports` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Dumping data for table `Airports`
+-- Dumping data for table `airports`
 --
 
-LOCK TABLES `Airports` WRITE;
-/*!40000 ALTER TABLE `Airports` DISABLE KEYS */;
-INSERT INTO `Airports` VALUES (1,'DME','Домодедово Международный Аэропорт','Москва','Россия',55.4084,37.9015,'2025-12-18 22:03:16.000000'),(2,'LED','Пулково Аэропорт ','Санкт-Петербург','Россия',59.8011,30.2625,'2025-12-18 22:03:16.000000'),(3,'KZN','Казань Международный Аэропорт ','Казань','Россия',55.6064,49.2865,'2025-12-18 22:03:16.000000'),(4,'KRR','Анапа Аэропорт','Сочи','Россия',43.4421,39.947,'2025-12-18 22:03:16.000000'),(5,'SVO','Шереметьево Международный Аэропорт','Москва','Россия',55.9726,37.4146,'2025-12-18 22:03:16.000000'),(6,'VKO','Внуково Международный Аэропорт','Москва','Россия',55.5915,37.261,'2025-12-18 22:03:16.000000'),(7,'AER','Сочи Международный Аэропорт','Сочи','Россия',43.4499,39.9566,'2025-12-18 22:03:16.000000'),(8,'IST','Стамбульский аэропорт','Стамбул','Турция',41.2753,28.7519,'2025-12-18 22:03:16.000000'),(9,'DXB','Международный аэропорт Дубай','Дубай','ОАЭ',25.2532,55.3657,'2025-12-18 22:03:16.000000'),(10,'LHR','Международный аэропорт Хитроу','Лондон','Великобритания',51.47,-0.4543,'2025-12-18 22:03:16.000000'),(11,'LGW','Гатвик','Лондон','Великобритания',51.1537,-0.1821,'2025-12-18 22:03:16.000000'),(12,'CDG','Шарль де Голль','Париж','Франция',49.0097,2.5479,'2025-12-18 22:03:16.000000'),(13,'ORY','Орли','Париж','Франция',48.7262,2.3652,'2025-12-18 22:03:16.000000'),(14,'BKK','Суварнабхуми','Бангкок','Таиланд',13.69,100.7501,'2025-12-18 22:03:16.000000'),(15,'JFK','Джон Ф. Кеннеди','Нью-Йорк','США',40.6413,-73.7781,'2025-12-18 22:03:16.000000'),(16,'LGA','Ла-Гуардия','Нью-Йорк','США',40.7769,-73.874,'2025-12-18 22:03:16.000000'),(17,'EWR','Ньюарк Либерти Интернешнл','Ньюарк','США',40.6895,-74.1745,'2025-12-18 22:03:16.000000');
-/*!40000 ALTER TABLE `Airports` ENABLE KEYS */;
+LOCK TABLES `airports` WRITE;
+/*!40000 ALTER TABLE `airports` DISABLE KEYS */;
+INSERT INTO `airports` VALUES (1,'DME','Домодедово Международный Аэропорт','Москва','Россия',55.4084,37.9015,'2025-12-18 22:03:16.000000'),(2,'LED','Пулково Аэропорт ','Санкт-Петербург','Россия',59.8011,30.2625,'2025-12-18 22:03:16.000000'),(3,'KZN','Казань Международный Аэропорт ','Казань','Россия',55.6064,49.2865,'2025-12-18 22:03:16.000000'),(4,'KRR','Анапа Аэропорт','Сочи','Россия',43.4421,39.947,'2025-12-18 22:03:16.000000'),(5,'SVO','Шереметьево Международный Аэропорт','Москва','Россия',55.9726,37.4146,'2025-12-18 22:03:16.000000'),(6,'VKO','Внуково Международный Аэропорт','Москва','Россия',55.5915,37.261,'2025-12-18 22:03:16.000000'),(7,'AER','Сочи Международный Аэропорт','Сочи','Россия',43.4499,39.9566,'2025-12-18 22:03:16.000000'),(8,'IST','Стамбульский аэропорт','Стамбул','Турция',41.2753,28.7519,'2025-12-18 22:03:16.000000'),(9,'DXB','Международный аэропорт Дубай','Дубай','ОАЭ',25.2532,55.3657,'2025-12-18 22:03:16.000000'),(10,'LHR','Международный аэропорт Хитроу','Лондон','Великобритания',51.47,-0.4543,'2025-12-18 22:03:16.000000'),(11,'LGW','Гатвик','Лондон','Великобритания',51.1537,-0.1821,'2025-12-18 22:03:16.000000'),(12,'CDG','Шарль де Голль','Париж','Франция',49.0097,2.5479,'2025-12-18 22:03:16.000000'),(13,'ORY','Орли','Париж','Франция',48.7262,2.3652,'2025-12-18 22:03:16.000000'),(14,'BKK','Суварнабхуми','Бангкок','Таиланд',13.69,100.7501,'2025-12-18 22:03:16.000000'),(15,'JFK','Джон Ф. Кеннеди','Нью-Йорк','США',40.6413,-73.7781,'2025-12-18 22:03:16.000000'),(16,'LGA','Ла-Гуардия','Нью-Йорк','США',40.7769,-73.874,'2025-12-18 22:03:16.000000'),(17,'EWR','Ньюарк Либерти Интернешнл','Ньюарк','США',40.6895,-74.1745,'2025-12-18 22:03:16.000000');
+/*!40000 ALTER TABLE `airports` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
--- Table structure for table `Bookings`
+-- Table structure for table `bookings`
 --
 
-DROP TABLE IF EXISTS `Bookings`;
+DROP TABLE IF EXISTS `bookings`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `Bookings` (
+CREATE TABLE `bookings` (
   `Id` int NOT NULL AUTO_INCREMENT,
   `UserId` int NOT NULL,
   `BookingReference` varchar(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
@@ -157,28 +157,28 @@ CREATE TABLE `Bookings` (
   KEY `idx_created` (`CreatedAt`),
   KEY `idx_status` (`Status`),
   KEY `idx_user` (`UserId`),
-  CONSTRAINT `FK_Bookings_Users_UserId` FOREIGN KEY (`UserId`) REFERENCES `Users` (`Id`) ON DELETE RESTRICT
-) ENGINE=InnoDB AUTO_INCREMENT=20 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+  CONSTRAINT `FK_Bookings_Users_UserId` FOREIGN KEY (`UserId`) REFERENCES `users` (`Id`) ON DELETE RESTRICT
+) ENGINE=InnoDB AUTO_INCREMENT=29 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Dumping data for table `Bookings`
+-- Dumping data for table `bookings`
 --
 
-LOCK TABLES `Bookings` WRITE;
-/*!40000 ALTER TABLE `Bookings` DISABLE KEYS */;
-INSERT INTO `Bookings` VALUES (1,8,'55F5U9',5500.00,'Created',NULL,'2026-04-07 12:54:21.763960','2026-04-07 12:54:21.763961'),(2,8,'LCUNLK',4299.00,'Created',NULL,'2026-04-07 18:38:36.944227','2026-04-07 18:38:36.944227'),(3,8,'4RTZLJ',4299.00,'Created',NULL,'2026-04-07 18:38:40.573401','2026-04-07 18:38:40.573401'),(4,8,'AW4ASG',3850.00,'Created',NULL,'2026-04-18 13:38:11.391952','2026-04-18 13:38:11.391952'),(5,8,'6SCJTX',3850.00,'Created',NULL,'2026-04-18 13:47:42.935838','2026-04-18 13:47:42.935838'),(6,8,'TMHNGR',5500.00,'Created',NULL,'2026-04-18 13:50:36.237969','2026-04-18 13:50:36.237969'),(7,8,'2UA5VJ',3850.00,'Created',NULL,'2026-04-18 13:54:22.517271','2026-04-18 13:54:22.517272'),(8,8,'SJDZHF',5500.00,'Created',NULL,'2026-04-18 14:14:02.398844','2026-04-18 14:14:02.398844'),(9,8,'MMLH5C',4500.00,'Created',NULL,'2026-04-18 14:14:55.399407','2026-04-18 14:14:55.399407'),(10,8,'598DSD',5500.00,'Confirmed',NULL,'2026-04-18 15:03:18.365793','2026-04-18 15:03:51.493810'),(11,8,'E4YT84',4299.00,'Confirmed',NULL,'2026-04-18 16:33:41.497139','2026-04-18 16:34:14.890660'),(12,8,'QTUTQN',5500.00,'Confirmed',NULL,'2026-04-18 17:04:13.884010','2026-04-18 17:04:49.537283'),(13,8,'6Q3EM7',4299.00,'Created',NULL,'2026-04-20 07:26:22.866374','2026-04-20 07:26:22.866374'),(14,8,'KR6BBH',4299.00,'Confirmed',NULL,'2026-04-20 07:47:28.364662','2026-04-20 07:47:59.978599'),(15,8,'JEZAHA',15000.00,'Confirmed',NULL,'2026-04-20 09:04:36.033111','2026-04-20 09:05:04.439717'),(16,8,'GMECV5',14400.00,'Confirmed',NULL,'2026-04-21 07:58:32.970560','2026-04-21 08:00:21.802068'),(17,8,'WNUA67',3850.00,'Created',NULL,'2026-04-21 14:56:58.127005','2026-04-21 14:56:58.127006'),(18,8,'UFPRRR',4299.00,'Confirmed',NULL,'2026-04-25 08:20:57.994444','2026-04-25 08:21:42.558954'),(19,8,'YRCF36',3850.00,'Confirmed',NULL,'2026-04-27 10:07:15.296609','2026-04-27 10:08:37.016690');
-/*!40000 ALTER TABLE `Bookings` ENABLE KEYS */;
+LOCK TABLES `bookings` WRITE;
+/*!40000 ALTER TABLE `bookings` DISABLE KEYS */;
+INSERT INTO `bookings` VALUES (1,8,'55F5U9',5500.00,'Created',NULL,'2026-04-07 12:54:21.763960','2026-04-07 12:54:21.763961'),(2,8,'LCUNLK',4299.00,'Created',NULL,'2026-04-07 18:38:36.944227','2026-04-07 18:38:36.944227'),(3,8,'4RTZLJ',4299.00,'Created',NULL,'2026-04-07 18:38:40.573401','2026-04-07 18:38:40.573401'),(4,8,'AW4ASG',3850.00,'Created',NULL,'2026-04-18 13:38:11.391952','2026-04-18 13:38:11.391952'),(5,8,'6SCJTX',3850.00,'Created',NULL,'2026-04-18 13:47:42.935838','2026-04-18 13:47:42.935838'),(6,8,'TMHNGR',5500.00,'Created',NULL,'2026-04-18 13:50:36.237969','2026-04-18 13:50:36.237969'),(7,8,'2UA5VJ',3850.00,'Created',NULL,'2026-04-18 13:54:22.517271','2026-04-18 13:54:22.517272'),(8,8,'SJDZHF',5500.00,'Created',NULL,'2026-04-18 14:14:02.398844','2026-04-18 14:14:02.398844'),(9,8,'MMLH5C',4500.00,'Created',NULL,'2026-04-18 14:14:55.399407','2026-04-18 14:14:55.399407'),(10,8,'598DSD',5500.00,'Confirmed',NULL,'2026-04-18 15:03:18.365793','2026-04-18 15:03:51.493810'),(11,8,'E4YT84',4299.00,'Confirmed',NULL,'2026-04-18 16:33:41.497139','2026-04-18 16:34:14.890660'),(12,8,'QTUTQN',5500.00,'Confirmed',NULL,'2026-04-18 17:04:13.884010','2026-04-18 17:04:49.537283'),(13,8,'6Q3EM7',4299.00,'Created',NULL,'2026-04-20 07:26:22.866374','2026-04-20 07:26:22.866374'),(14,8,'KR6BBH',4299.00,'Confirmed',NULL,'2026-04-20 07:47:28.364662','2026-04-20 07:47:59.978599'),(15,8,'JEZAHA',15000.00,'Confirmed',NULL,'2026-04-20 09:04:36.033111','2026-04-20 09:05:04.439717'),(16,8,'GMECV5',14400.00,'Confirmed',NULL,'2026-04-21 07:58:32.970560','2026-04-21 08:00:21.802068'),(17,8,'WNUA67',3850.00,'Created',NULL,'2026-04-21 14:56:58.127005','2026-04-21 14:56:58.127006'),(18,8,'UFPRRR',4299.00,'Confirmed',NULL,'2026-04-25 08:20:57.994444','2026-04-25 08:21:42.558954'),(19,8,'YRCF36',3850.00,'Confirmed',NULL,'2026-04-27 10:07:15.296609','2026-04-27 10:08:37.016690'),(20,8,'79R5JF',5500.00,'Created',NULL,'2026-05-11 12:02:50.431930','2026-05-11 12:02:50.431930'),(21,8,'848P3Z',5500.00,'Confirmed',NULL,'2026-05-11 12:03:41.353473','2026-05-11 12:04:16.574920'),(22,8,'PQZK2W',5500.00,'Confirmed',NULL,'2026-05-11 15:16:02.191016','2026-05-11 15:18:22.544137'),(23,8,'YE7HY7',5500.00,'Created',NULL,'2026-05-13 08:32:00.363307','2026-05-13 08:32:00.363307'),(24,8,'AM9TLX',5500.00,'Confirmed',NULL,'2026-05-21 03:37:18.625156','2026-05-21 03:37:53.486970'),(25,8,'R7M8Y3',5500.00,'Confirmed',NULL,'2026-05-28 11:18:46.416085','2026-05-28 11:19:23.655952'),(26,8,'MRNHPB',5200.00,'Confirmed',NULL,'2026-05-28 11:23:07.297792','2026-05-28 11:23:39.813237'),(27,8,'DXBAEJ',6000.00,'Confirmed',NULL,'2026-05-28 11:34:25.637153','2026-05-28 11:34:49.381896'),(28,8,'JQYWUT',10200.00,'Confirmed',NULL,'2026-05-28 13:59:54.763520','2026-05-28 14:00:20.523870');
+/*!40000 ALTER TABLE `bookings` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
--- Table structure for table `Fares`
+-- Table structure for table `fares`
 --
 
-DROP TABLE IF EXISTS `Fares`;
+DROP TABLE IF EXISTS `fares`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `Fares` (
+CREATE TABLE `fares` (
   `Id` int NOT NULL AUTO_INCREMENT,
   `FlightId` int NOT NULL,
   `Currency` varchar(3) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
@@ -191,28 +191,28 @@ CREATE TABLE `Fares` (
   PRIMARY KEY (`Id`),
   KEY `idx_class` (`Class`),
   KEY `idx_flight_id` (`FlightId`),
-  CONSTRAINT `FK_Fares_Flights_FlightId` FOREIGN KEY (`FlightId`) REFERENCES `Flights` (`Id`) ON DELETE CASCADE
+  CONSTRAINT `FK_Fares_Flights_FlightId` FOREIGN KEY (`FlightId`) REFERENCES `flights` (`Id`) ON DELETE CASCADE
 ) ENGINE=InnoDB AUTO_INCREMENT=211 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Dumping data for table `Fares`
+-- Dumping data for table `fares`
 --
 
-LOCK TABLES `Fares` WRITE;
-/*!40000 ALTER TABLE `Fares` DISABLE KEYS */;
-INSERT INTO `Fares` VALUES (1,5,'RUB',4299.00,44,1,23,0,'Economy'),(2,5,'RUB',8500.00,30,1,23,1,'Business'),(3,5,'RUB',15000.00,9,1,32,1,'First'),(4,6,'RUB',3850.00,56,0,0,0,'Economy'),(5,6,'RUB',7200.00,23,1,23,1,'Business'),(6,7,'RUB',5500.00,40,1,23,0,'Economy'),(7,7,'RUB',10200.00,20,1,23,1,'Business'),(8,7,'RUB',18000.00,8,1,32,1,'First'),(9,8,'RUB',4500.00,54,1,23,0,'Economy'),(10,8,'RUB',9000.00,28,1,23,1,'Business'),(11,9,'RUB',4299.00,44,1,23,0,'Economy'),(12,9,'RUB',8500.00,30,1,23,1,'Business'),(13,10,'RUB',4299.00,44,1,23,0,'Economy'),(14,10,'RUB',8500.00,30,1,23,1,'Business'),(15,11,'RUB',3850.00,55,0,0,0,'Economy'),(16,11,'RUB',7200.00,23,1,23,1,'Business'),(17,12,'RUB',4500.00,54,1,23,0,'Economy'),(18,12,'RUB',9000.00,28,1,23,1,'Business'),(19,13,'RUB',5500.00,40,1,23,0,'Economy'),(20,13,'RUB',10200.00,20,1,23,1,'Business'),(21,14,'RUB',4500.00,54,1,23,0,'Economy'),(22,14,'RUB',9000.00,28,1,23,1,'Business'),(23,15,'RUB',5600.00,42,1,23,0,'Economy'),(24,15,'RUB',11500.00,15,1,23,1,'First'),(25,16,'RUB',6200.00,38,1,23,0,'Economy'),(26,16,'RUB',11000.00,19,1,23,1,'Business'),(27,17,'RUB',5800.00,40,1,23,0,'Economy'),(28,17,'RUB',10500.00,20,1,23,1,'Business'),(29,18,'RUB',6000.00,36,1,23,0,'Economy'),(30,18,'RUB',12000.00,14,1,32,1,'First'),(31,19,'RUB',5200.00,42,1,23,0,'Economy'),(32,19,'RUB',10000.00,22,1,23,1,'Business'),(33,20,'RUB',5600.00,39,1,23,0,'Economy'),(34,20,'RUB',11000.00,19,1,23,1,'Business'),(35,21,'RUB',4800.00,51,1,23,0,'Economy'),(36,21,'RUB',9200.00,26,1,23,1,'Business'),(37,22,'RUB',5000.00,45,1,23,0,'Economy'),(38,22,'RUB',10500.00,17,1,23,1,'Business'),(39,23,'RUB',6200.00,34,1,23,0,'Economy'),(40,23,'RUB',11800.00,16,1,32,1,'First'),(41,24,'RUB',4900.00,49,1,23,0,'Economy'),(42,24,'RUB',9600.00,24,1,23,1,'Business'),(43,25,'RUB',5400.00,41,1,23,0,'Economy'),(44,25,'RUB',10800.00,18,1,23,1,'Business'),(45,26,'RUB',5100.00,47,1,23,0,'Economy'),(46,26,'RUB',10000.00,21,1,23,1,'Business'),(47,27,'RUB',4800.00,53,1,23,0,'Economy'),(48,27,'RUB',9400.00,27,1,23,1,'Business'),(49,28,'RUB',6300.00,33,1,23,0,'Economy'),(50,28,'RUB',12000.00,15,1,32,1,'First'),(51,29,'RUB',5700.00,38,1,23,0,'Economy'),(52,29,'RUB',11000.00,20,1,23,1,'Business'),(53,30,'RUB',4700.00,50,1,23,0,'Economy'),(54,30,'RUB',9100.00,25,1,23,1,'Business'),(55,31,'RUB',6100.00,35,1,23,0,'Economy'),(56,31,'RUB',11500.00,17,1,32,1,'First'),(57,32,'RUB',4900.00,48,1,23,0,'Economy'),(58,32,'RUB',9500.00,24,1,23,1,'Business'),(59,33,'RUB',5300.00,43,1,23,0,'Economy'),(60,33,'RUB',10300.00,22,1,23,1,'Business'),(61,34,'RUB',5900.00,37,1,23,0,'Economy'),(62,34,'RUB',11200.00,18,1,32,1,'First'),(63,35,'RUB',5100.00,46,1,23,0,'Economy'),(64,35,'RUB',9700.00,26,1,23,1,'Business'),(65,36,'RUB',6000.00,36,1,23,0,'Economy'),(66,36,'RUB',11400.00,19,1,23,1,'Business'),(67,37,'RUB',4800.00,52,1,23,0,'Economy'),(68,37,'RUB',9200.00,28,1,23,1,'Business'),(69,38,'RUB',5500.00,40,1,23,0,'Economy'),(70,38,'RUB',10500.00,21,1,23,1,'Business'),(71,39,'RUB',6200.00,34,1,23,0,'Economy'),(72,39,'RUB',11800.00,16,1,32,1,'First'),(73,40,'RUB',5000.00,51,1,23,0,'Economy'),(74,40,'RUB',9600.00,23,1,23,1,'Business'),(75,41,'RUB',5800.00,39,1,23,0,'Economy'),(76,41,'RUB',11000.00,20,1,23,1,'Business'),(77,42,'RUB',4700.00,54,1,23,0,'Economy'),(78,42,'RUB',9000.00,27,1,23,1,'Business'),(79,43,'RUB',5600.00,41,1,23,0,'Economy'),(80,43,'RUB',10800.00,19,1,23,1,'Business'),(81,44,'RUB',6300.00,33,1,23,0,'Economy'),(82,44,'RUB',12200.00,15,1,32,1,'First'),(83,45,'RUB',5900.00,37,1,23,0,'Economy'),(84,45,'RUB',11300.00,18,1,23,1,'Business'),(85,46,'RUB',4900.00,55,1,23,0,'Economy'),(86,46,'RUB',9300.00,29,1,23,1,'Business'),(87,47,'RUB',5200.00,48,1,23,0,'Economy'),(88,47,'RUB',10600.00,19,1,23,1,'Business'),(89,48,'RUB',5400.00,46,1,23,0,'Economy'),(90,48,'RUB',10800.00,18,1,23,1,'Business'),(91,49,'RUB',5600.00,43,1,23,0,'Economy'),(92,49,'RUB',11000.00,17,1,32,1,'First'),(93,50,'RUB',6000.00,40,1,23,0,'Economy'),(94,50,'RUB',11800.00,16,1,32,1,'First'),(95,51,'RUB',4800.00,52,1,23,0,'Economy'),(96,51,'RUB',9400.00,27,1,23,1,'Business'),(97,52,'RUB',5500.00,41,1,23,0,'Economy'),(98,52,'RUB',10500.00,20,1,23,1,'Business'),(99,53,'RUB',5800.00,39,1,23,0,'Economy'),(100,53,'RUB',11200.00,18,1,32,1,'First'),(101,54,'RUB',6100.00,37,1,23,0,'Economy'),(102,54,'RUB',11800.00,17,1,32,1,'First'),(103,55,'RUB',4900.00,54,1,23,0,'Economy'),(104,55,'RUB',9600.00,25,1,23,1,'Business'),(105,56,'RUB',5200.00,47,1,23,0,'Economy'),(106,56,'RUB',10200.00,19,1,23,1,'Business'),(107,57,'RUB',6400.00,35,1,23,0,'Economy'),(108,57,'RUB',12500.00,14,1,32,1,'First'),(109,58,'RUB',5600.00,42,1,23,0,'Economy'),(110,58,'RUB',10800.00,18,1,23,1,'Business'),(111,59,'RUB',4700.00,56,1,23,0,'Economy'),(112,59,'RUB',8900.00,28,1,23,1,'Business'),(113,60,'RUB',5400.00,44,1,23,0,'Economy'),(114,60,'RUB',10600.00,19,1,23,1,'Business'),(115,61,'RUB',5800.00,40,1,23,0,'Economy'),(116,61,'RUB',11000.00,18,1,32,1,'First'),(117,62,'RUB',5300.00,45,1,23,0,'Economy'),(118,62,'RUB',10300.00,20,1,23,1,'Business'),(119,63,'RUB',4600.00,58,0,0,0,'Economy'),(120,63,'RUB',8700.00,30,1,23,1,'Business'),(121,64,'RUB',5900.00,38,1,23,0,'Economy'),(122,64,'RUB',11400.00,17,1,32,1,'First'),(123,65,'RUB',6500.00,36,1,23,0,'Economy'),(124,65,'RUB',12600.00,14,1,32,1,'First'),(125,66,'RUB',5100.00,51,1,23,0,'Economy'),(126,66,'RUB',9800.00,24,1,23,1,'Business'),(127,67,'RUB',5700.00,43,1,23,0,'Economy'),(128,67,'RUB',11000.00,19,1,23,1,'Business'),(129,68,'RUB',6300.00,35,1,23,0,'Economy'),(130,68,'RUB',12700.00,15,1,32,1,'First'),(131,69,'RUB',4800.00,55,1,23,0,'Economy'),(132,69,'RUB',9500.00,27,1,23,1,'Business'),(133,70,'RUB',6200.00,34,1,23,0,'Economy'),(134,70,'RUB',12000.00,16,1,32,1,'First'),(135,71,'RUB',5500.00,48,1,23,0,'Economy'),(136,71,'RUB',10500.00,20,1,23,1,'Business'),(137,72,'RUB',4900.00,54,1,23,0,'Economy'),(138,72,'RUB',9600.00,25,1,23,1,'Business'),(139,73,'RUB',5300.00,46,1,23,0,'Economy'),(140,73,'RUB',10400.00,19,1,23,1,'Business'),(141,74,'RUB',5800.00,41,1,23,0,'Economy'),(142,74,'RUB',11200.00,18,1,32,1,'First'),(143,75,'RUB',6000.00,39,1,23,0,'Economy'),(144,75,'RUB',11800.00,17,1,32,1,'First'),(145,76,'RUB',5400.00,47,1,23,0,'Economy'),(146,76,'RUB',10600.00,20,1,23,1,'Business'),(147,77,'RUB',5900.00,42,1,23,0,'Economy'),(148,77,'RUB',11400.00,19,1,23,1,'Business'),(149,78,'RUB',6600.00,33,1,23,0,'Economy'),(150,78,'RUB',13000.00,14,1,32,1,'First'),(151,79,'RUB',5200.00,50,1,23,0,'Economy'),(152,79,'RUB',10200.00,22,1,23,1,'Business'),(153,80,'RUB',5600.00,44,1,23,0,'Economy'),(154,80,'RUB',11000.00,19,1,23,1,'Business'),(155,81,'RUB',5000.00,53,1,23,0,'Economy'),(156,81,'RUB',9700.00,26,1,23,1,'Business'),(157,82,'RUB',5400.00,48,1,23,0,'Economy'),(158,82,'RUB',10600.00,20,1,23,1,'Business'),(159,83,'RUB',5800.00,41,1,23,0,'Economy'),(160,83,'RUB',11200.00,18,1,32,1,'First'),(161,84,'RUB',4900.00,55,1,23,0,'Economy'),(162,84,'RUB',9600.00,27,1,23,1,'Business'),(163,85,'RUB',5200.00,49,1,23,0,'Economy'),(164,85,'RUB',10400.00,21,1,23,1,'Business'),(165,86,'RUB',5700.00,43,1,23,0,'Economy'),(166,86,'RUB',11000.00,19,1,23,1,'Business'),(167,87,'RUB',6100.00,38,1,23,0,'Economy'),(168,87,'RUB',12100.00,15,1,32,1,'First'),(169,88,'RUB',5500.00,46,1,23,0,'Economy'),(170,88,'RUB',10700.00,20,1,23,1,'Business'),(171,89,'RUB',5900.00,40,1,23,0,'Economy'),(172,89,'RUB',11400.00,18,1,32,1,'First'),(173,90,'RUB',5300.00,52,1,23,0,'Economy'),(174,90,'RUB',10300.00,23,1,23,1,'Business'),(175,91,'RUB',6400.00,36,1,23,0,'Economy'),(176,91,'RUB',12800.00,14,1,32,1,'First'),(177,92,'RUB',5700.00,45,1,23,0,'Economy'),(178,92,'RUB',11100.00,19,1,23,1,'Business'),(179,93,'RUB',5400.00,50,1,23,0,'Economy'),(180,93,'RUB',10600.00,22,1,23,1,'Business'),(181,94,'RUB',5800.00,23,1,23,0,'Economy'),(182,94,'RUB',11000.00,18,1,23,1,'Business'),(183,95,'RUB',6200.00,35,1,23,0,'Economy'),(184,95,'RUB',12400.00,14,1,32,1,'First'),(185,96,'RUB',5700.00,41,1,23,0,'Economy'),(186,96,'RUB',11100.00,19,1,23,1,'Business'),(187,97,'RUB',6400.00,36,1,23,0,'Economy'),(188,97,'RUB',12800.00,15,1,32,1,'First'),(189,98,'RUB',5400.00,48,1,23,0,'Economy'),(190,98,'RUB',10800.00,21,1,23,1,'Business'),(191,99,'RUB',5900.00,42,1,23,0,'Economy'),(192,99,'RUB',11600.00,17,1,32,1,'First'),(193,100,'RUB',5600.00,45,1,23,0,'Economy'),(194,100,'RUB',11200.00,20,1,23,1,'Business'),(195,101,'RUB',5300.00,50,1,23,0,'Economy'),(196,101,'RUB',10600.00,22,1,23,1,'Business'),(197,102,'RUB',5800.00,40,1,23,0,'Economy'),(198,102,'RUB',11400.00,19,1,23,1,'Business'),(199,103,'RUB',6100.00,37,1,23,0,'Economy'),(200,103,'RUB',12500.00,14,1,32,1,'First'),(201,104,'RUB',5500.00,46,1,23,0,'Economy'),(202,104,'RUB',11000.00,20,1,23,1,'Business'),(203,105,'RUB',6000.00,38,1,23,0,'Economy'),(204,105,'RUB',12200.00,16,1,32,1,'First'),(205,106,'RUB',5700.00,43,1,23,0,'Economy'),(206,106,'RUB',11300.00,18,1,23,1,'Business'),(207,107,'RUB',6300.00,35,1,23,0,'Economy'),(208,107,'RUB',12600.00,15,1,32,1,'First'),(209,108,'RUB',5900.00,41,1,23,0,'Economy'),(210,108,'RUB',11600.00,17,1,32,1,'First');
-/*!40000 ALTER TABLE `Fares` ENABLE KEYS */;
+LOCK TABLES `fares` WRITE;
+/*!40000 ALTER TABLE `fares` DISABLE KEYS */;
+INSERT INTO `fares` VALUES (1,5,'RUB',4299.00,44,1,23,0,'Economy'),(2,5,'RUB',8500.00,30,1,23,1,'Business'),(3,5,'RUB',15000.00,9,1,32,1,'First'),(4,6,'RUB',3850.00,56,0,0,0,'Economy'),(5,6,'RUB',7200.00,23,1,23,1,'Business'),(9,8,'RUB',4500.00,54,1,23,0,'Economy'),(10,8,'RUB',9000.00,28,1,23,1,'Business'),(11,9,'RUB',4299.00,44,1,23,0,'Economy'),(12,9,'RUB',8500.00,30,1,23,1,'Business'),(13,10,'RUB',4299.00,44,1,23,0,'Economy'),(14,10,'RUB',8500.00,30,1,23,1,'Business'),(15,11,'RUB',3850.00,55,0,0,0,'Economy'),(16,11,'RUB',7200.00,23,1,23,1,'Business'),(17,12,'RUB',4500.00,54,1,23,0,'Economy'),(18,12,'RUB',9000.00,28,1,23,1,'Business'),(19,13,'RUB',5500.00,40,1,23,0,'Economy'),(20,13,'RUB',10200.00,20,1,23,1,'Business'),(21,14,'RUB',4500.00,54,1,23,0,'Economy'),(22,14,'RUB',9000.00,28,1,23,1,'Business'),(23,15,'RUB',5600.00,42,1,23,0,'Economy'),(24,15,'RUB',11500.00,15,1,23,1,'First'),(25,16,'RUB',6200.00,38,1,23,0,'Economy'),(26,16,'RUB',11000.00,19,1,23,1,'Business'),(27,17,'RUB',5800.00,40,1,23,0,'Economy'),(28,17,'RUB',10500.00,20,1,23,1,'Business'),(29,18,'RUB',6000.00,36,1,23,0,'Economy'),(30,18,'RUB',12000.00,14,1,32,1,'First'),(31,19,'RUB',5200.00,42,1,23,0,'Economy'),(32,19,'RUB',10000.00,22,1,23,1,'Business'),(33,20,'RUB',5600.00,39,1,23,0,'Economy'),(34,20,'RUB',11000.00,19,1,23,1,'Business'),(35,21,'RUB',4800.00,51,1,23,0,'Economy'),(36,21,'RUB',9200.00,26,1,23,1,'Business'),(37,22,'RUB',5000.00,45,1,23,0,'Economy'),(38,22,'RUB',10500.00,17,1,23,1,'Business'),(39,23,'RUB',6200.00,34,1,23,0,'Economy'),(40,23,'RUB',11800.00,16,1,32,1,'First'),(41,24,'RUB',4900.00,49,1,23,0,'Economy'),(42,24,'RUB',9600.00,24,1,23,1,'Business'),(43,25,'RUB',5400.00,41,1,23,0,'Economy'),(44,25,'RUB',10800.00,18,1,23,1,'Business'),(45,26,'RUB',5100.00,47,1,23,0,'Economy'),(46,26,'RUB',10000.00,21,1,23,1,'Business'),(47,27,'RUB',4800.00,53,1,23,0,'Economy'),(48,27,'RUB',9400.00,27,1,23,1,'Business'),(49,28,'RUB',6300.00,33,1,23,0,'Economy'),(50,28,'RUB',12000.00,15,1,32,1,'First'),(51,29,'RUB',5700.00,38,1,23,0,'Economy'),(52,29,'RUB',11000.00,20,1,23,1,'Business'),(53,30,'RUB',4700.00,50,1,23,0,'Economy'),(54,30,'RUB',9100.00,25,1,23,1,'Business'),(55,31,'RUB',6100.00,35,1,23,0,'Economy'),(56,31,'RUB',11500.00,17,1,32,1,'First'),(57,32,'RUB',4900.00,48,1,23,0,'Economy'),(58,32,'RUB',9500.00,24,1,23,1,'Business'),(59,33,'RUB',5300.00,43,1,23,0,'Economy'),(60,33,'RUB',10300.00,22,1,23,1,'Business'),(61,34,'RUB',5900.00,37,1,23,0,'Economy'),(62,34,'RUB',11200.00,18,1,32,1,'First'),(63,35,'RUB',5100.00,46,1,23,0,'Economy'),(64,35,'RUB',9700.00,26,1,23,1,'Business'),(65,36,'RUB',6000.00,36,1,23,0,'Economy'),(66,36,'RUB',11400.00,19,1,23,1,'Business'),(67,37,'RUB',4800.00,52,1,23,0,'Economy'),(68,37,'RUB',9200.00,28,1,23,1,'Business'),(69,38,'RUB',5500.00,34,1,23,0,'Economy'),(70,38,'RUB',10500.00,21,1,23,1,'Business'),(71,39,'RUB',6200.00,34,1,23,0,'Economy'),(72,39,'RUB',11800.00,16,1,32,1,'First'),(73,40,'RUB',5000.00,51,1,23,0,'Economy'),(74,40,'RUB',9600.00,23,1,23,1,'Business'),(75,41,'RUB',5800.00,39,1,23,0,'Economy'),(76,41,'RUB',11000.00,20,1,23,1,'Business'),(77,42,'RUB',4700.00,54,1,23,0,'Economy'),(78,42,'RUB',9000.00,27,1,23,1,'Business'),(79,43,'RUB',5600.00,41,1,23,0,'Economy'),(80,43,'RUB',10800.00,19,1,23,1,'Business'),(81,44,'RUB',6300.00,33,1,23,0,'Economy'),(82,44,'RUB',12200.00,15,1,32,1,'First'),(83,45,'RUB',5900.00,37,1,23,0,'Economy'),(84,45,'RUB',11300.00,18,1,23,1,'Business'),(85,46,'RUB',4900.00,55,1,23,0,'Economy'),(86,46,'RUB',9300.00,29,1,23,1,'Business'),(87,47,'RUB',5200.00,48,1,23,0,'Economy'),(88,47,'RUB',10600.00,19,1,23,1,'Business'),(89,48,'RUB',5400.00,46,1,23,0,'Economy'),(90,48,'RUB',10800.00,18,1,23,1,'Business'),(91,49,'RUB',5600.00,43,1,23,0,'Economy'),(92,49,'RUB',11000.00,17,1,32,1,'First'),(93,50,'RUB',6000.00,37,1,23,0,'Economy'),(94,50,'RUB',11800.00,16,1,32,1,'First'),(95,51,'RUB',4800.00,52,1,23,0,'Economy'),(96,51,'RUB',9400.00,27,1,23,1,'Business'),(97,52,'RUB',5500.00,41,1,23,0,'Economy'),(98,52,'RUB',10500.00,20,1,23,1,'Business'),(99,53,'RUB',5800.00,39,1,23,0,'Economy'),(100,53,'RUB',11200.00,18,1,32,1,'First'),(101,54,'RUB',6100.00,37,1,23,0,'Economy'),(102,54,'RUB',11800.00,17,1,32,1,'First'),(103,55,'RUB',4900.00,54,1,23,0,'Economy'),(104,55,'RUB',9600.00,25,1,23,1,'Business'),(105,56,'RUB',5200.00,47,1,23,0,'Economy'),(106,56,'RUB',10200.00,19,1,23,1,'Business'),(107,57,'RUB',6400.00,35,1,23,0,'Economy'),(108,57,'RUB',12500.00,14,1,32,1,'First'),(109,58,'RUB',5600.00,42,1,23,0,'Economy'),(110,58,'RUB',10800.00,18,1,23,1,'Business'),(111,59,'RUB',4700.00,56,1,23,0,'Economy'),(112,59,'RUB',8900.00,28,1,23,1,'Business'),(113,60,'RUB',5400.00,44,1,23,0,'Economy'),(114,60,'RUB',10600.00,19,1,23,1,'Business'),(115,61,'RUB',5800.00,40,1,23,0,'Economy'),(116,61,'RUB',11000.00,18,1,32,1,'First'),(117,62,'RUB',5300.00,45,1,23,0,'Economy'),(118,62,'RUB',10300.00,20,1,23,1,'Business'),(119,63,'RUB',4600.00,58,0,0,0,'Economy'),(120,63,'RUB',8700.00,30,1,23,1,'Business'),(121,64,'RUB',5900.00,38,1,23,0,'Economy'),(122,64,'RUB',11400.00,17,1,32,1,'First'),(123,65,'RUB',6500.00,36,1,23,0,'Economy'),(124,65,'RUB',12600.00,14,1,32,1,'First'),(125,66,'RUB',5100.00,51,1,23,0,'Economy'),(126,66,'RUB',9800.00,24,1,23,1,'Business'),(127,67,'RUB',5700.00,43,1,23,0,'Economy'),(128,67,'RUB',11000.00,19,1,23,1,'Business'),(129,68,'RUB',6300.00,35,1,23,0,'Economy'),(130,68,'RUB',12700.00,15,1,32,1,'First'),(131,69,'RUB',4800.00,55,1,23,0,'Economy'),(132,69,'RUB',9500.00,27,1,23,1,'Business'),(133,70,'RUB',6200.00,34,1,23,0,'Economy'),(134,70,'RUB',12000.00,16,1,32,1,'First'),(135,71,'RUB',5500.00,48,1,23,0,'Economy'),(136,71,'RUB',10500.00,20,1,23,1,'Business'),(137,72,'RUB',4900.00,54,1,23,0,'Economy'),(138,72,'RUB',9600.00,25,1,23,1,'Business'),(139,73,'RUB',5300.00,46,1,23,0,'Economy'),(140,73,'RUB',10400.00,19,1,23,1,'Business'),(141,74,'RUB',5800.00,41,1,23,0,'Economy'),(142,74,'RUB',11200.00,18,1,32,1,'First'),(143,75,'RUB',6000.00,39,1,23,0,'Economy'),(144,75,'RUB',11800.00,17,1,32,1,'First'),(145,76,'RUB',5400.00,47,1,23,0,'Economy'),(146,76,'RUB',10600.00,20,1,23,1,'Business'),(147,77,'RUB',5900.00,42,1,23,0,'Economy'),(148,77,'RUB',11400.00,19,1,23,1,'Business'),(149,78,'RUB',6600.00,33,1,23,0,'Economy'),(150,78,'RUB',13000.00,14,1,32,1,'First'),(151,79,'RUB',5200.00,50,1,23,0,'Economy'),(152,79,'RUB',10200.00,22,1,23,1,'Business'),(153,80,'RUB',5600.00,44,1,23,0,'Economy'),(154,80,'RUB',11000.00,19,1,23,1,'Business'),(155,81,'RUB',5000.00,53,1,23,0,'Economy'),(156,81,'RUB',9700.00,26,1,23,1,'Business'),(157,82,'RUB',5400.00,48,1,23,0,'Economy'),(158,82,'RUB',10600.00,20,1,23,1,'Business'),(159,83,'RUB',5800.00,41,1,23,0,'Economy'),(160,83,'RUB',11200.00,18,1,32,1,'First'),(161,84,'RUB',4900.00,55,1,23,0,'Economy'),(162,84,'RUB',9600.00,27,1,23,1,'Business'),(163,85,'RUB',5200.00,48,1,23,0,'Economy'),(164,85,'RUB',10400.00,21,1,23,1,'Business'),(165,86,'RUB',5700.00,43,1,23,0,'Economy'),(166,86,'RUB',11000.00,19,1,23,1,'Business'),(167,87,'RUB',6100.00,38,1,23,0,'Economy'),(168,87,'RUB',12100.00,15,1,32,1,'First'),(169,88,'RUB',5500.00,46,1,23,0,'Economy'),(170,88,'RUB',10700.00,20,1,23,1,'Business'),(171,89,'RUB',5900.00,40,1,23,0,'Economy'),(172,89,'RUB',11400.00,18,1,32,1,'First'),(173,90,'RUB',5300.00,52,1,23,0,'Economy'),(174,90,'RUB',10300.00,23,1,23,1,'Business'),(175,91,'RUB',6400.00,36,1,23,0,'Economy'),(176,91,'RUB',12800.00,14,1,32,1,'First'),(177,92,'RUB',5700.00,45,1,23,0,'Economy'),(178,92,'RUB',11100.00,19,1,23,1,'Business'),(179,93,'RUB',5400.00,50,1,23,0,'Economy'),(180,93,'RUB',10600.00,22,1,23,1,'Business'),(181,94,'RUB',5800.00,23,1,23,0,'Economy'),(182,94,'RUB',11000.00,18,1,23,1,'Business'),(183,95,'RUB',6200.00,35,1,23,0,'Economy'),(184,95,'RUB',12400.00,14,1,32,1,'First'),(185,96,'RUB',5700.00,41,1,23,0,'Economy'),(186,96,'RUB',11100.00,19,1,23,1,'Business'),(187,97,'RUB',6400.00,36,1,23,0,'Economy'),(188,97,'RUB',12800.00,15,1,32,1,'First'),(189,98,'RUB',5400.00,48,1,23,0,'Economy'),(190,98,'RUB',10800.00,21,1,23,1,'Business'),(191,99,'RUB',5900.00,42,1,23,0,'Economy'),(192,99,'RUB',11600.00,17,1,32,1,'First'),(193,100,'RUB',5600.00,45,1,23,0,'Economy'),(194,100,'RUB',11200.00,20,1,23,1,'Business'),(195,101,'RUB',5300.00,50,1,23,0,'Economy'),(196,101,'RUB',10600.00,22,1,23,1,'Business'),(197,102,'RUB',5800.00,40,1,23,0,'Economy'),(198,102,'RUB',11400.00,19,1,23,1,'Business'),(199,103,'RUB',6100.00,37,1,23,0,'Economy'),(200,103,'RUB',12500.00,14,1,32,1,'First'),(201,104,'RUB',5500.00,46,1,23,0,'Economy'),(202,104,'RUB',11000.00,20,1,23,1,'Business'),(203,105,'RUB',6000.00,38,1,23,0,'Economy'),(204,105,'RUB',12200.00,16,1,32,1,'First'),(205,106,'RUB',5700.00,43,1,23,0,'Economy'),(206,106,'RUB',11300.00,18,1,23,1,'Business'),(207,107,'RUB',6300.00,35,1,23,0,'Economy'),(208,107,'RUB',12600.00,15,1,32,1,'First'),(209,108,'RUB',5900.00,41,1,23,0,'Economy'),(210,108,'RUB',11600.00,17,1,32,1,'First');
+/*!40000 ALTER TABLE `fares` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
--- Table structure for table `Flights`
+-- Table structure for table `flights`
 --
 
-DROP TABLE IF EXISTS `Flights`;
+DROP TABLE IF EXISTS `flights`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `Flights` (
+CREATE TABLE `flights` (
   `Id` int NOT NULL AUTO_INCREMENT,
   `FlightNumber` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
   `AirlineId` int NOT NULL,
@@ -232,31 +232,31 @@ CREATE TABLE `Flights` (
   KEY `idx_status` (`Status`),
   KEY `IX_Flights_AircraftId` (`AircraftId`),
   KEY `IX_Flights_DestAirportId` (`DestAirportId`),
-  CONSTRAINT `FK_Flights_Aircraft_AircraftId` FOREIGN KEY (`AircraftId`) REFERENCES `Aircraft` (`Id`) ON DELETE RESTRICT,
-  CONSTRAINT `FK_Flights_Airlines_AirlineId` FOREIGN KEY (`AirlineId`) REFERENCES `Airlines` (`Id`) ON DELETE RESTRICT,
-  CONSTRAINT `FK_Flights_Airports_DestAirportId` FOREIGN KEY (`DestAirportId`) REFERENCES `Airports` (`Id`) ON DELETE RESTRICT,
-  CONSTRAINT `FK_Flights_Airports_OriginAirportId` FOREIGN KEY (`OriginAirportId`) REFERENCES `Airports` (`Id`) ON DELETE RESTRICT
-) ENGINE=InnoDB AUTO_INCREMENT=109 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+  CONSTRAINT `FK_Flights_Aircraft_AircraftId` FOREIGN KEY (`AircraftId`) REFERENCES `aircraft` (`Id`) ON DELETE RESTRICT,
+  CONSTRAINT `FK_Flights_Airlines_AirlineId` FOREIGN KEY (`AirlineId`) REFERENCES `airlines` (`Id`) ON DELETE RESTRICT,
+  CONSTRAINT `FK_Flights_Airports_DestAirportId` FOREIGN KEY (`DestAirportId`) REFERENCES `airports` (`Id`) ON DELETE RESTRICT,
+  CONSTRAINT `FK_Flights_Airports_OriginAirportId` FOREIGN KEY (`OriginAirportId`) REFERENCES `airports` (`Id`) ON DELETE RESTRICT
+) ENGINE=InnoDB AUTO_INCREMENT=126 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Dumping data for table `Flights`
+-- Dumping data for table `flights`
 --
 
-LOCK TABLES `Flights` WRITE;
-/*!40000 ALTER TABLE `Flights` DISABLE KEYS */;
-INSERT INTO `Flights` VALUES (5,'SU112',1,1,1,2,'2025-12-18 22:21:03.000000','2025-12-19 01:21:03.000000',185,'2025-12-18 22:21:03.000000','Scheduled'),(6,'UT328',2,2,1,3,'2025-12-18 22:21:03.000000','2025-12-19 00:21:03.000000',126,'2025-12-18 22:21:03.000000','Scheduled'),(7,'UT128',2,3,1,4,'2025-12-18 22:21:03.000000','2025-12-19 03:21:03.000000',307,'2025-12-18 22:21:03.000000','Scheduled'),(8,'S7115',3,1,1,2,'2025-12-18 22:21:03.000000','2025-12-19 01:21:03.000000',179,'2025-12-18 22:21:03.000000','Scheduled'),(9,'S7598',3,1,8,6,'2026-05-01 10:15:00.000000','2026-05-01 13:28:00.000000',193,'2026-04-26 00:00:00.000000','Scheduled'),(10,'S7519',3,1,8,9,'2026-05-02 10:00:00.000000','2026-05-02 13:22:00.000000',202,'2026-04-26 00:00:00.000000','Scheduled'),(11,'S7866',3,2,1,8,'2026-05-02 18:30:00.000000','2026-05-02 21:39:00.000000',189,'2026-04-26 00:00:00.000000','Scheduled'),(12,'SU280',1,1,3,6,'2026-05-03 10:15:00.000000','2026-05-03 12:03:00.000000',108,'2026-04-26 00:00:00.000000','Scheduled'),(13,'SU412',1,1,3,6,'2026-05-03 18:00:00.000000','2026-05-03 19:46:00.000000',106,'2026-04-26 00:00:00.000000','Scheduled'),(14,'UT519',2,3,1,3,'2026-05-04 06:45:00.000000','2026-05-04 08:33:00.000000',108,'2026-04-26 00:00:00.000000','Scheduled'),(15,'SU607',1,2,2,9,'2026-05-04 10:30:00.000000','2026-05-04 15:57:00.000000',327,'2026-04-26 00:00:00.000000','Scheduled'),(16,'S7737',3,1,1,13,'2026-05-04 18:45:00.000000','2026-05-04 23:11:00.000000',266,'2026-04-26 00:00:00.000000','Scheduled'),(17,'UT645',2,1,2,1,'2026-05-05 10:30:00.000000','2026-05-05 12:22:00.000000',112,'2026-04-26 00:00:00.000000','Scheduled'),(18,'S7186',3,3,8,10,'2026-05-05 14:15:00.000000','2026-05-05 17:00:00.000000',165,'2026-04-26 00:00:00.000000','Scheduled'),(19,'S7471',3,3,2,1,'2026-05-07 06:15:00.000000','2026-05-07 08:10:00.000000',115,'2026-04-26 00:00:00.000000','Scheduled'),(20,'S7179',3,2,8,7,'2026-05-09 18:45:00.000000','2026-05-09 21:16:00.000000',151,'2026-04-26 00:00:00.000000','Scheduled'),(21,'UT842',2,3,6,2,'2026-05-10 18:45:00.000000','2026-05-10 20:33:00.000000',108,'2026-04-26 00:00:00.000000','Scheduled'),(22,'SU502',1,3,3,8,'2026-05-11 14:00:00.000000','2026-05-11 17:24:00.000000',204,'2026-04-26 00:00:00.000000','Scheduled'),(23,'S7662',3,3,1,9,'2026-05-12 10:30:00.000000','2026-05-12 15:24:00.000000',294,'2026-04-26 00:00:00.000000','Scheduled'),(24,'SU470',1,3,10,5,'2026-05-13 14:00:00.000000','2026-05-13 18:08:00.000000',248,'2026-04-26 00:00:00.000000','Scheduled'),(25,'SU738',1,3,5,3,'2026-05-13 18:15:00.000000','2026-05-13 20:02:00.000000',107,'2026-04-26 00:00:00.000000','Scheduled'),(26,'SU875',1,2,8,6,'2026-05-14 10:15:00.000000','2026-05-14 13:26:00.000000',191,'2026-04-26 00:00:00.000000','Scheduled'),(27,'UT507',2,3,3,1,'2026-05-14 14:15:00.000000','2026-05-14 15:57:00.000000',102,'2026-04-26 00:00:00.000000','Scheduled'),(28,'S7204',3,1,12,6,'2026-05-15 06:15:00.000000','2026-05-15 10:41:00.000000',266,'2026-04-26 00:00:00.000000','Scheduled'),(29,'SU237',1,1,5,14,'2026-05-16 10:00:00.000000','2026-05-16 20:28:00.000000',628,'2026-04-26 00:00:00.000000','Scheduled'),(30,'SU799',1,1,9,1,'2026-05-17 06:00:00.000000','2026-05-17 11:01:00.000000',301,'2026-04-26 00:00:00.000000','Scheduled'),(31,'S7570',3,3,9,8,'2026-05-17 10:15:00.000000','2026-05-17 13:34:00.000000',199,'2026-04-26 00:00:00.000000','Scheduled'),(32,'SU319',1,3,8,5,'2026-05-17 14:00:00.000000','2026-05-17 17:06:00.000000',186,'2026-04-26 00:00:00.000000','Scheduled'),(33,'S7619',3,3,9,8,'2026-05-18 06:00:00.000000','2026-05-18 09:08:00.000000',188,'2026-04-26 00:00:00.000000','Scheduled'),(34,'SU791',1,2,10,6,'2026-05-18 14:30:00.000000','2026-05-18 18:53:00.000000',263,'2026-04-26 00:00:00.000000','Scheduled'),(35,'UT722',2,2,7,5,'2026-05-18 18:30:00.000000','2026-05-18 21:01:00.000000',151,'2026-04-26 00:00:00.000000','Scheduled'),(36,'S7169',3,3,8,7,'2026-05-19 14:30:00.000000','2026-05-19 17:03:00.000000',153,'2026-04-26 00:00:00.000000','Scheduled'),(37,'UT526',2,3,1,3,'2026-05-20 10:15:00.000000','2026-05-20 11:59:00.000000',104,'2026-04-26 00:00:00.000000','Scheduled'),(38,'SU662',1,1,5,8,'2026-05-20 18:45:00.000000','2026-05-20 21:49:00.000000',184,'2026-04-26 00:00:00.000000','Scheduled'),(39,'SU299',1,1,5,13,'2026-05-22 10:45:00.000000','2026-05-22 15:02:00.000000',257,'2026-04-26 00:00:00.000000','Scheduled'),(40,'S7274',3,2,8,4,'2026-05-25 14:45:00.000000','2026-05-25 17:08:00.000000',143,'2026-04-26 00:00:00.000000','Scheduled'),(41,'S7916',3,1,4,1,'2026-05-25 18:45:00.000000','2026-05-25 21:22:00.000000',157,'2026-04-26 00:00:00.000000','Scheduled'),(42,'SU228',1,2,5,4,'2026-05-26 06:30:00.000000','2026-05-26 08:57:00.000000',147,'2026-04-26 00:00:00.000000','Scheduled'),(43,'S7698',3,1,8,7,'2026-05-28 14:30:00.000000','2026-05-28 17:04:00.000000',154,'2026-04-26 00:00:00.000000','Scheduled'),(44,'SU832',1,1,10,5,'2026-05-29 10:45:00.000000','2026-05-29 15:06:00.000000',261,'2026-04-26 00:00:00.000000','Scheduled'),(45,'SU377',1,2,7,1,'2026-05-29 18:15:00.000000','2026-05-29 20:56:00.000000',161,'2026-04-26 00:00:00.000000','Scheduled'),(46,'SU243',1,1,3,8,'2026-05-30 18:15:00.000000','2026-05-30 21:42:00.000000',207,'2026-04-26 00:00:00.000000','Scheduled'),(47,'SU236',1,2,5,14,'2026-05-31 06:30:00.000000','2026-05-31 16:54:00.000000',624,'2026-04-26 00:00:00.000000','Scheduled'),(48,'SU593',1,3,8,2,'2026-05-31 18:30:00.000000','2026-05-31 22:13:00.000000',223,'2026-04-26 00:00:00.000000','Scheduled'),(49,'S7401',3,2,8,2,'2026-06-01 14:15:00.000000','2026-06-01 17:47:00.000000',212,'2026-04-26 00:00:00.000000','Scheduled'),(50,'S7848',3,3,1,8,'2026-06-02 10:30:00.000000','2026-06-02 13:32:00.000000',182,'2026-04-26 00:00:00.000000','Scheduled'),(51,'S7748',3,3,1,2,'2026-06-06 18:30:00.000000','2026-06-06 20:22:00.000000',112,'2026-04-26 00:00:00.000000','Scheduled'),(52,'SU359',1,2,9,14,'2026-06-09 14:45:00.000000','2026-06-09 21:14:00.000000',389,'2026-04-26 00:00:00.000000','Scheduled'),(53,'S7754',3,3,1,12,'2026-06-09 18:45:00.000000','2026-06-09 23:10:00.000000',265,'2026-04-26 00:00:00.000000','Scheduled'),(54,'S7556',3,3,1,13,'2026-06-13 14:45:00.000000','2026-06-13 19:03:00.000000',258,'2026-04-26 00:00:00.000000','Scheduled'),(55,'SU936',1,2,3,6,'2026-06-15 10:15:00.000000','2026-06-15 11:52:00.000000',97,'2026-04-26 00:00:00.000000','Scheduled'),(56,'UT475',2,3,3,6,'2026-06-16 06:00:00.000000','2026-06-16 07:42:00.000000',102,'2026-04-26 00:00:00.000000','Scheduled'),(57,'SU937',1,2,2,9,'2026-06-16 14:00:00.000000','2026-06-16 19:21:00.000000',321,'2026-04-26 00:00:00.000000','Scheduled'),(58,'UT614',2,2,2,6,'2026-06-17 18:30:00.000000','2026-06-17 20:19:00.000000',109,'2026-04-26 00:00:00.000000','Scheduled'),(59,'S7779',3,2,4,5,'2026-06-18 10:00:00.000000','2026-06-18 12:28:00.000000',148,'2026-04-26 00:00:00.000000','Scheduled'),(60,'S7760',3,3,8,9,'2026-06-18 14:45:00.000000','2026-06-18 17:57:00.000000',192,'2026-04-26 00:00:00.000000','Scheduled'),(61,'S7714',3,3,8,13,'2026-06-19 18:45:00.000000','2026-06-19 21:50:00.000000',185,'2026-04-26 00:00:00.000000','Scheduled'),(62,'SU523',1,3,5,15,'2026-06-20 06:00:00.000000','2026-06-20 16:47:00.000000',647,'2026-04-26 00:00:00.000000','Scheduled'),(63,'S7130',3,1,4,5,'2026-06-22 06:45:00.000000','2026-06-22 09:26:00.000000',161,'2026-04-26 00:00:00.000000','Scheduled'),(64,'SU955',1,2,5,10,'2026-06-23 06:30:00.000000','2026-06-23 10:39:00.000000',249,'2026-04-26 00:00:00.000000','Scheduled'),(65,'SU837',1,1,10,1,'2026-06-24 10:30:00.000000','2026-06-24 14:48:00.000000',258,'2026-04-26 00:00:00.000000','Scheduled'),(66,'SU709',1,2,9,14,'2026-06-26 06:15:00.000000','2026-06-26 12:46:00.000000',391,'2026-04-26 00:00:00.000000','Scheduled'),(67,'S7966',3,2,4,8,'2026-06-27 18:00:00.000000','2026-06-27 20:25:00.000000',145,'2026-04-26 00:00:00.000000','Scheduled'),(68,'SU135',1,3,9,14,'2026-06-28 06:30:00.000000','2026-06-28 13:02:00.000000',392,'2026-04-26 00:00:00.000000','Scheduled'),(69,'S7697',3,3,8,11,'2026-06-29 06:45:00.000000','2026-06-29 09:30:00.000000',165,'2026-04-26 00:00:00.000000','Scheduled'),(70,'SU420',1,3,5,17,'2026-06-29 10:00:00.000000','2026-06-29 20:45:00.000000',645,'2026-04-26 00:00:00.000000','Scheduled'),(71,'SU814',1,2,4,1,'2026-06-29 18:45:00.000000','2026-06-29 21:20:00.000000',155,'2026-04-26 00:00:00.000000','Scheduled'),(72,'SU308',1,1,12,1,'2026-06-30 14:00:00.000000','2026-06-30 18:29:00.000000',269,'2026-04-26 00:00:00.000000','Scheduled'),(73,'SU629',1,3,2,6,'2026-07-01 06:00:00.000000','2026-07-01 07:50:00.000000',110,'2026-04-26 00:00:00.000000','Scheduled'),(74,'SU819',1,2,9,14,'2026-07-01 18:00:00.000000','2026-07-02 00:32:00.000000',392,'2026-04-26 00:00:00.000000','Scheduled'),(75,'SU107',1,3,9,14,'2026-07-02 10:15:00.000000','2026-07-02 16:34:00.000000',379,'2026-04-26 00:00:00.000000','Scheduled'),(76,'UT249',2,3,7,1,'2026-07-04 18:15:00.000000','2026-07-04 20:58:00.000000',163,'2026-04-26 00:00:00.000000','Scheduled'),(77,'UT431',2,2,6,3,'2026-07-08 06:30:00.000000','2026-07-08 08:19:00.000000',109,'2026-04-26 00:00:00.000000','Scheduled'),(78,'SU711',1,1,13,6,'2026-07-08 14:00:00.000000','2026-07-08 18:28:00.000000',268,'2026-04-26 00:00:00.000000','Scheduled'),(79,'SU339',1,3,3,8,'2026-07-08 18:30:00.000000','2026-07-08 21:59:00.000000',209,'2026-04-26 00:00:00.000000','Scheduled'),(80,'SU751',1,2,2,9,'2026-07-09 18:45:00.000000','2026-07-10 00:13:00.000000',328,'2026-04-26 00:00:00.000000','Scheduled'),(81,'UT369',2,1,6,2,'2026-07-10 06:15:00.000000','2026-07-10 08:07:00.000000',112,'2026-04-26 00:00:00.000000','Scheduled'),(82,'SU464',1,1,8,1,'2026-07-11 06:30:00.000000','2026-07-11 09:33:00.000000',183,'2026-04-26 00:00:00.000000','Scheduled'),(83,'S7423',3,1,8,10,'2026-07-12 14:30:00.000000','2026-07-12 17:21:00.000000',171,'2026-04-26 00:00:00.000000','Scheduled'),(84,'UT316',2,1,3,5,'2026-07-12 18:00:00.000000','2026-07-12 19:50:00.000000',110,'2026-04-26 00:00:00.000000','Scheduled'),(85,'SU143',1,3,2,9,'2026-07-13 14:45:00.000000','2026-07-13 20:01:00.000000',316,'2026-04-26 00:00:00.000000','Scheduled'),(86,'UT176',2,3,7,6,'2026-07-14 06:30:00.000000','2026-07-14 09:13:00.000000',163,'2026-04-26 00:00:00.000000','Scheduled'),(87,'SU900',1,2,13,1,'2026-07-15 14:30:00.000000','2026-07-15 19:02:00.000000',272,'2026-04-26 00:00:00.000000','Scheduled'),(88,'S7818',3,1,2,6,'2026-07-17 06:30:00.000000','2026-07-17 08:15:00.000000',105,'2026-04-26 00:00:00.000000','Scheduled'),(89,'SU771',1,1,3,8,'2026-07-17 10:15:00.000000','2026-07-17 13:44:00.000000',209,'2026-04-26 00:00:00.000000','Scheduled'),(90,'S7588',3,2,2,1,'2026-07-17 18:15:00.000000','2026-07-17 19:59:00.000000',104,'2026-04-26 00:00:00.000000','Scheduled'),(91,'SU218',1,3,10,6,'2026-07-18 18:45:00.000000','2026-07-18 23:07:00.000000',262,'2026-04-26 00:00:00.000000','Scheduled'),(92,'S7982',3,1,8,9,'2026-07-19 06:30:00.000000','2026-07-19 09:47:00.000000',197,'2026-04-26 00:00:00.000000','Scheduled'),(93,'SU180',1,3,5,3,'2026-07-19 10:30:00.000000','2026-07-19 12:20:00.000000',110,'2026-04-26 00:00:00.000000','Scheduled'),(94,'SU277',1,3,5,3,'2026-07-22 06:15:00.000000','2026-07-22 07:59:00.000000',104,'2026-04-26 00:00:00.000000','Scheduled'),(95,'SU448',1,1,2,5,'2026-07-22 10:30:00.000000','2026-07-22 12:22:00.000000',112,'2026-04-26 00:00:00.000000','Scheduled'),(96,'SU874',1,2,5,15,'2026-07-23 06:45:00.000000','2026-07-23 17:17:00.000000',632,'2026-04-26 00:00:00.000000','Scheduled'),(97,'SU388',1,3,3,8,'2026-07-23 18:15:00.000000','2026-07-23 21:39:00.000000',204,'2026-04-26 00:00:00.000000','Scheduled'),(98,'SU324',1,2,5,9,'2026-07-24 06:15:00.000000','2026-07-24 11:20:00.000000',305,'2026-04-26 00:00:00.000000','Scheduled'),(99,'SU286',1,3,8,1,'2026-07-24 10:45:00.000000','2026-07-24 14:02:00.000000',197,'2026-04-26 00:00:00.000000','Scheduled'),(100,'SU693',1,1,13,1,'2026-07-25 06:30:00.000000','2026-07-25 11:00:00.000000',270,'2026-04-26 00:00:00.000000','Scheduled'),(101,'S7231',3,3,4,1,'2026-07-26 10:15:00.000000','2026-07-26 12:57:00.000000',162,'2026-04-26 00:00:00.000000','Scheduled'),(102,'S7659',3,3,9,8,'2026-07-27 06:00:00.000000','2026-07-27 09:15:00.000000',195,'2026-04-26 00:00:00.000000','Scheduled'),(103,'SU713',1,2,5,4,'2026-07-27 14:45:00.000000','2026-07-27 17:20:00.000000',155,'2026-04-26 00:00:00.000000','Scheduled'),(104,'S7430',3,2,9,8,'2026-07-28 14:15:00.000000','2026-07-28 17:27:00.000000',192,'2026-04-26 00:00:00.000000','Scheduled'),(105,'SU425',1,2,5,17,'2026-07-29 06:15:00.000000','2026-07-29 16:53:00.000000',638,'2026-04-26 00:00:00.000000','Scheduled'),(106,'S7849',3,2,12,6,'2026-07-29 14:30:00.000000','2026-07-29 18:47:00.000000',257,'2026-04-26 00:00:00.000000','Scheduled'),(107,'SU336',1,2,3,8,'2026-07-29 18:15:00.000000','2026-07-29 21:40:00.000000',205,'2026-04-26 00:00:00.000000','Scheduled'),(108,'SU535',1,1,5,15,'2026-07-30 10:00:00.000000','2026-07-30 20:37:00.000000',637,'2026-04-26 00:00:00.000000','Scheduled');
-/*!40000 ALTER TABLE `Flights` ENABLE KEYS */;
+LOCK TABLES `flights` WRITE;
+/*!40000 ALTER TABLE `flights` DISABLE KEYS */;
+INSERT INTO `flights` VALUES (5,'SU111',1,1,1,2,'2025-12-18 22:21:03.000000','2025-12-19 01:21:03.000000',190,'2025-12-18 22:21:03.000000','Completed'),(6,'UT328',2,2,1,3,'2025-12-18 22:21:03.000000','2025-12-19 00:21:03.000000',126,'2025-12-18 22:21:03.000000','Completed'),(8,'S7115',3,1,1,2,'2025-12-18 22:21:03.000000','2025-12-19 01:21:03.000000',181,'2025-12-18 22:21:03.000000','Completed'),(9,'S7598',3,1,8,6,'2026-05-01 10:15:00.000000','2026-05-01 13:28:00.000000',193,'2026-04-26 00:00:00.000000','Completed'),(10,'S7519',3,1,8,9,'2026-05-02 10:00:00.000000','2026-05-02 13:22:00.000000',202,'2026-04-26 00:00:00.000000','Completed'),(11,'S7866',3,2,1,8,'2026-05-02 18:30:00.000000','2026-05-02 21:39:00.000000',189,'2026-04-26 00:00:00.000000','Completed'),(12,'SU280',1,1,3,6,'2026-05-03 10:15:00.000000','2026-05-03 12:03:00.000000',108,'2026-04-26 00:00:00.000000','Completed'),(13,'SU412',1,1,3,6,'2026-05-03 18:00:00.000000','2026-05-03 19:46:00.000000',106,'2026-04-26 00:00:00.000000','Completed'),(14,'UT519',2,3,1,3,'2026-05-04 06:45:00.000000','2026-05-04 08:33:00.000000',108,'2026-04-26 00:00:00.000000','Completed'),(15,'SU607',1,2,2,9,'2026-05-04 10:30:00.000000','2026-05-04 15:57:00.000000',327,'2026-04-26 00:00:00.000000','Completed'),(16,'S7737',3,1,1,13,'2026-05-04 18:45:00.000000','2026-05-04 23:11:00.000000',266,'2026-04-26 00:00:00.000000','Completed'),(17,'UT645',2,1,2,1,'2026-05-05 10:30:00.000000','2026-05-05 12:22:00.000000',112,'2026-04-26 00:00:00.000000','Completed'),(18,'S7186',3,3,8,10,'2026-05-05 14:15:00.000000','2026-05-05 17:00:00.000000',165,'2026-04-26 00:00:00.000000','Completed'),(19,'S7471',3,3,2,1,'2026-05-07 06:15:00.000000','2026-05-07 08:10:00.000000',115,'2026-04-26 00:00:00.000000','Completed'),(20,'S7179',3,2,8,7,'2026-05-09 18:45:00.000000','2026-05-09 21:16:00.000000',151,'2026-04-26 00:00:00.000000','Completed'),(21,'UT842',2,3,6,2,'2026-05-10 18:45:00.000000','2026-05-10 20:33:00.000000',108,'2026-04-26 00:00:00.000000','Completed'),(22,'SU502',1,3,3,8,'2026-05-11 14:00:00.000000','2026-05-11 17:24:00.000000',204,'2026-04-26 00:00:00.000000','Completed'),(23,'S7662',3,3,1,9,'2026-05-12 10:30:00.000000','2026-05-12 15:24:00.000000',294,'2026-04-26 00:00:00.000000','Completed'),(24,'SU470',1,3,10,5,'2026-05-13 14:00:00.000000','2026-05-13 18:08:00.000000',248,'2026-04-26 00:00:00.000000','Completed'),(25,'SU738',1,3,5,3,'2026-05-13 18:15:00.000000','2026-05-13 20:02:00.000000',107,'2026-04-26 00:00:00.000000','Completed'),(26,'SU875',1,2,8,6,'2026-05-14 10:15:00.000000','2026-05-14 13:26:00.000000',191,'2026-04-26 00:00:00.000000','Completed'),(27,'UT507',2,3,3,1,'2026-05-14 14:15:00.000000','2026-05-14 15:57:00.000000',102,'2026-04-26 00:00:00.000000','Completed'),(28,'S7204',3,1,12,6,'2026-05-15 06:15:00.000000','2026-05-15 10:41:00.000000',266,'2026-04-26 00:00:00.000000','Completed'),(29,'SU237',1,1,5,14,'2026-05-16 10:00:00.000000','2026-05-16 20:28:00.000000',628,'2026-04-26 00:00:00.000000','Completed'),(30,'SU799',1,1,9,1,'2026-05-17 06:00:00.000000','2026-05-17 11:01:00.000000',301,'2026-04-26 00:00:00.000000','Completed'),(31,'S7570',3,3,9,8,'2026-05-17 10:15:00.000000','2026-05-17 13:34:00.000000',199,'2026-04-26 00:00:00.000000','Completed'),(32,'SU319',1,3,8,5,'2026-05-17 14:00:00.000000','2026-05-17 17:06:00.000000',186,'2026-04-26 00:00:00.000000','Completed'),(33,'S7619',3,3,9,8,'2026-05-18 06:00:00.000000','2026-05-18 09:08:00.000000',188,'2026-04-26 00:00:00.000000','Completed'),(34,'SU791',1,2,10,6,'2026-05-18 14:30:00.000000','2026-05-18 18:53:00.000000',263,'2026-04-26 00:00:00.000000','Completed'),(35,'UT722',2,2,7,5,'2026-05-18 18:30:00.000000','2026-05-18 21:01:00.000000',151,'2026-04-26 00:00:00.000000','Completed'),(36,'S7169',3,3,8,7,'2026-05-19 14:30:00.000000','2026-05-19 17:03:00.000000',153,'2026-04-26 00:00:00.000000','Completed'),(37,'UT526',2,3,1,3,'2026-05-20 10:15:00.000000','2026-05-20 11:59:00.000000',104,'2026-04-26 00:00:00.000000','Completed'),(38,'SU662',1,1,5,8,'2026-05-20 18:45:00.000000','2026-05-20 21:49:00.000000',184,'2026-04-26 00:00:00.000000','Completed'),(39,'SU299',1,1,5,13,'2026-05-22 10:45:00.000000','2026-05-22 15:02:00.000000',257,'2026-04-26 00:00:00.000000','Completed'),(40,'S7274',3,2,8,4,'2026-05-25 14:45:00.000000','2026-05-25 17:08:00.000000',143,'2026-04-26 00:00:00.000000','Completed'),(41,'S7916',3,1,4,1,'2026-05-25 18:45:00.000000','2026-05-25 21:22:00.000000',157,'2026-04-26 00:00:00.000000','Completed'),(42,'SU228',1,2,5,4,'2026-05-26 06:30:00.000000','2026-05-26 08:57:00.000000',147,'2026-04-26 00:00:00.000000','Completed'),(43,'S7698',3,1,8,7,'2026-05-28 14:30:00.000000','2026-05-28 17:04:00.000000',154,'2026-04-26 00:00:00.000000','Completed'),(44,'SU832',1,1,10,5,'2026-05-29 10:45:00.000000','2026-05-29 15:06:00.000000',261,'2026-04-26 00:00:00.000000','Scheduled'),(45,'SU377',1,2,7,1,'2026-05-29 18:15:00.000000','2026-05-29 20:56:00.000000',161,'2026-04-26 00:00:00.000000','Scheduled'),(46,'SU243',1,1,3,8,'2026-05-30 18:15:00.000000','2026-05-30 21:42:00.000000',207,'2026-04-26 00:00:00.000000','Scheduled'),(47,'SU236',1,2,5,14,'2026-05-31 06:30:00.000000','2026-05-31 16:54:00.000000',624,'2026-04-26 00:00:00.000000','Scheduled'),(48,'SU593',1,3,8,2,'2026-05-31 18:30:00.000000','2026-05-31 22:13:00.000000',223,'2026-04-26 00:00:00.000000','Scheduled'),(49,'S7401',3,2,8,2,'2026-06-01 14:15:00.000000','2026-06-01 17:47:00.000000',212,'2026-04-26 00:00:00.000000','Scheduled'),(50,'S7848',3,3,1,8,'2026-06-02 10:30:00.000000','2026-06-02 13:32:00.000000',182,'2026-04-26 00:00:00.000000','Scheduled'),(51,'S7748',3,3,1,2,'2026-06-06 18:30:00.000000','2026-06-06 20:22:00.000000',112,'2026-04-26 00:00:00.000000','Scheduled'),(52,'SU359',1,2,9,14,'2026-06-09 14:45:00.000000','2026-06-09 21:14:00.000000',389,'2026-04-26 00:00:00.000000','Scheduled'),(53,'S7754',3,3,1,12,'2026-06-09 18:45:00.000000','2026-06-09 23:10:00.000000',265,'2026-04-26 00:00:00.000000','Scheduled'),(54,'S7556',3,3,1,13,'2026-06-13 14:45:00.000000','2026-06-13 19:03:00.000000',258,'2026-04-26 00:00:00.000000','Scheduled'),(55,'SU936',1,2,3,6,'2026-06-15 10:15:00.000000','2026-06-15 11:52:00.000000',97,'2026-04-26 00:00:00.000000','Scheduled'),(56,'UT475',2,3,3,6,'2026-06-16 06:00:00.000000','2026-06-16 07:42:00.000000',102,'2026-04-26 00:00:00.000000','Scheduled'),(57,'SU937',1,2,2,9,'2026-06-16 14:00:00.000000','2026-06-16 19:21:00.000000',321,'2026-04-26 00:00:00.000000','Scheduled'),(58,'UT614',2,2,2,6,'2026-06-17 18:30:00.000000','2026-06-17 20:19:00.000000',109,'2026-04-26 00:00:00.000000','Scheduled'),(59,'S7779',3,2,4,5,'2026-06-18 10:00:00.000000','2026-06-18 12:28:00.000000',148,'2026-04-26 00:00:00.000000','Scheduled'),(60,'S7760',3,3,8,9,'2026-06-18 14:45:00.000000','2026-06-18 17:57:00.000000',192,'2026-04-26 00:00:00.000000','Scheduled'),(61,'S7714',3,3,8,13,'2026-06-19 18:45:00.000000','2026-06-19 21:50:00.000000',185,'2026-04-26 00:00:00.000000','Scheduled'),(62,'SU523',1,3,5,15,'2026-06-20 06:00:00.000000','2026-06-20 16:47:00.000000',647,'2026-04-26 00:00:00.000000','Scheduled'),(63,'S7130',3,1,4,5,'2026-06-22 06:45:00.000000','2026-06-22 09:26:00.000000',161,'2026-04-26 00:00:00.000000','Scheduled'),(64,'SU955',1,2,5,10,'2026-06-23 06:30:00.000000','2026-06-23 10:39:00.000000',249,'2026-04-26 00:00:00.000000','Scheduled'),(65,'SU837',1,1,10,1,'2026-06-24 10:30:00.000000','2026-06-24 14:48:00.000000',258,'2026-04-26 00:00:00.000000','Scheduled'),(66,'SU709',1,2,9,14,'2026-06-26 06:15:00.000000','2026-06-26 12:46:00.000000',391,'2026-04-26 00:00:00.000000','Scheduled'),(67,'S7966',3,2,4,8,'2026-06-27 18:00:00.000000','2026-06-27 20:25:00.000000',145,'2026-04-26 00:00:00.000000','Scheduled'),(68,'SU135',1,3,9,14,'2026-06-28 06:30:00.000000','2026-06-28 13:02:00.000000',392,'2026-04-26 00:00:00.000000','Scheduled'),(69,'S7697',3,3,8,11,'2026-06-29 06:45:00.000000','2026-06-29 09:30:00.000000',165,'2026-04-26 00:00:00.000000','Scheduled'),(70,'SU420',1,3,5,17,'2026-06-29 10:00:00.000000','2026-06-29 20:45:00.000000',645,'2026-04-26 00:00:00.000000','Scheduled'),(71,'SU814',1,2,4,1,'2026-06-29 18:45:00.000000','2026-06-29 21:20:00.000000',155,'2026-04-26 00:00:00.000000','Scheduled'),(72,'SU308',1,1,12,1,'2026-06-30 14:00:00.000000','2026-06-30 18:29:00.000000',269,'2026-04-26 00:00:00.000000','Scheduled'),(73,'SU629',1,3,2,6,'2026-07-01 06:00:00.000000','2026-07-01 07:50:00.000000',110,'2026-04-26 00:00:00.000000','Scheduled'),(74,'SU819',1,2,9,14,'2026-07-01 18:00:00.000000','2026-07-02 00:32:00.000000',392,'2026-04-26 00:00:00.000000','Scheduled'),(75,'SU107',1,3,9,14,'2026-07-02 10:15:00.000000','2026-07-02 16:34:00.000000',379,'2026-04-26 00:00:00.000000','Scheduled'),(76,'UT249',2,3,7,1,'2026-07-04 18:15:00.000000','2026-07-04 20:58:00.000000',163,'2026-04-26 00:00:00.000000','Scheduled'),(77,'UT431',2,2,6,3,'2026-07-08 06:30:00.000000','2026-07-08 08:19:00.000000',109,'2026-04-26 00:00:00.000000','Scheduled'),(78,'SU711',1,1,13,6,'2026-07-08 14:00:00.000000','2026-07-08 18:28:00.000000',268,'2026-04-26 00:00:00.000000','Scheduled'),(79,'SU339',1,3,3,8,'2026-07-08 18:30:00.000000','2026-07-08 21:59:00.000000',209,'2026-04-26 00:00:00.000000','Scheduled'),(80,'SU751',1,2,2,9,'2026-07-09 18:45:00.000000','2026-07-10 00:13:00.000000',328,'2026-04-26 00:00:00.000000','Scheduled'),(81,'UT369',2,1,6,2,'2026-07-10 06:15:00.000000','2026-07-10 08:07:00.000000',112,'2026-04-26 00:00:00.000000','Scheduled'),(82,'SU464',1,1,8,1,'2026-07-11 06:30:00.000000','2026-07-11 09:33:00.000000',183,'2026-04-26 00:00:00.000000','Scheduled'),(83,'S7423',3,1,8,10,'2026-07-12 14:30:00.000000','2026-07-12 17:21:00.000000',171,'2026-04-26 00:00:00.000000','Scheduled'),(84,'UT316',2,1,3,5,'2026-07-12 18:00:00.000000','2026-07-12 19:50:00.000000',110,'2026-04-26 00:00:00.000000','Scheduled'),(85,'SU143',1,3,2,9,'2026-07-13 14:45:00.000000','2026-07-13 20:01:00.000000',316,'2026-04-26 00:00:00.000000','Scheduled'),(86,'UT176',2,3,7,6,'2026-07-14 06:30:00.000000','2026-07-14 09:13:00.000000',163,'2026-04-26 00:00:00.000000','Scheduled'),(87,'SU900',1,2,13,1,'2026-07-15 14:30:00.000000','2026-07-15 19:02:00.000000',272,'2026-04-26 00:00:00.000000','Scheduled'),(88,'S7818',3,1,2,6,'2026-07-17 06:30:00.000000','2026-07-17 08:15:00.000000',105,'2026-04-26 00:00:00.000000','Scheduled'),(89,'SU771',1,1,3,8,'2026-07-17 10:15:00.000000','2026-07-17 13:44:00.000000',209,'2026-04-26 00:00:00.000000','Scheduled'),(90,'S7588',3,2,2,1,'2026-07-17 18:15:00.000000','2026-07-17 19:59:00.000000',104,'2026-04-26 00:00:00.000000','Scheduled'),(91,'SU218',1,3,10,6,'2026-07-18 18:45:00.000000','2026-07-18 23:07:00.000000',262,'2026-04-26 00:00:00.000000','Scheduled'),(92,'S7982',3,1,8,9,'2026-07-19 06:30:00.000000','2026-07-19 09:47:00.000000',197,'2026-04-26 00:00:00.000000','Scheduled'),(93,'SU180',1,3,5,3,'2026-07-19 10:30:00.000000','2026-07-19 12:20:00.000000',110,'2026-04-26 00:00:00.000000','Scheduled'),(94,'SU277',1,3,5,3,'2026-07-22 06:15:00.000000','2026-07-22 07:59:00.000000',104,'2026-04-26 00:00:00.000000','Scheduled'),(95,'SU448',1,1,2,5,'2026-07-22 10:30:00.000000','2026-07-22 12:22:00.000000',112,'2026-04-26 00:00:00.000000','Scheduled'),(96,'SU874',1,2,5,15,'2026-07-23 06:45:00.000000','2026-07-23 17:17:00.000000',632,'2026-04-26 00:00:00.000000','Scheduled'),(97,'SU388',1,3,3,8,'2026-07-23 18:15:00.000000','2026-07-23 21:39:00.000000',204,'2026-04-26 00:00:00.000000','Scheduled'),(98,'SU324',1,2,5,9,'2026-07-24 06:15:00.000000','2026-07-24 11:20:00.000000',305,'2026-04-26 00:00:00.000000','Scheduled'),(99,'SU286',1,3,8,1,'2026-07-24 10:45:00.000000','2026-07-24 14:02:00.000000',197,'2026-04-26 00:00:00.000000','Scheduled'),(100,'SU693',1,1,13,1,'2026-07-25 06:30:00.000000','2026-07-25 11:00:00.000000',270,'2026-04-26 00:00:00.000000','Scheduled'),(101,'S7231',3,3,4,1,'2026-07-26 10:15:00.000000','2026-07-26 12:57:00.000000',162,'2026-04-26 00:00:00.000000','Scheduled'),(102,'S7659',3,3,9,8,'2026-07-27 06:00:00.000000','2026-07-27 09:15:00.000000',195,'2026-04-26 00:00:00.000000','Scheduled'),(103,'SU713',1,2,5,4,'2026-07-27 14:45:00.000000','2026-07-27 17:20:00.000000',155,'2026-04-26 00:00:00.000000','Scheduled'),(104,'S7430',3,2,9,8,'2026-07-28 14:15:00.000000','2026-07-28 17:27:00.000000',192,'2026-04-26 00:00:00.000000','Scheduled'),(105,'SU425',1,2,5,17,'2026-07-29 06:15:00.000000','2026-07-29 16:53:00.000000',638,'2026-04-26 00:00:00.000000','Scheduled'),(106,'S7849',3,2,12,6,'2026-07-29 14:30:00.000000','2026-07-29 18:47:00.000000',257,'2026-04-26 00:00:00.000000','Scheduled'),(107,'SU336',1,2,3,8,'2026-07-29 18:15:00.000000','2026-07-29 21:40:00.000000',205,'2026-04-26 00:00:00.000000','Scheduled'),(108,'SU535',1,1,5,15,'2026-07-30 10:00:00.000000','2026-07-30 20:37:00.000000',637,'2026-04-26 00:00:00.000000','Scheduled'),(109,'SU110',3,4,2,7,'2026-05-18 22:21:03.000000','2025-12-19 01:21:03.000000',190,'2026-05-25 18:56:14.991887','Completed'),(114,'UT100',2,3,2,8,'2026-05-28 12:30:00.000000','2026-05-28 12:40:00.000000',200,'2026-05-27 08:32:19.865579','Completed'),(115,'S7100',3,5,15,3,'2026-05-31 12:30:00.000000','2026-06-01 12:30:00.000000',1440,'2026-05-27 08:52:25.373345','Scheduled'),(116,'S7101',3,3,7,12,'2026-05-29 12:30:00.000000','2026-05-30 12:30:00.000000',1440,'2026-05-27 10:04:57.403969','Scheduled'),(119,'111',1,4,6,7,'2026-06-03 09:00:00.000000','2026-06-03 12:00:00.000000',180,'2026-05-27 14:50:05.129313','Scheduled'),(123,'S7102',3,1,8,6,'2026-05-27 22:00:00.000000','2026-05-28 12:00:00.000000',840,'2026-05-27 15:02:40.724988','Completed'),(124,'S7102',3,1,8,6,'2026-06-02 22:00:00.000000','2026-06-03 12:00:00.000000',840,'2026-05-27 15:02:40.726275','Scheduled'),(125,'S7102',3,1,8,6,'2026-06-03 22:00:00.000000','2026-06-04 12:00:00.000000',840,'2026-05-27 15:02:40.727343','Scheduled');
+/*!40000 ALTER TABLE `flights` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
--- Table structure for table `Payments`
+-- Table structure for table `payments`
 --
 
-DROP TABLE IF EXISTS `Payments`;
+DROP TABLE IF EXISTS `payments`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `Payments` (
+CREATE TABLE `payments` (
   `Id` int NOT NULL AUTO_INCREMENT,
   `BookingId` int NOT NULL,
   `YooKassaPaymentId` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
@@ -270,28 +270,28 @@ CREATE TABLE `Payments` (
   PRIMARY KEY (`Id`),
   UNIQUE KEY `idx_yookassa_payment_id` (`YooKassaPaymentId`),
   KEY `idx_booking_id` (`BookingId`),
-  CONSTRAINT `FK_Payments_Bookings_BookingId` FOREIGN KEY (`BookingId`) REFERENCES `Bookings` (`Id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=14 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+  CONSTRAINT `FK_Payments_Bookings_BookingId` FOREIGN KEY (`BookingId`) REFERENCES `bookings` (`Id`) ON DELETE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=22 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Dumping data for table `Payments`
+-- Dumping data for table `payments`
 --
 
-LOCK TABLES `Payments` WRITE;
-/*!40000 ALTER TABLE `Payments` DISABLE KEYS */;
-INSERT INTO `Payments` VALUES (1,7,'3175a0d0-000f-5001-8000-1267c3566076',3850.00,0,'https://yoomoney.ru/checkout/payments/v2/contract?orderId=3175a0d0-000f-5001-8000-1267c3566076',NULL,'Оплата бронирования 7','2026-04-18 13:54:23.899396','2026-04-18 13:54:23.899461'),(2,8,'3175a56c-000f-5001-9000-183aa1edd4f3',5500.00,0,'https://yoomoney.ru/checkout/payments/v2/contract?orderId=3175a56c-000f-5001-9000-183aa1edd4f3',NULL,'Оплата бронирования 8','2026-04-18 14:14:03.089689','2026-04-18 14:14:03.089689'),(3,9,'3175a5a1-000f-5001-8000-15e7c820ae21',4500.00,0,'https://yoomoney.ru/checkout/payments/v2/contract?orderId=3175a5a1-000f-5001-8000-15e7c820ae21',NULL,'Оплата бронирования 9','2026-04-18 14:14:56.255779','2026-04-18 14:14:56.255779'),(4,10,'3175b0f8-000f-5001-8000-188657dedc47',5500.00,1,'https://yoomoney.ru/checkout/payments/v2/contract?orderId=3175b0f8-000f-5001-8000-188657dedc47',NULL,'Оплата бронирования 10','2026-04-18 15:03:19.652584','2026-04-18 15:03:51.491294'),(5,11,'3175c627-000f-5000-b000-180fee39f3f7',4299.00,1,'https://yoomoney.ru/checkout/payments/v2/contract?orderId=3175c627-000f-5000-b000-180fee39f3f7',NULL,'Оплата бронирования 11','2026-04-18 16:33:43.385436','2026-04-18 16:34:14.872099'),(6,12,'3175cd4f-000f-5001-9000-1c628c05c113',5500.00,1,'https://yoomoney.ru/checkout/payments/v2/contract?orderId=3175cd4f-000f-5001-9000-1c628c05c113',NULL,'Оплата бронирования 12','2026-04-18 17:04:15.749630','2026-04-18 17:04:49.519671'),(7,13,'3177e8e1-000f-5000-8000-10b6ba73b448',4299.00,0,'https://yoomoney.ru/checkout/payments/v2/contract?orderId=3177e8e1-000f-5000-8000-10b6ba73b448',NULL,'Оплата бронирования 13','2026-04-20 07:26:25.237990','2026-04-20 07:26:25.238041'),(8,14,'3177edd1-000f-5001-8000-16bc404d7fc7',4299.00,1,'https://yoomoney.ru/checkout/payments/v2/contract?orderId=3177edd1-000f-5001-8000-16bc404d7fc7',NULL,'Оплата бронирования 14','2026-04-20 07:47:30.287412','2026-04-20 07:47:59.958228'),(9,15,'3177ffe3-000f-5001-8000-1e28f364908a',15000.00,1,'https://yoomoney.ru/checkout/payments/v2/contract?orderId=3177ffe3-000f-5001-8000-1e28f364908a',NULL,'Оплата бронирования 15','2026-04-20 09:04:36.995311','2026-04-20 09:05:04.437887'),(10,16,'317941e7-000f-5001-8000-1aeb8e823793',14400.00,1,'https://yoomoney.ru/checkout/payments/v2/contract?orderId=317941e7-000f-5001-8000-1aeb8e823793',NULL,'Оплата бронирования 16','2026-04-21 07:58:33.970338','2026-04-21 08:00:21.800257'),(11,17,'3179a3f9-000f-5001-8000-115dcf7e6214',3850.00,2,'https://yoomoney.ru/checkout/payments/v2/contract?orderId=3179a3f9-000f-5001-8000-115dcf7e6214',NULL,'Оплата бронирования 17','2026-04-21 14:56:59.472102','2026-04-24 19:57:59.094312'),(12,18,'317e8d2c-000f-5001-9000-1596dad79feb',4299.00,1,'https://yoomoney.ru/checkout/payments/v2/contract?orderId=317e8d2c-000f-5001-9000-1596dad79feb',NULL,'Оплата бронирования 18','2026-04-25 08:20:59.926495','2026-04-25 08:21:42.546237'),(13,19,'31814916-000f-5000-b000-1cfbc40253b4',3850.00,1,'https://yoomoney.ru/checkout/payments/v2/contract?orderId=31814916-000f-5000-b000-1cfbc40253b4',NULL,'Оплата бронирования 19','2026-04-27 10:07:18.049236','2026-04-27 10:08:37.013194');
-/*!40000 ALTER TABLE `Payments` ENABLE KEYS */;
+LOCK TABLES `payments` WRITE;
+/*!40000 ALTER TABLE `payments` DISABLE KEYS */;
+INSERT INTO `payments` VALUES (1,7,'3175a0d0-000f-5001-8000-1267c3566076',3850.00,0,'https://yoomoney.ru/checkout/payments/v2/contract?orderId=3175a0d0-000f-5001-8000-1267c3566076',NULL,'Оплата бронирования 7','2026-04-18 13:54:23.899396','2026-04-18 13:54:23.899461'),(2,8,'3175a56c-000f-5001-9000-183aa1edd4f3',5500.00,0,'https://yoomoney.ru/checkout/payments/v2/contract?orderId=3175a56c-000f-5001-9000-183aa1edd4f3',NULL,'Оплата бронирования 8','2026-04-18 14:14:03.089689','2026-04-18 14:14:03.089689'),(3,9,'3175a5a1-000f-5001-8000-15e7c820ae21',4500.00,0,'https://yoomoney.ru/checkout/payments/v2/contract?orderId=3175a5a1-000f-5001-8000-15e7c820ae21',NULL,'Оплата бронирования 9','2026-04-18 14:14:56.255779','2026-04-18 14:14:56.255779'),(4,10,'3175b0f8-000f-5001-8000-188657dedc47',5500.00,1,'https://yoomoney.ru/checkout/payments/v2/contract?orderId=3175b0f8-000f-5001-8000-188657dedc47',NULL,'Оплата бронирования 10','2026-04-18 15:03:19.652584','2026-04-18 15:03:51.491294'),(5,11,'3175c627-000f-5000-b000-180fee39f3f7',4299.00,1,'https://yoomoney.ru/checkout/payments/v2/contract?orderId=3175c627-000f-5000-b000-180fee39f3f7',NULL,'Оплата бронирования 11','2026-04-18 16:33:43.385436','2026-04-18 16:34:14.872099'),(6,12,'3175cd4f-000f-5001-9000-1c628c05c113',5500.00,1,'https://yoomoney.ru/checkout/payments/v2/contract?orderId=3175cd4f-000f-5001-9000-1c628c05c113',NULL,'Оплата бронирования 12','2026-04-18 17:04:15.749630','2026-04-18 17:04:49.519671'),(7,13,'3177e8e1-000f-5000-8000-10b6ba73b448',4299.00,0,'https://yoomoney.ru/checkout/payments/v2/contract?orderId=3177e8e1-000f-5000-8000-10b6ba73b448',NULL,'Оплата бронирования 13','2026-04-20 07:26:25.237990','2026-04-20 07:26:25.238041'),(8,14,'3177edd1-000f-5001-8000-16bc404d7fc7',4299.00,1,'https://yoomoney.ru/checkout/payments/v2/contract?orderId=3177edd1-000f-5001-8000-16bc404d7fc7',NULL,'Оплата бронирования 14','2026-04-20 07:47:30.287412','2026-04-20 07:47:59.958228'),(9,15,'3177ffe3-000f-5001-8000-1e28f364908a',15000.00,1,'https://yoomoney.ru/checkout/payments/v2/contract?orderId=3177ffe3-000f-5001-8000-1e28f364908a',NULL,'Оплата бронирования 15','2026-04-20 09:04:36.995311','2026-04-20 09:05:04.437887'),(10,16,'317941e7-000f-5001-8000-1aeb8e823793',14400.00,1,'https://yoomoney.ru/checkout/payments/v2/contract?orderId=317941e7-000f-5001-8000-1aeb8e823793',NULL,'Оплата бронирования 16','2026-04-21 07:58:33.970338','2026-04-21 08:00:21.800257'),(11,17,'3179a3f9-000f-5001-8000-115dcf7e6214',3850.00,2,'https://yoomoney.ru/checkout/payments/v2/contract?orderId=3179a3f9-000f-5001-8000-115dcf7e6214',NULL,'Оплата бронирования 17','2026-04-21 14:56:59.472102','2026-04-24 19:57:59.094312'),(12,18,'317e8d2c-000f-5001-9000-1596dad79feb',4299.00,1,'https://yoomoney.ru/checkout/payments/v2/contract?orderId=317e8d2c-000f-5001-9000-1596dad79feb',NULL,'Оплата бронирования 18','2026-04-25 08:20:59.926495','2026-04-25 08:21:42.546237'),(13,19,'31814916-000f-5000-b000-1cfbc40253b4',3850.00,1,'https://yoomoney.ru/checkout/payments/v2/contract?orderId=31814916-000f-5000-b000-1cfbc40253b4',NULL,'Оплата бронирования 19','2026-04-27 10:07:18.049236','2026-04-27 10:08:37.013194'),(14,21,'3193d95f-000f-5001-9000-14a8afe16b51',5500.00,1,'https://yoomoney.ru/checkout/payments/v2/contract?orderId=3193d95f-000f-5001-9000-14a8afe16b51',NULL,'Оплата бронирования 21','2026-05-11 12:03:42.781337','2026-05-11 12:04:16.560122'),(15,22,'31940675-000f-5001-8000-156d0ba419ab',5500.00,1,'https://yoomoney.ru/checkout/payments/v2/contract?orderId=31940675-000f-5001-8000-156d0ba419ab',NULL,'Оплата бронирования 22','2026-05-11 15:16:04.182775','2026-05-11 15:18:22.541929'),(16,23,'31964ac3-000f-5001-8000-124f484c0964',5500.00,0,'https://yoomoney.ru/checkout/payments/v2/contract?orderId=31964ac3-000f-5001-8000-124f484c0964',NULL,'Оплата бронирования 23','2026-05-13 08:32:02.291301','2026-05-13 08:32:02.291359'),(17,24,'31a091b9-000f-5001-9000-1799c136569a',5500.00,1,'https://yoomoney.ru/checkout/payments/v2/contract?orderId=31a091b9-000f-5001-9000-1799c136569a',NULL,'Оплата бронирования 24','2026-05-21 03:37:20.414480','2026-05-21 03:37:53.475492'),(18,25,'31aa3859-000f-5001-9000-17e489e35757',5500.00,1,'https://yoomoney.ru/checkout/payments/v2/contract?orderId=31aa3859-000f-5001-9000-17e489e35757',NULL,'Оплата бронирования 25','2026-05-28 11:18:47.947742','2026-05-28 11:19:23.654838'),(19,26,'31aa395e-000f-5001-8000-13af5173829b',5200.00,1,'https://yoomoney.ru/checkout/payments/v2/contract?orderId=31aa395e-000f-5001-8000-13af5173829b',NULL,'Оплата бронирования 26','2026-05-28 11:23:08.394129','2026-05-28 11:23:39.812290'),(20,27,'31aa3c04-000f-5000-b000-1e54eee1ea0b',6000.00,1,'https://yoomoney.ru/checkout/payments/v2/contract?orderId=31aa3c04-000f-5000-b000-1e54eee1ea0b',NULL,'Оплата бронирования 27','2026-05-28 11:34:26.513592','2026-05-28 11:34:49.381047'),(21,28,'31aa5e1e-000f-5001-8000-173d465a92e5',10200.00,1,'https://yoomoney.ru/checkout/payments/v2/contract?orderId=31aa5e1e-000f-5001-8000-173d465a92e5',NULL,'Оплата бронирования 28','2026-05-28 13:59:55.841495','2026-05-28 14:00:20.514424');
+/*!40000 ALTER TABLE `payments` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
--- Table structure for table `Seats`
+-- Table structure for table `seats`
 --
 
-DROP TABLE IF EXISTS `Seats`;
+DROP TABLE IF EXISTS `seats`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `Seats` (
+CREATE TABLE `seats` (
   `Id` int NOT NULL AUTO_INCREMENT,
   `FlightId` int NOT NULL,
   `SeatNumber` varchar(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
@@ -304,27 +304,27 @@ CREATE TABLE `Seats` (
   KEY `idx_class` (`SeatClass`),
   KEY `idx_flight` (`FlightId`),
   KEY `idx_status` (`Status`),
-  CONSTRAINT `FK_Seats_Flights_FlightId` FOREIGN KEY (`FlightId`) REFERENCES `Flights` (`Id`) ON DELETE CASCADE
+  CONSTRAINT `FK_Seats_Flights_FlightId` FOREIGN KEY (`FlightId`) REFERENCES `flights` (`Id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Dumping data for table `Seats`
+-- Dumping data for table `seats`
 --
 
-LOCK TABLES `Seats` WRITE;
-/*!40000 ALTER TABLE `Seats` DISABLE KEYS */;
-/*!40000 ALTER TABLE `Seats` ENABLE KEYS */;
+LOCK TABLES `seats` WRITE;
+/*!40000 ALTER TABLE `seats` DISABLE KEYS */;
+/*!40000 ALTER TABLE `seats` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
--- Table structure for table `Tickets`
+-- Table structure for table `tickets`
 --
 
-DROP TABLE IF EXISTS `Tickets`;
+DROP TABLE IF EXISTS `tickets`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `Tickets` (
+CREATE TABLE `tickets` (
   `Id` int NOT NULL AUTO_INCREMENT,
   `BookingId` int NOT NULL,
   `FlightId` int NOT NULL,
@@ -347,31 +347,31 @@ CREATE TABLE `Tickets` (
   KEY `idx_status` (`Status`),
   KEY `IX_Tickets_FareId` (`FareId`),
   KEY `IX_Tickets_SeatId` (`SeatId`),
-  CONSTRAINT `FK_Tickets_Bookings_BookingId` FOREIGN KEY (`BookingId`) REFERENCES `Bookings` (`Id`) ON DELETE CASCADE,
-  CONSTRAINT `FK_Tickets_Fares_FareId` FOREIGN KEY (`FareId`) REFERENCES `Fares` (`Id`) ON DELETE RESTRICT,
-  CONSTRAINT `FK_Tickets_Flights_FlightId` FOREIGN KEY (`FlightId`) REFERENCES `Flights` (`Id`) ON DELETE RESTRICT,
-  CONSTRAINT `FK_Tickets_Seats_SeatId` FOREIGN KEY (`SeatId`) REFERENCES `Seats` (`Id`) ON DELETE SET NULL
-) ENGINE=InnoDB AUTO_INCREMENT=21 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+  CONSTRAINT `FK_Tickets_Bookings_BookingId` FOREIGN KEY (`BookingId`) REFERENCES `bookings` (`Id`) ON DELETE CASCADE,
+  CONSTRAINT `FK_Tickets_Fares_FareId` FOREIGN KEY (`FareId`) REFERENCES `fares` (`Id`) ON DELETE RESTRICT,
+  CONSTRAINT `FK_Tickets_Flights_FlightId` FOREIGN KEY (`FlightId`) REFERENCES `flights` (`Id`) ON DELETE RESTRICT,
+  CONSTRAINT `FK_Tickets_Seats_SeatId` FOREIGN KEY (`SeatId`) REFERENCES `seats` (`Id`) ON DELETE SET NULL
+) ENGINE=InnoDB AUTO_INCREMENT=31 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Dumping data for table `Tickets`
+-- Dumping data for table `tickets`
 --
 
-LOCK TABLES `Tickets` WRITE;
-/*!40000 ALTER TABLE `Tickets` DISABLE KEYS */;
-INSERT INTO `Tickets` VALUES (1,1,7,6,NULL,'55F5U9-001','рпав','Adult',NULL,5500.00,'Active','2026-04-07 12:54:21.764794','2026-04-07 12:54:21.764794','54321','6543'),(2,2,5,1,NULL,'LCUNLK-001','павыа','Adult',NULL,4299.00,'Active','2026-04-07 18:38:36.946704','2026-04-07 18:38:36.946705','45231','5342'),(3,3,5,1,NULL,'4RTZLJ-001','павыа','Adult',NULL,4299.00,'Active','2026-04-07 18:38:40.573411','2026-04-07 18:38:40.573411','45231','5342'),(4,4,6,4,NULL,'AW4ASG-001','куцкц','Adult',NULL,3850.00,'Active','2026-04-18 13:38:11.392835','2026-04-18 13:38:11.392835','234234','3423'),(5,5,6,4,NULL,'6SCJTX-001','укцук','Adult',NULL,3850.00,'Active','2026-04-18 13:47:42.936444','2026-04-18 13:47:42.936444','432423','3242'),(6,6,7,6,NULL,'TMHNGR-001','уцкк','Adult',NULL,5500.00,'Active','2026-04-18 13:50:36.238544','2026-04-18 13:50:36.238544','423424','4234'),(7,7,6,4,NULL,'2UA5VJ-001','куцкц','Adult',NULL,3850.00,'Active','2026-04-18 13:54:22.517825','2026-04-18 13:54:22.517825','423423','4234'),(8,8,7,6,NULL,'SJDZHF-001','кцукц','Adult',NULL,5500.00,'Active','2026-04-18 14:14:02.398854','2026-04-18 14:14:02.398854','342342','3423'),(9,9,8,9,NULL,'MMLH5C-001','укцук','Adult',NULL,4500.00,'Active','2026-04-18 14:14:55.399422','2026-04-18 14:14:55.399423','423423','3423'),(10,10,7,6,NULL,'598DSD-001','куцк','Adult',NULL,5500.00,'Active','2026-04-18 15:03:18.366504','2026-04-18 15:03:18.366504','423424','4234'),(11,11,5,1,NULL,'E4YT84-001','куцк','Adult',NULL,4299.00,'Active','2026-04-18 16:33:41.497891','2026-04-18 16:33:41.497891','423424','4234'),(12,12,7,6,NULL,'QTUTQN-001','уцкцкц','Adult',NULL,5500.00,'Active','2026-04-18 17:04:13.884640','2026-04-18 17:04:13.884640','341234','4234'),(13,13,5,1,NULL,'6Q3EM7-001','rewrw','Adult',NULL,4299.00,'Active','2026-04-20 07:26:22.867107','2026-04-20 07:26:22.867107','324234','4234'),(14,14,5,1,NULL,'KR6BBH-001','rewrw','Adult',NULL,4299.00,'Active','2026-04-20 07:47:28.365484','2026-04-20 07:47:28.365485','234423','4324'),(15,15,5,3,NULL,'JEZAHA-001','куекц','Adult',NULL,15000.00,'Active','2026-04-20 09:04:36.033172','2026-04-20 09:04:36.033172','545345','4532'),(16,16,6,5,NULL,'GMECV5-001','fdsfs','Adult',NULL,7200.00,'Active','2026-04-21 07:58:32.970575','2026-04-21 07:58:32.970575','324234','4234'),(17,16,6,5,NULL,'GMECV5-002','wrwrw','Adult',NULL,7200.00,'Active','2026-04-21 07:58:32.970599','2026-04-21 07:58:32.970599','234242','4234'),(18,17,6,4,NULL,'WNUA67-001','fdsf','Adult',NULL,3850.00,'Active','2026-04-21 14:56:58.127048','2026-04-21 14:56:58.127048','423424','3423'),(19,18,5,1,NULL,'UFPRRR-001','fbdf','Adult',NULL,4299.00,'Active','2026-04-25 08:20:57.995156','2026-04-25 08:20:57.995156','453453','5453'),(20,19,11,15,NULL,'YRCF36-001','ghjhg','Adult',NULL,3850.00,'Active','2026-04-27 10:07:15.297653','2026-04-27 10:07:15.297653','456336','6456');
-/*!40000 ALTER TABLE `Tickets` ENABLE KEYS */;
+LOCK TABLES `tickets` WRITE;
+/*!40000 ALTER TABLE `tickets` DISABLE KEYS */;
+INSERT INTO `tickets` VALUES (2,2,5,1,NULL,'LCUNLK-001','павыа','Adult',NULL,4299.00,'Active','2026-04-07 18:38:36.946704','2026-04-07 18:38:36.946705','45231','5342'),(3,3,5,1,NULL,'4RTZLJ-001','павыа','Adult',NULL,4299.00,'Active','2026-04-07 18:38:40.573411','2026-04-07 18:38:40.573411','45231','5342'),(4,4,6,4,NULL,'AW4ASG-001','куцкц','Adult',NULL,3850.00,'Active','2026-04-18 13:38:11.392835','2026-04-18 13:38:11.392835','234234','3423'),(5,5,6,4,NULL,'6SCJTX-001','укцук','Adult',NULL,3850.00,'Active','2026-04-18 13:47:42.936444','2026-04-18 13:47:42.936444','432423','3242'),(7,7,6,4,NULL,'2UA5VJ-001','куцкц','Adult',NULL,3850.00,'Active','2026-04-18 13:54:22.517825','2026-04-18 13:54:22.517825','423423','4234'),(9,9,8,9,NULL,'MMLH5C-001','укцук','Adult',NULL,4500.00,'Active','2026-04-18 14:14:55.399422','2026-04-18 14:14:55.399423','423423','3423'),(11,11,5,1,NULL,'E4YT84-001','куцк','Adult',NULL,4299.00,'Active','2026-04-18 16:33:41.497891','2026-04-18 16:33:41.497891','423424','4234'),(13,13,5,1,NULL,'6Q3EM7-001','rewrw','Adult',NULL,4299.00,'Active','2026-04-20 07:26:22.867107','2026-04-20 07:26:22.867107','324234','4234'),(14,14,5,1,NULL,'KR6BBH-001','rewrw','Adult',NULL,4299.00,'Active','2026-04-20 07:47:28.365484','2026-04-20 07:47:28.365485','234423','4324'),(15,15,5,3,NULL,'JEZAHA-001','куекц','Adult',NULL,15000.00,'Active','2026-04-20 09:04:36.033172','2026-04-20 09:04:36.033172','545345','4532'),(16,16,6,5,NULL,'GMECV5-001','fdsfs','Adult',NULL,7200.00,'Active','2026-04-21 07:58:32.970575','2026-04-21 07:58:32.970575','324234','4234'),(17,16,6,5,NULL,'GMECV5-002','wrwrw','Adult',NULL,7200.00,'Active','2026-04-21 07:58:32.970599','2026-04-21 07:58:32.970599','234242','4234'),(18,17,6,4,NULL,'WNUA67-001','fdsf','Adult',NULL,3850.00,'Active','2026-04-21 14:56:58.127048','2026-04-21 14:56:58.127048','423424','3423'),(19,18,5,1,NULL,'UFPRRR-001','fbdf','Adult',NULL,4299.00,'Active','2026-04-25 08:20:57.995156','2026-04-25 08:20:57.995156','453453','5453'),(20,19,11,15,NULL,'YRCF36-001','ghjhg','Adult',NULL,3850.00,'Active','2026-04-27 10:07:15.297653','2026-04-27 10:07:15.297653','456336','6456'),(21,20,38,69,NULL,'79R5JF-001','гшнгш','Adult',NULL,5500.00,'Active','2026-05-11 12:02:50.433259','2026-05-11 12:02:50.433260','987989','8797'),(22,21,38,69,NULL,'848P3Z-001','iuiu','Adult',NULL,5500.00,'Active','2026-05-11 12:03:41.353483','2026-05-11 12:03:41.353483','897979','8989'),(23,22,38,69,NULL,'PQZK2W-001','укцкц','Adult',NULL,5500.00,'Active','2026-05-11 15:16:02.191735','2026-05-11 15:16:02.191735','432423','3423'),(24,23,38,69,NULL,'YE7HY7-001','аывмым','Adult',NULL,5500.00,'Active','2026-05-13 08:32:00.364812','2026-05-13 08:32:00.364812','243243','3243'),(25,24,38,69,NULL,'AM9TLX-001','авыа','Adult',NULL,5500.00,'Active','2026-05-21 03:37:18.626547','2026-05-21 03:37:18.626548','345345','5345'),(26,25,38,69,NULL,'R7M8Y3-001','ававыа','Adult',NULL,5500.00,'Active','2026-05-28 11:18:46.416719','2026-05-28 11:18:46.416719','324342','4324'),(27,26,85,163,NULL,'MRNHPB-001','аваыаы','Adult',NULL,5200.00,'Active','2026-05-28 11:23:07.297805','2026-05-28 11:23:07.297805','324234','4324'),(28,27,50,93,NULL,'DXBAEJ-001','аваыва','Adult',NULL,6000.00,'Active','2026-05-28 11:34:25.637176','2026-05-28 11:34:25.637177','332324','3242'),(29,28,50,93,NULL,'JQYWUT-001','вава','Child',NULL,4200.00,'Active','2026-05-28 13:59:54.764425','2026-05-28 13:59:54.764425','',''),(30,28,50,93,NULL,'JQYWUT-002','авыава   ','Adult',NULL,6000.00,'Active','2026-05-28 13:59:54.764780','2026-05-28 13:59:54.764780','244232','3323');
+/*!40000 ALTER TABLE `tickets` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
--- Table structure for table `Users`
+-- Table structure for table `users`
 --
 
-DROP TABLE IF EXISTS `Users`;
+DROP TABLE IF EXISTS `users`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `Users` (
+CREATE TABLE `users` (
   `Id` int NOT NULL AUTO_INCREMENT,
   `Email` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
   `PasswordHash` varchar(512) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
@@ -380,20 +380,21 @@ CREATE TABLE `Users` (
   `Role` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
   `CreatedAt` datetime(6) NOT NULL,
   `UpdatedAt` datetime(6) NOT NULL,
+  `IsActive` tinyint(1) NOT NULL DEFAULT '1',
   PRIMARY KEY (`Id`),
   UNIQUE KEY `idx_email` (`Email`),
   KEY `idx_role` (`Role`)
-) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Dumping data for table `Users`
+-- Dumping data for table `users`
 --
 
-LOCK TABLES `Users` WRITE;
-/*!40000 ALTER TABLE `Users` DISABLE KEYS */;
-INSERT INTO `Users` VALUES (2,'pop@gmail.com','$2a$11$Q045xlabPb0WSzMN8XXXYOaNJMGIS2./6mZrFApGL7kRm67g9GhXC','pop','9898','User','2026-01-17 06:16:56.797835','2026-01-17 06:16:56.797836'),(3,'23rolling@gmail.com','$2a$11$o/HpCFeGlvHfAoHe.fLT/uMmee/BxUQ4TWyc4xiAFSH6srWJudpuS','rolliingUser','+78909088765','User','2026-01-30 09:17:23.340705','2026-01-30 09:17:23.340705'),(4,'kolller@gmail.com','$2a$11$XGdS3FwWFL5sO6EauRvonO84oY0bFFIiAAZs3ZXIMqLOubfg1sk4S','koll3','+79054503423','User','2026-03-11 15:12:18.913989','2026-03-11 15:12:18.914030'),(5,'fdfdsfs@gmail.com','$2a$11$ybzUWJXkOH5t6bf2176Ub./n5EJb76U/gDdZAGXjnJvYY5WVWXm3e','dgsg','+7898765334','User','2026-03-13 14:10:24.889230','2026-03-13 14:10:24.889260'),(6,'565dfdfd@gmail.com','$2a$11$.I27m7yfTvW2VdkwCe5GI.QkPxQ0pIKWFAi0MePSjnXd1t6Tlt8gC','fdfd','789876545678','User','2026-03-13 15:42:23.322197','2026-03-13 15:42:23.322218'),(7,'kjhgfd@gamil.com','$2a$11$O90F/t2nkGBJgPs/wt.G.uZpM1FNs4ZXG9DWn2Fn8OjYOpcdKtfv6','juhgfd','787654345678','User','2026-03-14 07:32:52.446331','2026-03-14 07:32:52.446332'),(8,'lowep980@gmail.com','$2a$11$GRSDNSa33NJ7V9TifdafWe.ksOOZGshfEoJkxZfprs2IMee9qfL1C','Lowep','79606953553','User','2026-03-17 07:02:25.009251','2026-04-07 14:21:00.308665'),(9,'kolllefr@gmail.com','$2a$11$qssHze7W/UGyNyOAZObpuuuAe11I9f9km7XvuCJpKx3DQZNsBhYdm','kolller','98765456789','User','2026-04-07 12:43:27.203804','2026-04-07 12:43:27.203853');
-/*!40000 ALTER TABLE `Users` ENABLE KEYS */;
+LOCK TABLES `users` WRITE;
+/*!40000 ALTER TABLE `users` DISABLE KEYS */;
+INSERT INTO `users` VALUES (3,'23rolling@gmail.com','$2a$11$o/HpCFeGlvHfAoHe.fLT/uMmee/BxUQ4TWyc4xiAFSH6srWJudpuS','rolliingUser','+78909088765','User','2026-01-30 09:17:23.340705','2026-01-30 09:17:23.340705',1),(4,'kolller@gmail.com','$2a$11$tBLb5XgaXj3hdy7ZEXRJSuasknf8sGwKvefElFOvl344v7B5myzGO','koll3','+79054503423','Manager','2026-03-11 15:12:18.913989','2026-05-11 14:32:00.738472',1),(5,'fdfdsfs@gmail.com','$2a$11$ybzUWJXkOH5t6bf2176Ub./n5EJb76U/gDdZAGXjnJvYY5WVWXm3e','dgsg','+7898765334','User','2026-03-13 14:10:24.889230','2026-03-13 14:10:24.889260',1),(6,'565dfdfd@gmail.com','$2a$11$.I27m7yfTvW2VdkwCe5GI.QkPxQ0pIKWFAi0MePSjnXd1t6Tlt8gC','fdfd','789876545678','User','2026-03-13 15:42:23.322197','2026-03-13 15:42:23.322218',1),(7,'kjhgfd@gamil.com','$2a$11$O90F/t2nkGBJgPs/wt.G.uZpM1FNs4ZXG9DWn2Fn8OjYOpcdKtfv6','juhgfd','787654345678','User','2026-03-14 07:32:52.446331','2026-03-14 07:32:52.446332',1),(8,'lowep980@gmail.com','$2a$11$GRSDNSa33NJ7V9TifdafWe.ksOOZGshfEoJkxZfprs2IMee9qfL1C','Lowep','79606953553','Admin','2026-03-17 07:02:25.009251','2026-05-26 12:38:27.473548',1),(9,'kolllefr@gmail.com','$2a$11$qssHze7W/UGyNyOAZObpuuuAe11I9f9km7XvuCJpKx3DQZNsBhYdm','kolller','98765456789','User','2026-04-07 12:43:27.203804','2026-05-11 15:55:42.029258',0),(10,'23roll@gmail.com','$2a$11$T1wZ.YmwLzrKosRVUeGNSuwkH2zWQdPl2JWq4DboNQm2.iTGyfcnG','23roll','46325625646','User','2026-05-11 15:57:35.431278','2026-05-11 16:00:39.947941',0);
+/*!40000 ALTER TABLE `users` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
@@ -405,4 +406,423 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-05-01 14:57:20
+-- Dump completed on 2026-05-29  7:12:24
+
+
+-- ============================================================
+
+-- ============================================================
+-- ZetTechAvio (ZT) EXTENSION: 90 FLIGHTS (08.06 - 05.07)
+-- ============================================================
+
+-- 1. Add ZetTechAvio airline (if not exists)
+INSERT IGNORE INTO `airlines` VALUES (4,'ZT','ZetTechAvio',NULL,'2026-05-29 00:00:00.000000');
+ALTER TABLE `airlines` AUTO_INCREMENT = 5;
+
+-- 2. Add Russian airports (IDs 18-51)
+INSERT IGNORE INTO `airports` VALUES
+(18,'OVB','Обь Аэропорт','Новосибирск','Россия',55.0126,82.6507,'2026-05-29 00:00:00.000000'),
+(19,'TOM','Богаславо Аэропорт','Томск','Россия',56.4048,84.9614,'2026-05-29 00:00:00.000000'),
+(20,'SCG','Северный Аэропорт','Сургут','Россия',61.358,73.3977,'2026-05-29 00:00:00.000000'),
+(21,'IJK','Иркутск Аэропорт','Иркутск','Россия',52.291,104.38,'2026-05-29 00:00:00.000000'),
+(22,'KJA','Красноярск Аэропорт','Красноярск','Россия',56.0252,92.8933,'2026-05-29 00:00:00.000000'),
+(23,'VVO','Владивосток Аэропорт','Владивосток','Россия',43.3994,132.1471,'2026-05-29 00:00:00.000000'),
+(24,'KGD','Калининград Аэропорт','Калининград','Россия',54.8905,20.6649,'2026-05-29 00:00:00.000000'),
+(25,'KRR','Краснодар Аэропорт','Краснодар','Россия',45.0126,39.0557,'2026-05-29 00:00:00.000000'),
+(26,'ROV','Ростов Аэропорт','Ростов-на-Дону','Россия',47.4951,39.9307,'2026-05-29 00:00:00.000000'),
+(27,'VGG','Волгоград Аэропорт','Волгоград','Россия',48.6165,44.3995,'2026-05-29 00:00:00.000000'),
+(28,'REN','Ренген Аэропорт','Оренбург','Россия',51.8126,55.4424,'2026-05-29 00:00:00.000000'),
+(29,'MRW','Минеральные Воды Аэропорт','Минеральные Воды','Россия',44.3913,43.1394,'2026-05-29 00:00:00.000000'),
+(30,'BAX','Барнаул Аэропорт','Барнаул','Россия',53.3905,83.6994,'2026-05-29 00:00:00.000000'),
+(31,'AER2','Адлер Аэропорт','Сочи','Россия',43.4499,39.9566,'2026-05-29 00:00:00.000000'),
+(32,'SCW','Сыктывкар Аэропорт','Сыктывкар','Россия',61.7585,50.8148,'2026-05-29 00:00:00.000000'),
+(33,'PEE','Пермь Аэропорт','Пермь','Россия',56.5464,55.9412,'2026-05-29 00:00:00.000000'),
+(34,'UFA','Уфа Аэропорт','Уфа','Россия',54.5575,55.9492,'2026-05-29 00:00:00.000000'),
+(35,'KRO','Курган Аэропорт','Курган','Россия',55.4517,65.3461,'2026-05-29 00:00:00.000000'),
+(36,'TJM','Тюмень Аэропорт','Тюмень','Россия',57.2006,65.443,'2026-05-29 00:00:00.000000'),
+(37,'HMA','Ханты-Мансийск Аэропорт','Ханты-Мансийск','Россия',61.0086,69.3053,'2026-05-29 00:00:00.000000'),
+(38,'NJC','Нижневартовск Аэропорт','Нижневартовск','Россия',60.9332,74.6593,'2026-05-29 00:00:00.000000'),
+(39,'RZA','Рязань Аэропорт','Рязань','Россия',54.5306,39.7375,'2026-05-29 00:00:00.000000'),
+(40,'TSE','Тверь Аэропорт','Тверь','Россия',56.9411,35.8794,'2026-05-29 00:00:00.000000'),
+(41,'VLD','Вологда Аэропорт','Вологда','Россия',59.2159,39.8828,'2026-05-29 00:00:00.000000'),
+(42,'ARH','Архангельск Аэропорт','Архангельск','Россия',64.5977,40.5683,'2026-05-29 00:00:00.000000'),
+(43,'GOJ','Нижний Новгород Аэропорт','Нижний Новгород','Россия',56.1231,43.6825,'2026-05-29 00:00:00.000000'),
+(44,'KEJ','Кемерово Аэропорт','Кемерово','Россия',55.2454,86.0765,'2026-05-29 00:00:00.000000'),
+(45,'SWT','Северск Аэропорт','Северск','Россия',56.3474,84.9,'2026-05-29 00:00:00.000000'),
+(46,'PKC','Петропавловск-Камчатский Аэропорт','Петропавловск-Камчатский','Россия',53.1406,158.5889,'2026-05-29 00:00:00.000000'),
+(47,'EIA','Элиста Аэропорт','Элиста','Россия',46.3077,44.2538,'2026-05-29 00:00:00.000000'),
+(48,'NOU','Новороссийск Аэропорт','Новороссийск','Россия',44.6988,37.7035,'2026-05-29 00:00:00.000000'),
+(49,'BQO','Биробиджан Аэропорт','Биробиджан','Россия',48.7892,132.9303,'2026-05-29 00:00:00.000000'),
+(50,'KYZ','Кызыл Аэропорт','Кызыл','Россия',51.7686,94.4373,'2026-05-29 00:00:00.000000'),
+(51,'AKX','Актобе Аэропорт','Актобе','Россия',50.2831,57.1675,'2026-05-29 00:00:00.000000');
+ALTER TABLE `airports` AUTO_INCREMENT = 52;
+
+-- 3. Add 90 ZetTechAvio flights (ZT code) - Dates: 08.06 to 05.07
+
+INSERT INTO `flights` VALUES
+(176,'ZT101',4,4,3,25,'2026-06-08 06:20:00.000000','2026-06-08 07:49:00.000000',89,'2026-05-29 00:00:00.000000','Scheduled'),
+(179,'ZT102',4,5,12,25,'2026-06-08 08:00:00.000000','2026-06-08 11:59:00.000000',239,'2026-05-29 00:00:00.000000','Scheduled'),
+(182,'ZT103',4,2,1,22,'2026-06-08 15:20:00.000000','2026-06-08 16:31:00.000000',71,'2026-05-29 00:00:00.000000','Scheduled'),
+(185,'ZT104',4,2,4,14,'2026-06-08 15:40:00.000000','2026-06-08 19:15:00.000000',215,'2026-05-29 00:00:00.000000','Scheduled'),
+(188,'ZT105',4,5,6,23,'2026-06-09 05:30:00.000000','2026-06-09 06:59:00.000000',89,'2026-05-29 00:00:00.000000','Scheduled'),
+(191,'ZT106',4,4,21,37,'2026-06-09 07:00:00.000000','2026-06-09 10:26:00.000000',206,'2026-05-29 00:00:00.000000','Scheduled'),
+(194,'ZT107',4,2,7,29,'2026-06-09 06:00:00.000000','2026-06-09 07:57:00.000000',117,'2026-05-29 00:00:00.000000','Scheduled'),
+(197,'ZT108',4,4,7,12,'2026-06-10 14:30:00.000000','2026-06-10 20:08:00.000000',338,'2026-05-29 00:00:00.000000','Scheduled'),
+(200,'ZT109',4,3,7,49,'2026-06-10 20:00:00.000000','2026-06-10 23:21:00.000000',201,'2026-05-29 00:00:00.000000','Scheduled'),
+(203,'ZT110',4,5,2,17,'2026-06-10 20:10:00.000000','2026-06-10 26:06:00.000000',356,'2026-05-29 00:00:00.000000','Scheduled'),
+(206,'ZT111',4,5,6,46,'2026-06-11 15:00:00.000000','2026-06-11 19:08:00.000000',248,'2026-05-29 00:00:00.000000','Scheduled'),
+(209,'ZT112',4,4,5,32,'2026-06-11 22:50:00.000000','2026-06-11 28:40:00.000000',350,'2026-05-29 00:00:00.000000','Scheduled'),
+(212,'ZT113',4,1,31,46,'2026-06-11 18:20:00.000000','2026-06-11 23:26:00.000000',306,'2026-05-29 00:00:00.000000','Scheduled'),
+(215,'ZT114',4,4,5,17,'2026-06-12 10:50:00.000000','2026-06-12 12:17:00.000000',87,'2026-05-29 00:00:00.000000','Scheduled'),
+(218,'ZT115',4,3,5,46,'2026-06-12 13:10:00.000000','2026-06-12 16:46:00.000000',216,'2026-05-29 00:00:00.000000','Scheduled'),
+(221,'ZT116',4,4,28,37,'2026-06-12 17:00:00.000000','2026-06-12 21:38:00.000000',278,'2026-05-29 00:00:00.000000','Scheduled'),
+(224,'ZT117',4,5,4,11,'2026-06-12 15:00:00.000000','2026-06-12 17:21:00.000000',141,'2026-05-29 00:00:00.000000','Scheduled'),
+(227,'ZT118',4,2,6,24,'2026-06-13 16:00:00.000000','2026-06-13 19:45:00.000000',225,'2026-05-29 00:00:00.000000','Scheduled'),
+(230,'ZT119',4,3,4,28,'2026-06-13 22:40:00.000000','2026-06-13 23:55:00.000000',75,'2026-05-29 00:00:00.000000','Scheduled'),
+(233,'ZT120',4,2,30,32,'2026-06-13 12:40:00.000000','2026-06-13 17:32:00.000000',292,'2026-05-29 00:00:00.000000','Scheduled'),
+(236,'ZT121',4,4,5,29,'2026-06-14 22:30:00.000000','2026-06-14 26:28:00.000000',238,'2026-05-29 00:00:00.000000','Scheduled'),
+(239,'ZT122',4,2,7,30,'2026-06-14 05:10:00.000000','2026-06-14 09:48:00.000000',278,'2026-05-29 00:00:00.000000','Scheduled'),
+(242,'ZT123',4,4,34,42,'2026-06-14 13:20:00.000000','2026-06-14 16:24:00.000000',184,'2026-05-29 00:00:00.000000','Scheduled'),
+(245,'ZT124',4,5,4,21,'2026-06-15 18:00:00.000000','2026-06-15 19:40:00.000000',100,'2026-05-29 00:00:00.000000','Scheduled'),
+(248,'ZT125',4,1,1,49,'2026-06-15 21:20:00.000000','2026-06-15 22:50:00.000000',90,'2026-05-29 00:00:00.000000','Scheduled'),
+(251,'ZT126',4,1,7,48,'2026-06-15 05:40:00.000000','2026-06-15 09:38:00.000000',238,'2026-05-29 00:00:00.000000','Scheduled'),
+(254,'ZT127',4,3,5,22,'2026-06-16 17:00:00.000000','2026-06-16 20:30:00.000000',210,'2026-05-29 00:00:00.000000','Scheduled'),
+(257,'ZT128',4,4,4,23,'2026-06-16 06:40:00.000000','2026-06-16 10:16:00.000000',216,'2026-05-29 00:00:00.000000','Scheduled'),
+(260,'ZT129',4,4,7,16,'2026-06-16 05:50:00.000000','2026-06-16 07:58:00.000000',128,'2026-05-29 00:00:00.000000','Scheduled'),
+(263,'ZT130',4,1,7,45,'2026-06-17 09:20:00.000000','2026-06-17 12:05:00.000000',165,'2026-05-29 00:00:00.000000','Scheduled'),
+(266,'ZT131',4,5,33,35,'2026-06-17 06:40:00.000000','2026-06-17 10:43:00.000000',243,'2026-05-29 00:00:00.000000','Scheduled'),
+(269,'ZT132',4,4,1,32,'2026-06-17 09:50:00.000000','2026-06-17 13:04:00.000000',194,'2026-05-29 00:00:00.000000','Scheduled'),
+(272,'ZT133',4,5,29,31,'2026-06-17 09:40:00.000000','2026-06-17 13:17:00.000000',217,'2026-05-29 00:00:00.000000','Scheduled'),
+(275,'ZT134',4,4,5,7,'2026-06-18 10:40:00.000000','2026-06-18 14:42:00.000000',242,'2026-05-29 00:00:00.000000','Scheduled'),
+(278,'ZT135',4,3,5,33,'2026-06-18 09:30:00.000000','2026-06-18 10:25:00.000000',55,'2026-05-29 00:00:00.000000','Scheduled'),
+(281,'ZT136',4,1,21,23,'2026-06-18 19:20:00.000000','2026-06-18 23:44:00.000000',264,'2026-05-29 00:00:00.000000','Scheduled'),
+(284,'ZT137',4,5,7,11,'2026-06-19 21:20:00.000000','2026-06-19 26:29:00.000000',309,'2026-05-29 00:00:00.000000','Scheduled'),
+(287,'ZT138',4,1,5,42,'2026-06-19 09:20:00.000000','2026-06-19 14:21:00.000000',301,'2026-05-29 00:00:00.000000','Scheduled'),
+(290,'ZT139',4,3,25,38,'2026-06-19 16:10:00.000000','2026-06-19 21:46:00.000000',336,'2026-05-29 00:00:00.000000','Scheduled'),
+(293,'ZT140',4,2,21,33,'2026-06-20 13:40:00.000000','2026-06-20 16:29:00.000000',169,'2026-05-29 00:00:00.000000','Scheduled'),
+(296,'ZT141',4,5,9,31,'2026-06-20 13:30:00.000000','2026-06-20 14:37:00.000000',67,'2026-05-29 00:00:00.000000','Scheduled'),
+(299,'ZT142',4,1,25,44,'2026-06-20 11:40:00.000000','2026-06-20 14:07:00.000000',147,'2026-05-29 00:00:00.000000','Scheduled'),
+(302,'ZT143',4,1,5,41,'2026-06-21 13:40:00.000000','2026-06-21 16:23:00.000000',163,'2026-05-29 00:00:00.000000','Scheduled'),
+(305,'ZT144',4,5,4,20,'2026-06-21 15:00:00.000000','2026-06-21 18:39:00.000000',219,'2026-05-29 00:00:00.000000','Scheduled'),
+(308,'ZT145',4,4,5,31,'2026-06-21 09:40:00.000000','2026-06-21 11:34:00.000000',114,'2026-05-29 00:00:00.000000','Scheduled'),
+(311,'ZT146',4,5,4,48,'2026-06-22 17:00:00.000000','2026-06-22 19:56:00.000000',176,'2026-05-29 00:00:00.000000','Scheduled'),
+(314,'ZT147',4,5,4,27,'2026-06-22 15:30:00.000000','2026-06-22 18:09:00.000000',159,'2026-05-29 00:00:00.000000','Scheduled'),
+(317,'ZT148',4,4,2,10,'2026-06-22 05:40:00.000000','2026-06-22 11:36:00.000000',356,'2026-05-29 00:00:00.000000','Scheduled'),
+(320,'ZT149',4,3,29,33,'2026-06-22 08:50:00.000000','2026-06-22 10:01:00.000000',71,'2026-05-29 00:00:00.000000','Scheduled'),
+(323,'ZT150',4,3,31,47,'2026-06-23 16:50:00.000000','2026-06-23 21:10:00.000000',260,'2026-05-29 00:00:00.000000','Scheduled'),
+(326,'ZT151',4,2,11,31,'2026-06-23 11:30:00.000000','2026-06-23 15:10:00.000000',220,'2026-05-29 00:00:00.000000','Scheduled'),
+(329,'ZT152',4,4,6,36,'2026-06-23 17:00:00.000000','2026-06-23 21:17:00.000000',257,'2026-05-29 00:00:00.000000','Scheduled'),
+(332,'ZT153',4,4,1,24,'2026-06-24 13:10:00.000000','2026-06-24 18:41:00.000000',331,'2026-05-29 00:00:00.000000','Scheduled'),
+(335,'ZT154',4,3,5,12,'2026-06-24 07:20:00.000000','2026-06-24 09:07:00.000000',107,'2026-05-29 00:00:00.000000','Scheduled'),
+(338,'ZT155',4,1,25,32,'2026-06-24 15:00:00.000000','2026-06-24 18:59:00.000000',239,'2026-05-29 00:00:00.000000','Scheduled'),
+(341,'ZT156',4,4,26,35,'2026-06-25 17:20:00.000000','2026-06-25 19:00:00.000000',100,'2026-05-29 00:00:00.000000','Scheduled'),
+(344,'ZT157',4,3,2,24,'2026-06-25 15:10:00.000000','2026-06-25 19:43:00.000000',273,'2026-05-29 00:00:00.000000','Scheduled'),
+(347,'ZT158',4,5,13,31,'2026-06-25 16:10:00.000000','2026-06-25 20:48:00.000000',278,'2026-05-29 00:00:00.000000','Scheduled'),
+(350,'ZT159',4,2,1,4,'2026-06-26 13:20:00.000000','2026-06-26 14:29:00.000000',69,'2026-05-29 00:00:00.000000','Scheduled'),
+(353,'ZT160',4,2,6,28,'2026-06-26 05:30:00.000000','2026-06-26 10:29:00.000000',299,'2026-05-29 00:00:00.000000','Scheduled'),
+(356,'ZT161',4,5,1,47,'2026-06-26 22:00:00.000000','2026-06-26 26:45:00.000000',285,'2026-05-29 00:00:00.000000','Scheduled'),
+(359,'ZT162',4,5,1,35,'2026-06-26 15:20:00.000000','2026-06-26 17:58:00.000000',158,'2026-05-29 00:00:00.000000','Scheduled'),
+(362,'ZT163',4,3,6,27,'2026-06-27 19:40:00.000000','2026-06-27 25:32:00.000000',352,'2026-05-29 00:00:00.000000','Scheduled'),
+(365,'ZT164',4,2,31,44,'2026-06-27 05:20:00.000000','2026-06-27 09:22:00.000000',242,'2026-05-29 00:00:00.000000','Scheduled'),
+(368,'ZT165',4,2,18,31,'2026-06-27 07:20:00.000000','2026-06-27 10:30:00.000000',190,'2026-05-29 00:00:00.000000','Scheduled'),
+(371,'ZT166',4,5,24,42,'2026-06-28 16:30:00.000000','2026-06-28 17:37:00.000000',67,'2026-05-29 00:00:00.000000','Scheduled'),
+(374,'ZT167',4,2,5,50,'2026-06-28 20:50:00.000000','2026-06-28 22:59:00.000000',129,'2026-05-29 00:00:00.000000','Scheduled'),
+(377,'ZT168',4,5,21,26,'2026-06-28 13:40:00.000000','2026-06-28 15:49:00.000000',129,'2026-05-29 00:00:00.000000','Scheduled'),
+(380,'ZT169',4,2,1,9,'2026-06-29 14:30:00.000000','2026-06-29 19:14:00.000000',284,'2026-05-29 00:00:00.000000','Scheduled'),
+(383,'ZT170',4,4,1,2,'2026-06-29 21:00:00.000000','2026-06-29 22:37:00.000000',97,'2026-05-29 00:00:00.000000','Scheduled'),
+(386,'ZT171',4,2,4,13,'2026-06-29 22:40:00.000000','2026-06-29 25:48:00.000000',188,'2026-05-29 00:00:00.000000','Scheduled'),
+(389,'ZT172',4,4,7,28,'2026-06-30 07:50:00.000000','2026-06-30 11:55:00.000000',245,'2026-05-29 00:00:00.000000','Scheduled'),
+(392,'ZT173',4,4,1,46,'2026-06-30 08:00:00.000000','2026-06-30 13:36:00.000000',336,'2026-05-29 00:00:00.000000','Scheduled'),
+(395,'ZT174',4,2,30,33,'2026-06-30 18:40:00.000000','2026-06-30 22:27:00.000000',227,'2026-05-29 00:00:00.000000','Scheduled'),
+(398,'ZT175',4,2,5,47,'2026-07-01 09:10:00.000000','2026-07-01 11:43:00.000000',153,'2026-05-29 00:00:00.000000','Scheduled'),
+(401,'ZT176',4,4,4,25,'2026-07-01 12:10:00.000000','2026-07-01 13:32:00.000000',82,'2026-05-29 00:00:00.000000','Scheduled'),
+(404,'ZT177',4,5,21,31,'2026-07-01 05:30:00.000000','2026-07-01 08:59:00.000000',209,'2026-05-29 00:00:00.000000','Scheduled'),
+(407,'ZT178',4,3,4,29,'2026-07-01 06:10:00.000000','2026-07-01 10:38:00.000000',268,'2026-05-29 00:00:00.000000','Scheduled'),
+(410,'ZT179',4,3,6,51,'2026-07-02 14:00:00.000000','2026-07-02 17:09:00.000000',189,'2026-05-29 00:00:00.000000','Scheduled'),
+(413,'ZT180',4,2,2,22,'2026-07-02 21:00:00.000000','2026-07-02 24:50:00.000000',230,'2026-05-29 00:00:00.000000','Scheduled'),
+(416,'ZT181',4,5,25,26,'2026-07-02 12:30:00.000000','2026-07-02 15:08:00.000000',158,'2026-05-29 00:00:00.000000','Scheduled'),
+(419,'ZT182',4,2,1,27,'2026-07-03 18:30:00.000000','2026-07-03 24:01:00.000000',331,'2026-05-29 00:00:00.000000','Scheduled'),
+(422,'ZT183',4,3,20,32,'2026-07-03 07:30:00.000000','2026-07-03 08:36:00.000000',66,'2026-05-29 00:00:00.000000','Scheduled'),
+(425,'ZT184',4,2,31,49,'2026-07-03 20:50:00.000000','2026-07-03 22:29:00.000000',99,'2026-05-29 00:00:00.000000','Scheduled'),
+(428,'ZT185',4,5,31,38,'2026-07-04 19:20:00.000000','2026-07-04 24:47:00.000000',327,'2026-05-29 00:00:00.000000','Scheduled'),
+(431,'ZT186',4,3,1,41,'2026-07-04 19:40:00.000000','2026-07-04 23:25:00.000000',225,'2026-05-29 00:00:00.000000','Scheduled'),
+(434,'ZT187',4,1,20,36,'2026-07-04 11:30:00.000000','2026-07-04 12:39:00.000000',69,'2026-05-29 00:00:00.000000','Scheduled'),
+(437,'ZT188',4,1,7,33,'2026-07-05 08:40:00.000000','2026-07-05 12:11:00.000000',211,'2026-05-29 00:00:00.000000','Scheduled'),
+(440,'ZT189',4,4,1,11,'2026-07-05 11:30:00.000000','2026-07-05 13:47:00.000000',137,'2026-05-29 00:00:00.000000','Scheduled'),
+(443,'ZT190',4,2,16,25,'2026-07-05 20:10:00.000000','2026-07-05 20:57:00.000000',47,'2026-05-29 00:00:00.000000','Scheduled')
+;
+ALTER TABLE `flights` AUTO_INCREMENT = 446;
+
+INSERT INTO `fares` VALUES
+(361,176,'RUB',4500.00,120,1,23,0,'Economy'),
+(362,176,'RUB',9000.00,40,1,23,1,'Business'),
+(363,176,'RUB',13500.00,12,1,32,1,'First'),
+(364,179,'RUB',5500.00,120,1,23,0,'Economy'),
+(365,179,'RUB',11000.00,40,1,23,1,'Business'),
+(366,179,'RUB',16500.00,12,1,32,1,'First'),
+(367,182,'RUB',4000.00,120,1,23,0,'Economy'),
+(368,182,'RUB',8000.00,40,1,23,1,'Business'),
+(369,182,'RUB',12000.00,12,1,32,1,'First'),
+(370,185,'RUB',4000.00,120,1,23,0,'Economy'),
+(371,185,'RUB',8000.00,40,1,23,1,'Business'),
+(372,185,'RUB',12000.00,12,1,32,1,'First'),
+(373,188,'RUB',5000.00,120,1,23,0,'Economy'),
+(374,188,'RUB',10000.00,40,1,23,1,'Business'),
+(375,188,'RUB',15000.00,12,1,32,1,'First'),
+(376,191,'RUB',3500.00,120,1,23,0,'Economy'),
+(377,191,'RUB',7000.00,40,1,23,1,'Business'),
+(378,191,'RUB',10500.00,12,1,32,1,'First'),
+(379,194,'RUB',3500.00,120,1,23,0,'Economy'),
+(380,194,'RUB',7000.00,40,1,23,1,'Business'),
+(381,194,'RUB',10500.00,12,1,32,1,'First'),
+(382,197,'RUB',4500.00,120,1,23,0,'Economy'),
+(383,197,'RUB',9000.00,40,1,23,1,'Business'),
+(384,197,'RUB',13500.00,12,1,32,1,'First'),
+(385,200,'RUB',5500.00,120,1,23,0,'Economy'),
+(386,200,'RUB',11000.00,40,1,23,1,'Business'),
+(387,200,'RUB',16500.00,12,1,32,1,'First'),
+(388,203,'RUB',5500.00,120,1,23,0,'Economy'),
+(389,203,'RUB',11000.00,40,1,23,1,'Business'),
+(390,203,'RUB',16500.00,12,1,32,1,'First'),
+(391,206,'RUB',5000.00,120,1,23,0,'Economy'),
+(392,206,'RUB',10000.00,40,1,23,1,'Business'),
+(393,206,'RUB',15000.00,12,1,32,1,'First'),
+(394,209,'RUB',5500.00,120,1,23,0,'Economy'),
+(395,209,'RUB',11000.00,40,1,23,1,'Business'),
+(396,209,'RUB',16500.00,12,1,32,1,'First'),
+(397,212,'RUB',6000.00,120,1,23,0,'Economy'),
+(398,212,'RUB',12000.00,40,1,23,1,'Business'),
+(399,212,'RUB',18000.00,12,1,32,1,'First'),
+(400,215,'RUB',6000.00,120,1,23,0,'Economy'),
+(401,215,'RUB',12000.00,40,1,23,1,'Business'),
+(402,215,'RUB',18000.00,12,1,32,1,'First'),
+(403,218,'RUB',5500.00,120,1,23,0,'Economy'),
+(404,218,'RUB',11000.00,40,1,23,1,'Business'),
+(405,218,'RUB',16500.00,12,1,32,1,'First'),
+(406,221,'RUB',5500.00,120,1,23,0,'Economy'),
+(407,221,'RUB',11000.00,40,1,23,1,'Business'),
+(408,221,'RUB',16500.00,12,1,32,1,'First'),
+(409,224,'RUB',3500.00,120,1,23,0,'Economy'),
+(410,224,'RUB',7000.00,40,1,23,1,'Business'),
+(411,224,'RUB',10500.00,12,1,32,1,'First'),
+(412,227,'RUB',5000.00,120,1,23,0,'Economy'),
+(413,227,'RUB',10000.00,40,1,23,1,'Business'),
+(414,227,'RUB',15000.00,12,1,32,1,'First'),
+(415,230,'RUB',5000.00,120,1,23,0,'Economy'),
+(416,230,'RUB',10000.00,40,1,23,1,'Business'),
+(417,230,'RUB',15000.00,12,1,32,1,'First'),
+(418,233,'RUB',4000.00,120,1,23,0,'Economy'),
+(419,233,'RUB',8000.00,40,1,23,1,'Business'),
+(420,233,'RUB',12000.00,12,1,32,1,'First'),
+(421,236,'RUB',3500.00,120,1,23,0,'Economy'),
+(422,236,'RUB',7000.00,40,1,23,1,'Business'),
+(423,236,'RUB',10500.00,12,1,32,1,'First'),
+(424,239,'RUB',3500.00,120,1,23,0,'Economy'),
+(425,239,'RUB',7000.00,40,1,23,1,'Business'),
+(426,239,'RUB',10500.00,12,1,32,1,'First'),
+(427,242,'RUB',6000.00,120,1,23,0,'Economy'),
+(428,242,'RUB',12000.00,40,1,23,1,'Business'),
+(429,242,'RUB',18000.00,12,1,32,1,'First'),
+(430,245,'RUB',3500.00,120,1,23,0,'Economy'),
+(431,245,'RUB',7000.00,40,1,23,1,'Business'),
+(432,245,'RUB',10500.00,12,1,32,1,'First'),
+(433,248,'RUB',5000.00,120,1,23,0,'Economy'),
+(434,248,'RUB',10000.00,40,1,23,1,'Business'),
+(435,248,'RUB',15000.00,12,1,32,1,'First'),
+(436,251,'RUB',5500.00,120,1,23,0,'Economy'),
+(437,251,'RUB',11000.00,40,1,23,1,'Business'),
+(438,251,'RUB',16500.00,12,1,32,1,'First'),
+(439,254,'RUB',5000.00,120,1,23,0,'Economy'),
+(440,254,'RUB',10000.00,40,1,23,1,'Business'),
+(441,254,'RUB',15000.00,12,1,32,1,'First'),
+(442,257,'RUB',4500.00,120,1,23,0,'Economy'),
+(443,257,'RUB',9000.00,40,1,23,1,'Business'),
+(444,257,'RUB',13500.00,12,1,32,1,'First'),
+(445,260,'RUB',3500.00,120,1,23,0,'Economy'),
+(446,260,'RUB',7000.00,40,1,23,1,'Business'),
+(447,260,'RUB',10500.00,12,1,32,1,'First'),
+(448,263,'RUB',6000.00,120,1,23,0,'Economy'),
+(449,263,'RUB',12000.00,40,1,23,1,'Business'),
+(450,263,'RUB',18000.00,12,1,32,1,'First'),
+(451,266,'RUB',4500.00,120,1,23,0,'Economy'),
+(452,266,'RUB',9000.00,40,1,23,1,'Business'),
+(453,266,'RUB',13500.00,12,1,32,1,'First'),
+(454,269,'RUB',4500.00,120,1,23,0,'Economy'),
+(455,269,'RUB',9000.00,40,1,23,1,'Business'),
+(456,269,'RUB',13500.00,12,1,32,1,'First'),
+(457,272,'RUB',3500.00,120,1,23,0,'Economy'),
+(458,272,'RUB',7000.00,40,1,23,1,'Business'),
+(459,272,'RUB',10500.00,12,1,32,1,'First'),
+(460,275,'RUB',3500.00,120,1,23,0,'Economy'),
+(461,275,'RUB',7000.00,40,1,23,1,'Business'),
+(462,275,'RUB',10500.00,12,1,32,1,'First'),
+(463,278,'RUB',5000.00,120,1,23,0,'Economy'),
+(464,278,'RUB',10000.00,40,1,23,1,'Business'),
+(465,278,'RUB',15000.00,12,1,32,1,'First'),
+(466,281,'RUB',4000.00,120,1,23,0,'Economy'),
+(467,281,'RUB',8000.00,40,1,23,1,'Business'),
+(468,281,'RUB',12000.00,12,1,32,1,'First'),
+(469,284,'RUB',5500.00,120,1,23,0,'Economy'),
+(470,284,'RUB',11000.00,40,1,23,1,'Business'),
+(471,284,'RUB',16500.00,12,1,32,1,'First'),
+(472,287,'RUB',5500.00,120,1,23,0,'Economy'),
+(473,287,'RUB',11000.00,40,1,23,1,'Business'),
+(474,287,'RUB',16500.00,12,1,32,1,'First'),
+(475,290,'RUB',3500.00,120,1,23,0,'Economy'),
+(476,290,'RUB',7000.00,40,1,23,1,'Business'),
+(477,290,'RUB',10500.00,12,1,32,1,'First'),
+(478,293,'RUB',4500.00,120,1,23,0,'Economy'),
+(479,293,'RUB',9000.00,40,1,23,1,'Business'),
+(480,293,'RUB',13500.00,12,1,32,1,'First'),
+(481,296,'RUB',3500.00,120,1,23,0,'Economy'),
+(482,296,'RUB',7000.00,40,1,23,1,'Business'),
+(483,296,'RUB',10500.00,12,1,32,1,'First'),
+(484,299,'RUB',4000.00,120,1,23,0,'Economy'),
+(485,299,'RUB',8000.00,40,1,23,1,'Business'),
+(486,299,'RUB',12000.00,12,1,32,1,'First'),
+(487,302,'RUB',5500.00,120,1,23,0,'Economy'),
+(488,302,'RUB',11000.00,40,1,23,1,'Business'),
+(489,302,'RUB',16500.00,12,1,32,1,'First'),
+(490,305,'RUB',5500.00,120,1,23,0,'Economy'),
+(491,305,'RUB',11000.00,40,1,23,1,'Business'),
+(492,305,'RUB',16500.00,12,1,32,1,'First'),
+(493,308,'RUB',5000.00,120,1,23,0,'Economy'),
+(494,308,'RUB',10000.00,40,1,23,1,'Business'),
+(495,308,'RUB',15000.00,12,1,32,1,'First'),
+(496,311,'RUB',5000.00,120,1,23,0,'Economy'),
+(497,311,'RUB',10000.00,40,1,23,1,'Business'),
+(498,311,'RUB',15000.00,12,1,32,1,'First'),
+(499,314,'RUB',4000.00,120,1,23,0,'Economy'),
+(500,314,'RUB',8000.00,40,1,23,1,'Business'),
+(501,314,'RUB',12000.00,12,1,32,1,'First'),
+(502,317,'RUB',4500.00,120,1,23,0,'Economy'),
+(503,317,'RUB',9000.00,40,1,23,1,'Business'),
+(504,317,'RUB',13500.00,12,1,32,1,'First'),
+(505,320,'RUB',5000.00,120,1,23,0,'Economy'),
+(506,320,'RUB',10000.00,40,1,23,1,'Business'),
+(507,320,'RUB',15000.00,12,1,32,1,'First'),
+(508,323,'RUB',4500.00,120,1,23,0,'Economy'),
+(509,323,'RUB',9000.00,40,1,23,1,'Business'),
+(510,323,'RUB',13500.00,12,1,32,1,'First'),
+(511,326,'RUB',4000.00,120,1,23,0,'Economy'),
+(512,326,'RUB',8000.00,40,1,23,1,'Business'),
+(513,326,'RUB',12000.00,12,1,32,1,'First'),
+(514,329,'RUB',5500.00,120,1,23,0,'Economy'),
+(515,329,'RUB',11000.00,40,1,23,1,'Business'),
+(516,329,'RUB',16500.00,12,1,32,1,'First'),
+(517,332,'RUB',4500.00,120,1,23,0,'Economy'),
+(518,332,'RUB',9000.00,40,1,23,1,'Business'),
+(519,332,'RUB',13500.00,12,1,32,1,'First'),
+(520,335,'RUB',5500.00,120,1,23,0,'Economy'),
+(521,335,'RUB',11000.00,40,1,23,1,'Business'),
+(522,335,'RUB',16500.00,12,1,32,1,'First'),
+(523,338,'RUB',5500.00,120,1,23,0,'Economy'),
+(524,338,'RUB',11000.00,40,1,23,1,'Business'),
+(525,338,'RUB',16500.00,12,1,32,1,'First'),
+(526,341,'RUB',5500.00,120,1,23,0,'Economy'),
+(527,341,'RUB',11000.00,40,1,23,1,'Business'),
+(528,341,'RUB',16500.00,12,1,32,1,'First'),
+(529,344,'RUB',5000.00,120,1,23,0,'Economy'),
+(530,344,'RUB',10000.00,40,1,23,1,'Business'),
+(531,344,'RUB',15000.00,12,1,32,1,'First'),
+(532,347,'RUB',5500.00,120,1,23,0,'Economy'),
+(533,347,'RUB',11000.00,40,1,23,1,'Business'),
+(534,347,'RUB',16500.00,12,1,32,1,'First'),
+(535,350,'RUB',3500.00,120,1,23,0,'Economy'),
+(536,350,'RUB',7000.00,40,1,23,1,'Business'),
+(537,350,'RUB',10500.00,12,1,32,1,'First'),
+(538,353,'RUB',5000.00,120,1,23,0,'Economy'),
+(539,353,'RUB',10000.00,40,1,23,1,'Business'),
+(540,353,'RUB',15000.00,12,1,32,1,'First'),
+(541,356,'RUB',4000.00,120,1,23,0,'Economy'),
+(542,356,'RUB',8000.00,40,1,23,1,'Business'),
+(543,356,'RUB',12000.00,12,1,32,1,'First'),
+(544,359,'RUB',3500.00,120,1,23,0,'Economy'),
+(545,359,'RUB',7000.00,40,1,23,1,'Business'),
+(546,359,'RUB',10500.00,12,1,32,1,'First'),
+(547,362,'RUB',6000.00,120,1,23,0,'Economy'),
+(548,362,'RUB',12000.00,40,1,23,1,'Business'),
+(549,362,'RUB',18000.00,12,1,32,1,'First'),
+(550,365,'RUB',6000.00,120,1,23,0,'Economy'),
+(551,365,'RUB',12000.00,40,1,23,1,'Business'),
+(552,365,'RUB',18000.00,12,1,32,1,'First'),
+(553,368,'RUB',5000.00,120,1,23,0,'Economy'),
+(554,368,'RUB',10000.00,40,1,23,1,'Business'),
+(555,368,'RUB',15000.00,12,1,32,1,'First'),
+(556,371,'RUB',3500.00,120,1,23,0,'Economy'),
+(557,371,'RUB',7000.00,40,1,23,1,'Business'),
+(558,371,'RUB',10500.00,12,1,32,1,'First'),
+(559,374,'RUB',3500.00,120,1,23,0,'Economy'),
+(560,374,'RUB',7000.00,40,1,23,1,'Business'),
+(561,374,'RUB',10500.00,12,1,32,1,'First'),
+(562,377,'RUB',4000.00,120,1,23,0,'Economy'),
+(563,377,'RUB',8000.00,40,1,23,1,'Business'),
+(564,377,'RUB',12000.00,12,1,32,1,'First'),
+(565,380,'RUB',4500.00,120,1,23,0,'Economy'),
+(566,380,'RUB',9000.00,40,1,23,1,'Business'),
+(567,380,'RUB',13500.00,12,1,32,1,'First'),
+(568,383,'RUB',5500.00,120,1,23,0,'Economy'),
+(569,383,'RUB',11000.00,40,1,23,1,'Business'),
+(570,383,'RUB',16500.00,12,1,32,1,'First'),
+(571,386,'RUB',5500.00,120,1,23,0,'Economy'),
+(572,386,'RUB',11000.00,40,1,23,1,'Business'),
+(573,386,'RUB',16500.00,12,1,32,1,'First'),
+(574,389,'RUB',5000.00,120,1,23,0,'Economy'),
+(575,389,'RUB',10000.00,40,1,23,1,'Business'),
+(576,389,'RUB',15000.00,12,1,32,1,'First'),
+(577,392,'RUB',6000.00,120,1,23,0,'Economy'),
+(578,392,'RUB',12000.00,40,1,23,1,'Business'),
+(579,392,'RUB',18000.00,12,1,32,1,'First'),
+(580,395,'RUB',5000.00,120,1,23,0,'Economy'),
+(581,395,'RUB',10000.00,40,1,23,1,'Business'),
+(582,395,'RUB',15000.00,12,1,32,1,'First'),
+(583,398,'RUB',3500.00,120,1,23,0,'Economy'),
+(584,398,'RUB',7000.00,40,1,23,1,'Business'),
+(585,398,'RUB',10500.00,12,1,32,1,'First'),
+(586,401,'RUB',3500.00,120,1,23,0,'Economy'),
+(587,401,'RUB',7000.00,40,1,23,1,'Business'),
+(588,401,'RUB',10500.00,12,1,32,1,'First'),
+(589,404,'RUB',3500.00,120,1,23,0,'Economy'),
+(590,404,'RUB',7000.00,40,1,23,1,'Business'),
+(591,404,'RUB',10500.00,12,1,32,1,'First'),
+(592,407,'RUB',4000.00,120,1,23,0,'Economy'),
+(593,407,'RUB',8000.00,40,1,23,1,'Business'),
+(594,407,'RUB',12000.00,12,1,32,1,'First'),
+(595,410,'RUB',4000.00,120,1,23,0,'Economy'),
+(596,410,'RUB',8000.00,40,1,23,1,'Business'),
+(597,410,'RUB',12000.00,12,1,32,1,'First'),
+(598,413,'RUB',5000.00,120,1,23,0,'Economy'),
+(599,413,'RUB',10000.00,40,1,23,1,'Business'),
+(600,413,'RUB',15000.00,12,1,32,1,'First'),
+(601,416,'RUB',6000.00,120,1,23,0,'Economy'),
+(602,416,'RUB',12000.00,40,1,23,1,'Business'),
+(603,416,'RUB',18000.00,12,1,32,1,'First'),
+(604,419,'RUB',5000.00,120,1,23,0,'Economy'),
+(605,419,'RUB',10000.00,40,1,23,1,'Business'),
+(606,419,'RUB',15000.00,12,1,32,1,'First'),
+(607,422,'RUB',4000.00,120,1,23,0,'Economy'),
+(608,422,'RUB',8000.00,40,1,23,1,'Business'),
+(609,422,'RUB',12000.00,12,1,32,1,'First'),
+(610,425,'RUB',3500.00,120,1,23,0,'Economy'),
+(611,425,'RUB',7000.00,40,1,23,1,'Business'),
+(612,425,'RUB',10500.00,12,1,32,1,'First'),
+(613,428,'RUB',3500.00,120,1,23,0,'Economy'),
+(614,428,'RUB',7000.00,40,1,23,1,'Business'),
+(615,428,'RUB',10500.00,12,1,32,1,'First'),
+(616,431,'RUB',4500.00,120,1,23,0,'Economy'),
+(617,431,'RUB',9000.00,40,1,23,1,'Business'),
+(618,431,'RUB',13500.00,12,1,32,1,'First'),
+(619,434,'RUB',5500.00,120,1,23,0,'Economy'),
+(620,434,'RUB',11000.00,40,1,23,1,'Business'),
+(621,434,'RUB',16500.00,12,1,32,1,'First'),
+(622,437,'RUB',6000.00,120,1,23,0,'Economy'),
+(623,437,'RUB',12000.00,40,1,23,1,'Business'),
+(624,437,'RUB',18000.00,12,1,32,1,'First'),
+(625,440,'RUB',4000.00,120,1,23,0,'Economy'),
+(626,440,'RUB',8000.00,40,1,23,1,'Business'),
+(627,440,'RUB',12000.00,12,1,32,1,'First'),
+(628,443,'RUB',3500.00,120,1,23,0,'Economy'),
+(629,443,'RUB',7000.00,40,1,23,1,'Business'),
+(630,443,'RUB',10500.00,12,1,32,1,'First')
+;
+ALTER TABLE `fares` AUTO_INCREMENT = 631;

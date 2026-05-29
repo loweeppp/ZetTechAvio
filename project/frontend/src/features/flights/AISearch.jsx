@@ -59,7 +59,6 @@ function parseLLMResponse(text) {
   return { from, to, date, passengers, reasoning };
 }
 
-const formatDate = (value) => (value ? String(value).split('-').reverse().join('.') : '');
 const prepareSearchValue = (field) => {
   if (!field) return '';
   if (typeof field === 'object') return field.query || field.name || field.code || '';
@@ -68,11 +67,12 @@ const prepareSearchValue = (field) => {
 
 const isRussianText = (text) => /[а-яА-ЯЁё]/.test(String(text || ''));
 
-const buildFallbackReasoning = ({ from, to, date, passengers, explicitPassengers }) => {
+const buildFallbackReasoning = ({ from, to, date, dateFrom, dateTo, passengers, explicitPassengers }) => {
   const parts = [];
   if (from) parts.push(`от ${from.name}`);
   if (to) parts.push(`в ${to.name}`);
   if (date) parts.push(`дата ${formatDate(date)}`);
+  else if (dateFrom && dateTo) parts.push(`с ${formatDate(dateFrom)} по ${formatDate(dateTo)}`);
   if (explicitPassengers || passengers > 1) {
     parts.push(`${passengers} пассажир${passengers === 1 ? '' : passengers < 5 ? 'а' : 'ов'}`);
   }
@@ -82,6 +82,18 @@ const buildFallbackReasoning = ({ from, to, date, passengers, explicitPassengers
   }
 
   return 'Распознан запрос. Уточните маршрут, дату или количество пассажиров.';
+};
+
+const formatDate = (value) => {
+  if (!value) return '';
+  const dateOnly = String(value).split('T')[0];
+  return dateOnly.split('-').reverse().join('.');
+};
+
+const extractDateOnly = (value) => {
+  if (!value) return '';
+  const dateOnly = String(value).split('T')[0];
+  return dateOnly;
 };
 
 export default function AISearch({ onSearch }) {
@@ -122,7 +134,7 @@ export default function AISearch({ onSearch }) {
       }
 
       const payload = await response.json();
-      const hasSearchValue = payload?.from || payload?.to || payload?.date;
+      const hasSearchValue = payload?.from || payload?.to || payload?.date || payload?.dateFrom || payload?.dateTo;
       if (!hasSearchValue) {
         throw new Error('ИИ не смог понять параметры поиска. Попробуйте переформулировать запрос.');
       }
@@ -131,7 +143,9 @@ export default function AISearch({ onSearch }) {
       const parsed = {
         from: payload?.from ? resolveCity(payload.from) : null,
         to: payload?.to ? resolveCity(payload.to) : null,
-        date: payload?.date || '',
+        date: payload?.date || payload?.dateFrom || payload?.dateTo || '',
+        dateFrom: payload?.dateFrom || '',
+        dateTo: payload?.dateTo || '',
         passengers: payload?.passengers || 1,
         showPassengers: explicitPassengers || (payload?.passengers || 1) > 1,
         reasoning: isRussianText(payload?.reasoning)
@@ -140,6 +154,8 @@ export default function AISearch({ onSearch }) {
               from: payload?.from ? resolveCity(payload.from) : null,
               to: payload?.to ? resolveCity(payload.to) : null,
               date: payload?.date || '',
+              dateFrom: payload?.dateFrom || '',
+              dateTo: payload?.dateTo || '',
               passengers: payload?.passengers || 1,
               explicitPassengers,
             }),
@@ -162,10 +178,12 @@ export default function AISearch({ onSearch }) {
               ),
             ).sort();
 
-            if (parsed.date && availableDates.length > 0 && !availableDates.includes(parsed.date)) {
+            const hasDateRange = !!(parsed.dateFrom && parsed.dateTo);
+            const parsedDate = extractDateOnly(parsed.date);
+            if (!hasDateRange && parsedDate && availableDates.length > 0 && !availableDates.includes(parsedDate)) {
               const dateList = availableDates.slice(0, 5).map(formatDate).join(', ');
               parsed.reasoning = `На эту дату нет рейсов, но есть на эти даты: ${dateList}`;
-            } else if (!parsed.date && availableDates.length > 0) {
+            } else if (!parsed.date && !hasDateRange && availableDates.length > 0) {
               const dateList = availableDates.slice(0, 5).map(formatDate).join(', ');
               parsed.reasoning = `Есть рейсы на маршруте ${parsed.from.name} → ${parsed.to.name}. Доступные даты: ${dateList}`;
             } else if (routeFlights.length === 0) {
@@ -286,6 +304,9 @@ export default function AISearch({ onSearch }) {
                 {result.from && result.to && <span className="homev2__aiArrow">→</span>}
                 {result.to && <Chip>{result.to.name}</Chip>}
                 {result.date && <Chip>{formatDate(result.date)}</Chip>}
+                {!result.date && result.dateFrom && result.dateTo && (
+                  <Chip>{`${formatDate(result.dateFrom)} — ${formatDate(result.dateTo)}`}</Chip>
+                )}
                 {result.showPassengers && <Chip>{result.passengers} пасс.</Chip>}
               </div>
               </div>
@@ -298,6 +319,8 @@ export default function AISearch({ onSearch }) {
                     from: result.from,
                     to: result.to,
                     date: result.date,
+                    dateFrom: result.dateFrom,
+                    dateTo: result.dateTo,
                     passengers: result.passengers,
                   })
                 }
