@@ -18,13 +18,27 @@ export default function Results({ query, onBack, onSearch }) {
   const [sort, setSort] = React.useState('cheapest');
   const [loading, setLoading] = React.useState(true);
   const [flights, setFlights] = React.useState([]);
-  const [priceBounds, setPriceBounds] = React.useState({ min: 3000, max: 9999 });
-  const [maxPrice, setMaxPrice] = React.useState(9999);
+  const [priceBounds, setPriceBounds] = React.useState({
+    min: query?.minPrice ?? 3000,
+    max: query?.maxPrice ?? 9999,
+  });
+  const [maxPrice, setMaxPrice] = React.useState(query?.maxPrice ?? query?.minPrice ?? 9999);
   const [durationBounds, setDurationBounds] = React.useState({ min: 60, max: 720 });
   const [maxDuration, setMaxDuration] = React.useState(720);
+
+  React.useEffect(() => {
+    setMaxPrice((current) => {
+      const clamped = Math.min(Math.max(current, priceBounds.min), priceBounds.max);
+      return clamped;
+    });
+  }, [priceBounds]);
   const [baggageOnly, setBaggageOnly] = React.useState(false);
-  const [departureFrom, setDepartureFrom] = React.useState('');
-  const [departureTo, setDepartureTo] = React.useState('');
+  const [departureFrom, setDepartureFrom] = React.useState(
+    query?.dateFrom ?? query?.date ?? '',
+  );
+  const [departureTo, setDepartureTo] = React.useState(
+    query?.dateTo ?? query?.date ?? '',
+  );
   const [error, setError] = React.useState(null);
   const [selectedFlight, setSelectedFlight] = React.useState(null);
   const [isBookingOpen, setIsBookingOpen] = React.useState(false);
@@ -66,15 +80,17 @@ export default function Results({ query, onBack, onSearch }) {
           const durations = flightsData.map((flight) => flight.durationMinutes);
           const minPrice = Math.min(...prices);
           const maxPriceValue = Math.max(...prices);
-          const minDuration = Math.min(...durations);
+          const minDurationValue = Math.min(...durations);
           const maxDurationValue = Math.max(...durations);
-          setPriceBounds({ min: minPrice, max: maxPriceValue });
-          setMaxPrice(maxPriceValue);
-          setDurationBounds({ min: Math.max(30, minDuration), max: maxDurationValue });
-          setMaxDuration(maxDurationValue);
+          const boundsMin = query?.minPrice != null ? query.minPrice : minPrice;
+          const boundsMax = query?.maxPrice != null ? query.maxPrice : maxPriceValue;
+          setPriceBounds({ min: boundsMin, max: boundsMax });
+          setMaxPrice(query?.maxPrice ?? maxPriceValue);
+          setDurationBounds({ min: query?.minDuration != null ? query.minDuration : Math.max(30, minDurationValue), max: query?.maxDuration != null ? query.maxDuration : maxDurationValue });
+          setMaxDuration(query?.maxDuration ?? maxDurationValue);
         } else {
-          setPriceBounds({ min: 50, max: 1500 });
-          setMaxPrice(1500);
+          setPriceBounds({ min: query?.minPrice ?? 50, max: query?.maxPrice ?? 1500 });
+          setMaxPrice(query?.maxPrice ?? 1500);
           setDurationBounds({ min: 60, max: 720 });
           setMaxDuration(720);
         }
@@ -111,7 +127,7 @@ export default function Results({ query, onBack, onSearch }) {
     return flights.filter((flight) => {
       const status = String(flight.status || flight.Status || '').toLowerCase();
       const statusOk = status !== 'cancelled' && status !== 'completed';
-      const priceOk = flight.minPrice <= maxPrice;
+      const priceOk = flight.minPrice >= priceBounds.min && flight.minPrice <= maxPrice;
       const durationOk = flight.durationMinutes <= maxDuration;
       const baggageOk =
         !baggageOnly ||
@@ -122,7 +138,7 @@ export default function Results({ query, onBack, onSearch }) {
         (!toDate || departureDate <= toDate);
       return statusOk && priceOk && durationOk && baggageOk && dateOk;
     });
-  }, [flights, maxPrice, maxDuration, baggageOnly, departureFrom, departureTo]);
+  }, [flights, maxPrice, maxDuration, baggageOnly, departureFrom, departureTo, priceBounds.min]);
 
   const sortedFlights = React.useMemo(() => {
     if (sort === 'fastest') {

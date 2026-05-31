@@ -1,7 +1,7 @@
 import React from 'react';
 import { Sparkles, ArrowRight, Loader2, RotateCcw } from 'lucide-react';
 
-import { CITIES, resolveCity } from './cities';
+import { resolveCity } from './cities';
 
 const API_URL = process.env.REACT_APP_API_URL || 'https://api.zettechavio.ru';
 
@@ -11,53 +11,6 @@ const EXAMPLES = [
   'Романтическая поездка в Париж на выходные',
   'Из Петербурга в Бангкок на двоих, начало мая',
 ];
-
-function parseLLMResponse(text) {
-  const lower = String(text ?? '').toLowerCase();
-
-  let from = CITIES.find((c) => c.code === 'MOW');
-  if (lower.includes('петербург') || lower.includes('спб') || lower.includes('led')) {
-    from = CITIES.find((c) => c.code === 'LED');
-  } else if (lower.includes('казань')) {
-    from = CITIES.find((c) => c.code === 'KZN');
-  } else if (lower.includes('сочи')) {
-    from = CITIES.find((c) => c.code === 'AER');
-  }
-
-  let to = CITIES.find((c) => c.code === 'IST');
-  if (lower.includes('дубай') || lower.includes('dubai') || lower.includes('дxб')) {
-    to = CITIES.find((c) => c.code === 'DXB');
-  } else if (lower.includes('париж') || lower.includes('paris')) {
-    to = CITIES.find((c) => c.code === 'PAR');
-  } else if (lower.includes('бангкок') || lower.includes('таиланд') || lower.includes('тайланд')) {
-    to = CITIES.find((c) => c.code === 'BKK');
-  } else if (lower.includes('лондон') || lower.includes('london')) {
-    to = CITIES.find((c) => c.code === 'LON');
-  } else if (lower.includes('нью-йорк') || lower.includes('нью йорк') || lower.includes('new york')) {
-    to = CITIES.find((c) => c.code === 'NYC');
-  } else if (lower.includes('стамбул') || lower.includes('istanbul')) {
-    to = CITIES.find((c) => c.code === 'IST');
-  }
-
-  let passengers = 1;
-  const passMatch = lower.match(/(\d+)\s*(чел|пасс|человек|пассажир)/);
-  if (passMatch) passengers = Math.min(9, parseInt(passMatch[1], 10));
-  else if (lower.includes('двоих') || lower.includes('двух') || lower.includes('вдвоём') || lower.includes('на двоих')) passengers = 2;
-  else if (lower.includes('троих') || lower.includes('трёх') || lower.includes('на троих')) passengers = 3;
-
-  let date = '2026-05-01';
-  if (lower.includes('апрел')) date = '2026-04-28';
-  else if (lower.includes('июн')) date = '2026-06-01';
-  else if (lower.includes('июл')) date = '2026-07-01';
-  else if (lower.includes('август')) date = '2026-08-01';
-
-  const reasoning = `Определил маршрут ${from.name} → ${to.name}, ${passengers} пасс., дата — ${date
-    .split('-')
-    .reverse()
-    .join('.')}`;
-
-  return { from, to, date, passengers, reasoning };
-}
 
 const prepareSearchValue = (field) => {
   if (!field) return '';
@@ -147,6 +100,8 @@ export default function AISearch({ onSearch }) {
         dateFrom: payload?.dateFrom || '',
         dateTo: payload?.dateTo || '',
         passengers: payload?.passengers || 1,
+        minPrice: payload?.minPrice != null ? Number(payload.minPrice) : undefined,
+        maxPrice: payload?.maxPrice != null ? Number(payload.maxPrice) : undefined,
         showPassengers: explicitPassengers || (payload?.passengers || 1) > 1,
         reasoning: isRussianText(payload?.reasoning)
           ? payload.reasoning
@@ -307,6 +262,9 @@ export default function AISearch({ onSearch }) {
                 {!result.date && result.dateFrom && result.dateTo && (
                   <Chip>{`${formatDate(result.dateFrom)} — ${formatDate(result.dateTo)}`}</Chip>
                 )}
+                {result.minPrice != null && result.maxPrice != null && (
+                  <Chip>{`от ${result.minPrice} до ${result.maxPrice} ₽`}</Chip>
+                )}
                 {result.showPassengers && <Chip>{result.passengers} пасс.</Chip>}
               </div>
               </div>
@@ -322,6 +280,8 @@ export default function AISearch({ onSearch }) {
                     dateFrom: result.dateFrom,
                     dateTo: result.dateTo,
                     passengers: result.passengers,
+                    minPrice: result.minPrice,
+                    maxPrice: result.maxPrice,
                   })
                 }
               >
