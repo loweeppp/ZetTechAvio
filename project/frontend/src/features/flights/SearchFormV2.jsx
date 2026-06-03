@@ -106,8 +106,8 @@ function CityInput({ label, value, onChange, placeholder, items = CITIES }) {
 
 export default function SearchFormV2({ onSearch }) {
   const { t } = useTranslation();
-  const [from, setFrom] = React.useState(CITIES[0]);
-  const [to, setTo] = React.useState(CITIES[4]);
+  const [from, setFrom] = React.useState(null);
+  const [to, setTo] = React.useState(null);
   const [date, setDate] = React.useState('');
   const [passengers, setPassengers] = React.useState(1);
   const [swapping, setSwapping] = React.useState(false);
@@ -274,10 +274,6 @@ export default function SearchFormV2({ onSearch }) {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!from && !to && !date) {
-      setError(t('searchForm.errorMissingRoute'));
-      return;
-    }
     setError('');
     onSearch?.({ from, to, date, passengers });
   };

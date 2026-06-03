@@ -8,6 +8,8 @@ namespace ZetTechAvio1._0.Controllers
     [Route("api/[controller]")]
     public class AiController : ControllerBase
     {
+        private const int MaxParseRequestLength = 500;
+
         private readonly ILLMService _llmService;
         private readonly ILogger<AiController> _logger;
 
@@ -23,10 +25,17 @@ namespace ZetTechAvio1._0.Controllers
             if (request == null || string.IsNullOrWhiteSpace(request.Text))
                 return BadRequest(new { message = "Поле text обязательно." });
 
+            if (request.Text.Length > MaxParseRequestLength)
+                return BadRequest(new { message = $"Максимальная длина запроса {MaxParseRequestLength} символов." });
+
             try
             {
                 var result = await _llmService.ParseFlightSearchAsync(request.Text);
                 return Ok(result);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { message = ex.Message });
             }
             catch (Exception ex)
             {

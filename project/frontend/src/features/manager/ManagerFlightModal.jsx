@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { PlaneTakeoff, Plane, PlaneLanding, Clock, Info, ArrowRight } from 'lucide-react';
 import '../admin/admin-panel.css';
 
 const statusOptions = [
@@ -35,6 +36,16 @@ const emptyFlightForm = {
   durationMinutes: '',
   status: 'Scheduled'
 };
+
+function SectionHeader({ icon, label }) {
+  return (
+    <div className="flight-section-header">
+      <span className="flight-section-header__icon">{icon}</span>
+      <span className="flight-section-header__text">{label}</span>
+      <div className="flight-section-header__divider" />
+    </div>
+  );
+}
 
 export default function ManagerFlightModal({ isOpen, onClose, flight, onSave, airlines = [], aircrafts = [], airports = [] }) {
   const [formState, setFormState] = useState(emptyFlightForm);
@@ -138,8 +149,6 @@ export default function ManagerFlightModal({ isOpen, onClose, flight, onSave, ai
       return 'Аэропорт вылета и прибытия не могут находиться в одном городе.';
     }
 
-    const selectedAirline = airlines.find((airline) => String(airline.id) === String(formState.airlineId));
-
     if (departureDateOnly === arrivalDateOnly && arrival <= departure) {
       return 'Прилет на той же календарной дате должен быть позже времени вылета.';
     }
@@ -191,144 +200,175 @@ export default function ManagerFlightModal({ isOpen, onClose, flight, onSave, ai
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="admin-modal__box" onClick={(event) => event.stopPropagation()}>
+      <div className="manager-modal__box flight-edit-modal" onClick={(event) => event.stopPropagation()}>
         <div className="modal-header">
-          <h2>{flight ? `Редактировать рейс #${flight.id}` : 'Новый рейс'}</h2>
-          <button type="button" className="modal-close-btn" onClick={onClose}>
-            ✕
+          <div>
+            <h2>{flight ? `Редактировать рейс #${flight.id}` : 'Новый рейс'}</h2>
+            <p className="flight-edit-modal__subtitle">Создайте или отредактируйте сведения о рейсе</p>
+          </div>
+          <button type="button" className="modal-close-btn" onClick={onClose} aria-label="Закрыть">
+            ×
           </button>
         </div>
 
         <form className="admin-modal__form" onSubmit={handleSubmit}>
-          <div className="floating-input-wrapper">
-            <input
-              id="flight-number"
-              type="text"
-              value={formState.flightNumber}
-              onChange={(e) => handleChange('flightNumber', e.target.value)}
-              placeholder=" "
-            />
-            <label htmlFor="flight-number" className="floating-label">Номер рейса</label>
+          <div className="flight-edit-modal__section">
+            <SectionHeader icon={<Info />} label="Основная информация" />
+            <div className="flight-edit-modal__grid-3">
+              <div className="floating-input-wrapper">
+                <input
+                  id="flight-number"
+                  type="text"
+                  value={formState.flightNumber}
+                  onChange={(e) => handleChange('flightNumber', e.target.value)}
+                  placeholder=" "
+                />
+                <label htmlFor="flight-number" className="floating-label">Номер рейса</label>
+              </div>
+
+              <div className="admin-modal__select-wrapper">
+                <label htmlFor="airline-id">Авиакомпания</label>
+                {fixedAirline ? (
+                  <>
+                    <input type="hidden" id="airline-id" value={formState.airlineId} />
+                    <div className="admin-modal__fixed-value">
+                      {fixedAirline.name} ({fixedAirline.iataCode})
+                    </div>
+                  </>
+                ) : (
+                  <select
+                    id="airline-id"
+                    value={formState.airlineId}
+                    onChange={(e) => handleChange('airlineId', e.target.value)}
+                    required
+                  >
+                    <option value="">Выберите авиакомпанию</option>
+                    {airlines.map((airline) => (
+                      <option key={airline.id} value={airline.id}>
+                        {airline.name} ({airline.iataCode})
+                      </option>
+                    ))}
+                  </select>
+                )}
+              </div>
+
+              <div className="admin-modal__select-wrapper">
+                <label htmlFor="aircraft-id">Самолёт</label>
+                <select
+                  id="aircraft-id"
+                  value={formState.aircraftId}
+                  onChange={(e) => handleChange('aircraftId', e.target.value)}
+                  required
+                >
+                  <option value="">Выберите самолёт</option>
+                  {aircrafts.map((aircraft) => (
+                    <option key={aircraft.id} value={aircraft.id}>
+                      {aircraft.manufacturer} {aircraft.model}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
           </div>
 
-          <div className="admin-modal__select-wrapper">
-            <label htmlFor="airline-id">Авиакомпания</label>
-            {fixedAirline ? (
-              <>
-                <input type="hidden" id="airline-id" value={formState.airlineId} />
-                <div className="admin-modal__fixed-value">
-                  {fixedAirline.name} ({fixedAirline.iataCode})
+          <div className="flight-edit-modal__section">
+            <SectionHeader icon={<Plane />} label="Маршрут" />
+            <div className="flight-edit-modal__route-grid">
+              <div className="admin-modal__select-wrapper">
+                <label htmlFor="origin-airport-id">Аэропорт отправления</label>
+                <select
+                  id="origin-airport-id"
+                  value={formState.originAirportId}
+                  onChange={(e) => handleChange('originAirportId', e.target.value)}
+                  required
+                >
+                  <option value="">Выберите аэропорт отправления</option>
+                  {airports.map((airport) => (
+                    <option key={airport.id} value={airport.id}>
+                      {airport.iata} — {airport.city}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="flight-route-preview">
+                <div className="flight-route-preview__top">
+                  <span>{originAirport?.iata || '---'}</span>
+                  <ArrowRight className="flight-route-preview__arrow" />
+                  <span>{destAirport?.iata || '---'}</span>
                 </div>
-              </>
-            ) : (
-              <select
-                id="airline-id"
-                value={formState.airlineId}
-                onChange={(e) => handleChange('airlineId', e.target.value)}
-                required
-              >
-                <option value="">Выберите авиакомпанию</option>
-                {airlines.map((airline) => (
-                  <option key={airline.id} value={airline.id}>
-                    {airline.name} ({airline.iataCode})
-                  </option>
-                ))}
-              </select>
-            )}
+                <div className="flight-route-preview__icons">
+                  <PlaneTakeoff />
+                  <Plane className="flight-route-preview__plane" />
+                  <PlaneLanding />
+                </div>
+              </div>
+
+              <div className="admin-modal__select-wrapper">
+                <label htmlFor="dest-airport-id">Аэропорт прибытия</label>
+                <select
+                  id="dest-airport-id"
+                  value={formState.destAirportId}
+                  onChange={(e) => handleChange('destAirportId', e.target.value)}
+                  required
+                >
+                  <option value="">Выберите аэропорт прибытия</option>
+                  {airports.map((airport) => (
+                    <option key={airport.id} value={airport.id}>
+                      {airport.iata} — {airport.city}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
           </div>
 
-          <div className="admin-modal__select-wrapper">
-            <label htmlFor="aircraft-id">Самолёт</label>
-            <select
-              id="aircraft-id"
-              value={formState.aircraftId}
-              onChange={(e) => handleChange('aircraftId', e.target.value)}
-              required
-            >
-              <option value="">Выберите самолёт</option>
-              {aircrafts.map((aircraft) => (
-                <option key={aircraft.id} value={aircraft.id}>
-                  {aircraft.manufacturer} {aircraft.model}
-                </option>
-              ))}
-            </select>
-          </div>
+          <div className="flight-edit-modal__section">
+            <SectionHeader icon={<Clock />} label="Расписание" />
+            <div className="flight-edit-modal__grid-3">
+              <div className="floating-input-wrapper">
+                <input
+                  id="departure-dt"
+                  type="datetime-local"
+                  value={formState.departureDt}
+                  onChange={(e) => handleChange('departureDt', e.target.value)}
+                  placeholder=" "
+                  required
+                  min={localMinDepartureValue}
+                  max={localMaxDepartureValue}
+                />
+                <label htmlFor="departure-dt" className="floating-label">Дата и время вылета</label>
+              </div>
 
-          <div className="admin-modal__select-wrapper">
-            <label htmlFor="origin-airport-id">Аэропорт отправления</label>
-            <select
-              id="origin-airport-id"
-              value={formState.originAirportId}
-              onChange={(e) => handleChange('originAirportId', e.target.value)}
-              required
-            >
-              <option value="">Выберите аэропорт отправления</option>
-              {airports.map((airport) => (
-                <option key={airport.id} value={airport.id}>
-                  {airport.iata} — {airport.city}
-                </option>
-              ))}
-            </select>
-          </div>
+              <div className="floating-input-wrapper">
+                <input
+                  id="arrival-dt"
+                  type="datetime-local"
+                  value={formState.arrivalDt}
+                  onChange={(e) => handleChange('arrivalDt', e.target.value)}
+                  onBlur={calculateDuration}
+                  placeholder=" "
+                  required
+                  min={formState.departureDt || localMinDepartureValue}
+                  max={localMaxArrivalValue}
+                />
+                <label htmlFor="arrival-dt" className="floating-label">Дата и время прилёта</label>
+              </div>
 
-          <div className="admin-modal__select-wrapper">
-            <label htmlFor="dest-airport-id">Аэропорт прибытия</label>
-            <select
-              id="dest-airport-id"
-              value={formState.destAirportId}
-              onChange={(e) => handleChange('destAirportId', e.target.value)}
-              required
-            >
-              <option value="">Выберите аэропорт прибытия</option>
-              {airports.map((airport) => (
-                <option key={airport.id} value={airport.id}>
-                  {airport.iata} — {airport.city}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="floating-input-wrapper">
-            <input
-              id="departure-dt"
-              type="datetime-local"
-              value={formState.departureDt}
-              onChange={(e) => handleChange('departureDt', e.target.value)}
-              placeholder=" "
-              required
-              min={localMinDepartureValue}
-              max={localMaxDepartureValue}
-            />
-            <label htmlFor="departure-dt" className="floating-label">Дата и время вылета</label>
-          </div>
-
-          <div className="floating-input-wrapper">
-            <input
-              id="arrival-dt"
-              type="datetime-local"
-              value={formState.arrivalDt}
-              onChange={(e) => handleChange('arrivalDt', e.target.value)}
-              onBlur={calculateDuration}
-              placeholder=" "
-              required
-              min={formState.departureDt || localMinDepartureValue}
-              max={localMaxArrivalValue}
-            />
-            <label htmlFor="arrival-dt" className="floating-label">Дата и время прилёта</label>
-          </div>
-
-          <div className="floating-input-wrapper">
-            <input
-              id="duration-minutes"
-              type="number"
-              value={formState.durationMinutes}
-              onChange={(e) => handleChange('durationMinutes', e.target.value)}
-              placeholder=" "
-              required
-              min="1"
-              max={MAX_FLIGHT_DURATION_MINUTES}
-            />
-            <label htmlFor="duration-minutes" className="floating-label">Продолжительность (мин)</label>
+              <div className="floating-input-wrapper">
+                <input
+                  id="duration-minutes"
+                  type="number"
+                  value={formState.durationMinutes}
+                  onChange={(e) => handleChange('durationMinutes', e.target.value)}
+                  placeholder=" "
+                  required
+                  min="1"
+                  max={MAX_FLIGHT_DURATION_MINUTES}
+                />
+                <label htmlFor="duration-minutes" className="floating-label">Продолжительность (мин)</label>
+              </div>
+            </div>
           </div>
 
           {flight && (
@@ -353,8 +393,8 @@ export default function ManagerFlightModal({ isOpen, onClose, flight, onSave, ai
           )}
 
           <div className="admin-modal__actions">
-            <button type="submit" className="btn btn-submit">Сохранить</button>
             <button type="button" className="btn btn-secondary" onClick={onClose}>Отмена</button>
+            <button type="submit" className="btn btn-submit">Сохранить</button>
           </div>
         </form>
       </div>
