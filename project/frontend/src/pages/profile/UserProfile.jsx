@@ -255,7 +255,7 @@ export default function UserProfile() {
                         <div className="security-list">
                             <button className="security-action" onClick={() => setIsProfileModalOpen(true)}>
                                 <span className="security-action-icon"></span>
-                                Изменить пароль
+                                Изменить данные
                             </button>
                             <button className="security-action">
                                 <span className="security-action-icon"></span>

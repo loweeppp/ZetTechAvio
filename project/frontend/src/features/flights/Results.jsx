@@ -64,7 +64,9 @@ export default function Results({ query, onBack, onSearch }) {
 
         if (fromValue) params.append('from', fromValue);
         if (toValue) params.append('to', toValue);
-        if (query.date) params.append('date', query.date);
+        if (query.date && !query.dateFrom && !query.dateTo) {
+          params.append('date', query.date);
+        }
 
         const response = await fetch(`${API_URL}/api/flights/search?${params.toString()}`);
         if (!response.ok) {

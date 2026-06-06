@@ -96,7 +96,7 @@ export default function AISearch({ onSearch }) {
       const parsed = {
         from: payload?.from ? resolveCity(payload.from) : null,
         to: payload?.to ? resolveCity(payload.to) : null,
-        date: payload?.date || payload?.dateFrom || payload?.dateTo || '',
+        date: payload?.date || '',
         dateFrom: payload?.dateFrom || '',
         dateTo: payload?.dateTo || '',
         passengers: payload?.passengers || 1,

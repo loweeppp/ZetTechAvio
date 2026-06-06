@@ -14,13 +14,26 @@ export const CITIES = [
 export function resolveCity(value) {
   if (!value) return null;
   const normalized = String(value).trim();
-  const byCode = CITIES.find((c) => c.code === normalized.toUpperCase());
+  const normalizedUpper = normalized.toUpperCase();
+  const normalizedLower = normalized.toLowerCase();
+
+  const byCode = CITIES.find((c) => c.code === normalizedUpper);
   if (byCode) return byCode;
+
+  const byAirport = CITIES.find((c) =>
+    (c.airport || '')
+      .split('/')
+      .map((code) => code.trim().toUpperCase())
+      .includes(normalizedUpper),
+  );
+  if (byAirport) return byAirport;
+
   const byName = CITIES.find(
     (c) =>
-      c.name.toLowerCase() === normalized.toLowerCase() ||
-      (c.query || '').toLowerCase() === normalized.toLowerCase(),
+      c.name.toLowerCase() === normalizedLower ||
+      (c.query || '').toLowerCase() === normalizedLower,
   );
   if (byName) return byName;
-  return { code: normalized.toUpperCase(), name: normalized, airport: normalized, query: normalized };
+
+  return { code: normalizedUpper, name: normalized, airport: normalized, query: normalized };
 }

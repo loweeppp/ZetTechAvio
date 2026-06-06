@@ -77,6 +77,10 @@ namespace ZetTechAvio1._0.Services
         {
             try
             {
+                var airports = await _dbContext.Airports.ToListAsync();
+                var fromAirportCodes = GetAirportCodesForCityGroup(from, airports);
+                var toAirportCodes = GetAirportCodesForCityGroup(to, airports);
+
                 IQueryable<Flight> query = _dbContext.Flights
                     .Include(f => f.OriginAirport)
                     .Include(f => f.DestAirport)
@@ -85,16 +89,32 @@ namespace ZetTechAvio1._0.Services
                 // Filter BEFORE ToListAsync (on database, not in memory!)
                 if (!string.IsNullOrEmpty(from))
                 {
-                    query = query.Where(f =>
-                        f.OriginAirport.Iata.ToLower().Contains(from.ToLower()) ||
-                        f.OriginAirport.City.ToLower().Contains(from.ToLower()));
+                    if (fromAirportCodes.Count > 1)
+                    {
+                        query = query.Where(f => fromAirportCodes.Contains(f.OriginAirport.Iata));
+                    }
+                    else
+                    {
+                        var fromLower = from.ToLower();
+                        query = query.Where(f =>
+                            f.OriginAirport.Iata.ToLower().Contains(fromLower) ||
+                            f.OriginAirport.City.ToLower().Contains(fromLower));
+                    }
                 }
 
                 if (!string.IsNullOrEmpty(to))
                 {
-                    query = query.Where(f =>
-                        f.DestAirport.Iata.ToLower().Contains(to.ToLower()) ||
-                        f.DestAirport.City.ToLower().Contains(to.ToLower()));
+                    if (toAirportCodes.Count > 1)
+                    {
+                        query = query.Where(f => toAirportCodes.Contains(f.DestAirport.Iata));
+                    }
+                    else
+                    {
+                        var toLower = to.ToLower();
+                        query = query.Where(f =>
+                            f.DestAirport.Iata.ToLower().Contains(toLower) ||
+                            f.DestAirport.City.ToLower().Contains(toLower));
+                    }
                 }
 
                 if (!string.IsNullOrEmpty(date) && DateTime.TryParse(date, out var parsedDate))
@@ -113,6 +133,38 @@ namespace ZetTechAvio1._0.Services
                 Console.WriteLine($"SearchFlightsAsync error: {ex.Message}");
                 return new List<FlightDto>();
             }
+        }
+
+        private static IReadOnlyCollection<string> GetAirportCodesForCityGroup(string? input, IEnumerable<Airport> airports)
+        {
+            if (string.IsNullOrWhiteSpace(input))
+                return Array.Empty<string>();
+
+            var normalizedInput = NormalizeAirportCode(input);
+            if (normalizedInput == null)
+                return Array.Empty<string>();
+
+            var exactAirport = airports.FirstOrDefault(a => string.Equals(a.Iata, normalizedInput, StringComparison.OrdinalIgnoreCase));
+            if (exactAirport == null)
+                return new[] { normalizedInput };
+
+            var sameCityCodes = airports
+                .Where(a => !string.IsNullOrWhiteSpace(a.City) && string.Equals(a.City, exactAirport.City, StringComparison.OrdinalIgnoreCase))
+                .Select(a => NormalizeAirportCode(a.Iata))
+                .Where(code => code != null)
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToList();
+
+            return sameCityCodes.Count > 1 ? sameCityCodes : new[] { normalizedInput };
+        }
+
+        private static string? NormalizeAirportCode(string? code)
+        {
+            if (string.IsNullOrWhiteSpace(code))
+                return null;
+
+            var trimmed = code.Trim();
+            return trimmed.Length == 3 ? trimmed.ToUpperInvariant() : null;
         }
 
         public async Task<List<Airport>> GetAirportsAsync()
