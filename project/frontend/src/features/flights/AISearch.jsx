@@ -1,7 +1,48 @@
 import React from 'react';
-import { Sparkles, ArrowRight, Loader2, RotateCcw } from 'lucide-react';
+import { Sparkles, ArrowRight, Loader2, RotateCcw, Mic, MicOff } from 'lucide-react';
 
 import { resolveCity } from './cities';
+
+function audioBufferToWav(buffer) {
+  const numChannels = 1;
+  const sampleRate = buffer.sampleRate;
+  const samples = buffer.getChannelData(0);
+  const pcm = new Int16Array(samples.length);
+
+  for (let i = 0; i < samples.length; i++) {
+    const s = Math.max(-1, Math.min(1, samples[i]));
+    pcm[i] = s < 0 ? s * 0x8000 : s * 0x7fff;
+  }
+
+  const dataLength = pcm.length * 2;
+  const wavBuffer = new ArrayBuffer(44 + dataLength);
+  const view = new DataView(wavBuffer);
+
+  const write = (offset, str) => {
+    for (let i = 0; i < str.length; i++) {
+      view.setUint8(offset + i, str.charCodeAt(i));
+    }
+  };
+
+  write(0, 'RIFF');
+  view.setUint32(4, 36 + dataLength, true);
+  write(8, 'WAVE');
+  write(12, 'fmt ');
+  view.setUint32(16, 16, true);
+  view.setUint16(20, 1, true);
+  view.setUint16(22, numChannels, true);
+  view.setUint32(24, sampleRate, true);
+  view.setUint32(28, sampleRate * 2, true);
+  view.setUint16(32, 2, true);
+  view.setUint16(34, 16, true);
+  write(36, 'data');
+  view.setUint32(40, dataLength, true);
+
+  const wavPcm = new Int16Array(wavBuffer, 44);
+  wavPcm.set(pcm);
+
+  return new Blob([wavBuffer], { type: 'audio/wav' });
+}
 
 const API_URL = process.env.REACT_APP_API_URL || 'https://api.zettechavio.ru';
 
@@ -55,6 +96,15 @@ export default function AISearch({ onSearch }) {
   const [result, setResult] = React.useState(null);
   const [error, setError] = React.useState('');
   const [exampleIdx, setExampleIdx] = React.useState(0);
+  const [listening, setListening] = React.useState(false);
+  const mediaRecorderRef = React.useRef(null);
+  const chunksRef = React.useRef([]);
+  const audioContextRef = React.useRef(null);
+  const analyserRef = React.useRef(null);
+  const vadIntervalRef = React.useRef(null);
+  const silenceStartRef = React.useRef(null);
+  const voiceDetectedRef = React.useRef(false);
+  const stopTimeoutRef = React.useRef(null);
   const textareaRef = React.useRef(null);
 
   React.useEffect(() => {
@@ -160,6 +210,138 @@ export default function AISearch({ onSearch }) {
     }
   };
 
+  const handleVoice = async () => {
+    if (listening) {
+      mediaRecorderRef.current?.stop();
+      return;
+    }
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const recorder = new MediaRecorder(stream);
+      chunksRef.current = [];
+      mediaRecorderRef.current = recorder;
+
+      recorder.ondataavailable = (e) => {
+        if (e.data.size > 0) chunksRef.current.push(e.data);
+      };
+
+      const cleanupVad = () => {
+        if (vadIntervalRef.current) {
+          window.clearInterval(vadIntervalRef.current);
+          vadIntervalRef.current = null;
+        }
+
+        if (audioContextRef.current) {
+          audioContextRef.current.close().catch(() => null);
+          audioContextRef.current = null;
+        }
+
+        analyserRef.current = null;
+        silenceStartRef.current = null;
+        voiceDetectedRef.current = false;
+      };
+
+      const stopRecording = () => {
+        if (mediaRecorderRef.current?.state === 'recording') {
+          mediaRecorderRef.current.stop();
+        }
+
+        if (stopTimeoutRef.current) {
+          window.clearTimeout(stopTimeoutRef.current);
+          stopTimeoutRef.current = null;
+        }
+
+        cleanupVad();
+      };
+
+      const startVad = () => {
+        try {
+          const audioCtx = new AudioContext();
+          const source = audioCtx.createMediaStreamSource(stream);
+          const analyser = audioCtx.createAnalyser();
+          analyser.fftSize = 512;
+          source.connect(analyser);
+
+          audioContextRef.current = audioCtx;
+          analyserRef.current = analyser;
+
+          const dataArray = new Float32Array(analyser.fftSize);
+          const threshold = 0.013;
+          const silenceTimeoutMs = 5000;
+          const vadIntervalMs = 150;
+
+          vadIntervalRef.current = window.setInterval(() => {
+            analyser.getFloatTimeDomainData(dataArray);
+            let sum = 0;
+            for (let i = 0; i < dataArray.length; i += 1) {
+              sum += dataArray[i] * dataArray[i];
+            }
+            const rms = Math.sqrt(sum / dataArray.length);
+
+            if (rms > threshold) {
+              voiceDetectedRef.current = true;
+              silenceStartRef.current = null;
+            } else if (voiceDetectedRef.current) {
+              if (silenceStartRef.current === null) {
+                silenceStartRef.current = Date.now();
+              } else if (Date.now() - silenceStartRef.current >= silenceTimeoutMs) {
+                stopRecording();
+              }
+            }
+          }, vadIntervalMs);
+        } catch (vadError) {
+          console.warn('VAD start failed', vadError);
+        }
+      };
+
+      recorder.onstop = async () => {
+        cleanupVad();
+        stream.getTracks().forEach((t) => t.stop());
+        setListening(false);
+        setLoading(true);
+        setError('');
+
+        try {
+          const blob = new Blob(chunksRef.current, { type: 'audio/webm' });
+          const arrayBuffer = await blob.arrayBuffer();
+          const audioCtx = new AudioContext({ sampleRate: 16000 });
+          const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
+          await audioCtx.close();
+
+          const wavBlob = audioBufferToWav(audioBuffer);
+          const form = new FormData();
+          form.append('audio', wavBlob, 'voice.wav');
+
+          const res = await fetch(`${API_URL}/api/ai/transcribe`, {
+            method: 'POST',
+            body: form,
+          });
+
+          if (!res.ok) throw new Error('Ошибка транскрипции');
+          const data = await res.json();
+
+          if (!data.text) throw new Error('Не удалось распознать речь');
+          setQuery(data.text);
+        } catch (err) {
+          setError(err instanceof Error ? err.message : 'Ошибка транскрипции');
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      recorder.start();
+      setListening(true);
+      startVad();
+
+      stopTimeoutRef.current = window.setTimeout(() => {
+        stopRecording();
+      }, 30000);
+    } catch (err) {
+      setError('Нет доступа к микрофону');
+    }
+  };
+
   const handleReset = () => {
     setQuery('');
     setResult(null);
@@ -216,6 +398,15 @@ export default function AISearch({ onSearch }) {
             </div>
 
             <div className="homev2__aiActions">
+              <button
+                type="button"
+                onClick={handleVoice}
+                className={`homev2__aiReset ${listening ? 'homev2__aiReset--listening' : ''}`}
+                title={listening ? 'Остановить запись' : 'Голосовой ввод'}
+              >
+                {listening ? <MicOff className="homev2__aiResetIcon" /> : <Mic className="homev2__aiResetIcon" />}
+              </button>
+
               {result && (
                 <button
                   type="button"

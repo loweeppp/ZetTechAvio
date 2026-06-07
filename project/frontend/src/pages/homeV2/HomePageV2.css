@@ -813,6 +813,26 @@
   color: #64748b;
 }
 
+.homev2__aiMic {
+  width: 36px;
+  height: 36px;
+  border-radius: 14px;
+  border: 1px solid rgba(226, 232, 240, 1);
+  background: #fff;
+  color: #64748b;
+  cursor: pointer;
+}
+
+.homev2__aiReset--listening {
+  color: #ef4444;
+  animation: mic-pulse 1s ease-in-out infinite;
+}
+
+@keyframes mic-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.6; transform: scale(1.15); }
+}
+
 .homev2__aiResetIcon {
   width: 16px;
   height: 16px;
