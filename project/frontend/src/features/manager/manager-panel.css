@@ -1,0 +1,207 @@
+/* ── Fare presets ────────────────────────────────────────────────────────── */
+
+.fare-presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.875rem;
+}
+
+.fare-preset-btn {
+  border: 1px solid #d9dde6;
+  background: #ffffff;
+  color: #0f172a;
+  border-radius: 14px;
+  padding: 0.55rem 1rem;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.fare-preset-btn:hover {
+  background: #f8fafc;
+}
+
+.fare-preset-btn.active {
+  background: #0f172a;
+  color: #ffffff;
+  border-color: #0f172a;
+}
+
+/* ── Fare table ──────────────────────────────────────────────────────────── */
+
+.fare-table {
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.fare-table__header {
+  display: grid;
+  grid-template-columns: 2rem 1fr 1fr 1fr 1fr;
+  gap: 0.75rem;
+  align-items: center;
+  padding: 0.5rem 1rem;
+  background: #f8fafc;
+  border-bottom: 1px solid #e2e8f0;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #64748b;
+}
+
+.fare-table__row {
+  display: grid;
+  grid-template-columns: 2rem 1fr 1fr 1fr 1fr;
+  gap: 0.75rem;
+  align-items: center;
+  padding: 0.625rem 1rem;
+  transition: opacity 0.15s ease;
+}
+
+.fare-table__row--bordered {
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.fare-table__row--disabled {
+  opacity: 0.45;
+}
+
+/* Checkbox */
+.fare-table__checkbox-label {
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.fare-table__checkbox-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+}
+
+.fare-table__checkbox-box {
+  width: 1.1rem;
+  height: 1.1rem;
+  border-radius: 5px;
+  border: 1.5px solid #cbd5e1;
+  background: #ffffff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s ease, border-color 0.15s ease;
+  flex-shrink: 0;
+}
+
+.fare-table__checkbox-box--checked {
+  background: #0f172a;
+  border-color: #0f172a;
+  color: #ffffff;
+}
+
+.fare-table__checkbox-tick {
+  width: 0.75rem;
+  height: 0.75rem;
+}
+
+.fare-table__name {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.fare-table__input {
+  width: 100%;
+  padding: 0.45rem 0.6rem;
+  border: 1px solid #d9dde6;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  background: #ffffff;
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+
+.fare-table__input:focus {
+  border-color: #3b82f6;
+}
+
+.fare-table__input:disabled {
+  background: #f8fafc;
+  cursor: not-allowed;
+}
+
+.fare-table__select {
+  width: 100%;
+  padding: 0.45rem 0.6rem;
+  border: 1px solid #d9dde6;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  background: #ffffff;
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+
+.fare-table__select:focus {
+  border-color: #3b82f6;
+}
+
+.fare-table__select:disabled {
+  background: #f8fafc;
+  cursor: not-allowed;
+}
+
+/* ── Seat counter ─────────────────────────────────────────────────────────── */
+
+.fare-seat-counter {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1rem;
+  border-top: 1px solid #e2e8f0;
+  font-size: 0.9rem;
+}
+
+.fare-seat-counter--ok {
+  background: #f0fdf4;
+}
+
+.fare-seat-counter--error {
+  background: #fff1f2;
+}
+
+.fare-seat-counter__icon {
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
+}
+
+.fare-seat-counter--ok .fare-seat-counter__icon {
+  color: #16a34a;
+}
+
+.fare-seat-counter--error .fare-seat-counter__icon {
+  color: #b91c1c;
+}
+
+.fare-seat-counter__text {
+  color: #334155;
+}
+
+.fare-seat-counter--ok .fare-seat-counter__text strong {
+  color: #15803d;
+}
+
+.fare-seat-counter--error .fare-seat-counter__text strong {
+  color: #b91c1c;
+}
+
+.fare-seat-counter__limit {
+  color: #64748b;
+  font-weight: normal;
+}
+
+.fare-seat-counter__warning {
+  color: #b91c1c;
+  margin-left: 0.25rem;
+}

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import './admin-panel.css';
 
-export default function AdminUserModal({ isOpen, onClose, user, currentUserId, onSave, onToggleBlock, onDelete }) {
+export default function AdminUserModal({ isOpen, onClose, user, currentUserId, onSave, onToggleBlock }) {
   const isSelfUser = user?.id === currentUserId;
   const [formState, setFormState] = useState({
     email: '',
@@ -108,9 +108,6 @@ export default function AdminUserModal({ isOpen, onClose, user, currentUserId, o
           )}
 
           <div className="admin-modal__actions">
-            <button type="button" className="btn btn-delete" onClick={() => onDelete(user.id)} disabled={isSelfUser}>
-              Удалить
-            </button>
             <button
               type="button"
               className="btn btn-danger"
@@ -125,7 +122,6 @@ export default function AdminUserModal({ isOpen, onClose, user, currentUserId, o
             <button type="button" className="btn btn-secondary" onClick={onClose}>
               Отмена
             </button>
-
           </div>
         </form>
       </div>

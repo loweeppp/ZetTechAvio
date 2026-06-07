@@ -1134,8 +1134,9 @@ namespace ZetTechAvio1._0.Tests
         public Task<List<FlightDto>> SearchFlightsAsync(string from, string to, string date) => Task.FromResult(new List<FlightDto>());
         public Task<Flight?> GetFlightByIdAsync(int id) => Task.FromResult<Flight?>(null);
         public Task<Flight> CreateFlightAsync(Flight flight) => throw new NotImplementedException();
-        public Task<Flight?> UpdateFlightAsync(int id, Flight updatedFlight) => throw new NotImplementedException();
+        public Task<Flight?> UpdateFlightAsync(int id, Flight updatedFlight, List<FareClassRequest>? fareClasses = null) => throw new NotImplementedException();
         public Task<DeleteFlightResult> DeleteFlightAsync(int id) => throw new NotImplementedException();
+        public Task<Flight?> CancelFlightAsync(int id) => Task.FromResult<Flight?>(null);
         public Task<List<Fare>> GetFlightFaresAsync(int flightId) => Task.FromResult(Fares.Where(f => f.FlightId == flightId).ToList());
         public Task<List<Airport>> GetAirportsAsync() => Task.FromResult(Airports);
         public Task<Airport?> GetAirportByIdAsync(int airportId) => Task.FromResult(Airports.FirstOrDefault(a => a.Id == airportId));
@@ -1145,6 +1146,7 @@ namespace ZetTechAvio1._0.Tests
         public Task<string> GenerateFlightNumberAsync(string airlinePrefix) => throw new NotImplementedException();
         public Task<List<Aircraft>> GetAircraftsAsync() => Task.FromResult(new List<Aircraft>());
         public Task<int> GetFlightTicketCountAsync(int flightId) => throw new NotImplementedException();
+        public Task<List<FlightTicketResponse>> GetFlightTicketsAsync(int flightId) => Task.FromResult(new List<FlightTicketResponse>());
         public Task<List<Flight>> CreateScheduledFlightsAsync(FlightScheduleRequest request) => Task.FromResult(new List<Flight>());
     }
 

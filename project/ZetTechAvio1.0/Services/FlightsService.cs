@@ -19,8 +19,9 @@ namespace ZetTechAvio1._0.Services
         Task<List<FlightDto>> SearchFlightsAsync(string from, string to, string date);
         Task<Flight?> GetFlightByIdAsync(int id);
         Task<Flight> CreateFlightAsync(Flight flight);
-        Task<Flight?> UpdateFlightAsync(int id, Flight updatedFlight);
+        Task<Flight?> UpdateFlightAsync(int id, Flight updatedFlight, List<FareClassRequest>? fareClasses = null);
         Task<DeleteFlightResult> DeleteFlightAsync(int id);
+        Task<Flight?> CancelFlightAsync(int id);
         Task<List<Fare>> GetFlightFaresAsync(int flightId);
         Task<List<Airport>> GetAirportsAsync();
         Task<Airport?> GetAirportByIdAsync(int airportId);
@@ -30,6 +31,7 @@ namespace ZetTechAvio1._0.Services
         Task<string> GenerateFlightNumberAsync(string airlinePrefix);
         Task<List<Aircraft>> GetAircraftsAsync();
         Task<int> GetFlightTicketCountAsync(int flightId);
+        Task<List<FlightTicketResponse>> GetFlightTicketsAsync(int flightId);
         Task<List<Flight>> CreateScheduledFlightsAsync(FlightScheduleRequest request);
     }
 
@@ -47,13 +49,19 @@ namespace ZetTechAvio1._0.Services
             var flights = await _dbContext.Flights
                 .Include(f => f.OriginAirport)
                 .Include(f => f.DestAirport)
+                .Include(f => f.Aircraft)
                 .Include(f => f.Fares)
+                .Include(f => f.Tickets)
                 .ToListAsync();
 
             return flights.Select(MapToDto).ToList();
         }
         private FlightDto MapToDto(Flight flight)
         {
+            var remainingSeats = flight.Fares?.Sum(f => f.SeatsAvailable) ?? 0;
+            var ticketCount = flight.Tickets?.Count ?? 0;
+            var maxSeats = ticketCount + remainingSeats;
+
             return new FlightDto
             {
                 Id = flight.Id,
@@ -70,6 +78,9 @@ namespace ZetTechAvio1._0.Services
                 AircraftId = flight.AircraftId,
                 OriginAirportId = flight.OriginAirportId,
                 DestAirportId = flight.DestAirportId,
+                TicketCount = ticketCount,
+                RemainingSeats = remainingSeats,
+                MaxSeats = maxSeats,
                 Status = flight.Status.ToString()
             };
         }
@@ -84,7 +95,9 @@ namespace ZetTechAvio1._0.Services
                 IQueryable<Flight> query = _dbContext.Flights
                     .Include(f => f.OriginAirport)
                     .Include(f => f.DestAirport)
-                    .Include(f => f.Fares);
+                    .Include(f => f.Aircraft)
+                    .Include(f => f.Fares)
+                    .Include(f => f.Tickets);
 
                 // Filter BEFORE ToListAsync (on database, not in memory!)
                 if (!string.IsNullOrEmpty(from))
@@ -148,14 +161,15 @@ namespace ZetTechAvio1._0.Services
             if (exactAirport == null)
                 return new[] { normalizedInput };
 
-            var sameCityCodes = airports
+            List<string> sameCityCodes = airports
                 .Where(a => !string.IsNullOrWhiteSpace(a.City) && string.Equals(a.City, exactAirport.City, StringComparison.OrdinalIgnoreCase))
                 .Select(a => NormalizeAirportCode(a.Iata))
                 .Where(code => code != null)
+                .Select(code => code!)
                 .Distinct(StringComparer.OrdinalIgnoreCase)
                 .ToList();
 
-            return sameCityCodes.Count > 1 ? sameCityCodes : new[] { normalizedInput };
+            return sameCityCodes.Count > 1 ? sameCityCodes : new List<string> { normalizedInput };
         }
 
         private static string? NormalizeAirportCode(string? code)
@@ -299,7 +313,17 @@ namespace ZetTechAvio1._0.Services
             }
 
             var targetDays = request.Weekdays
-                .Select(day => Enum.TryParse<DayOfWeek>(day, true, out var parsed) ? parsed : throw new ArgumentException($"Неверный день недели: {day}"))
+                .Select(day => day switch
+                {
+                    0 => DayOfWeek.Monday,
+                    1 => DayOfWeek.Tuesday,
+                    2 => DayOfWeek.Wednesday,
+                    3 => DayOfWeek.Thursday,
+                    4 => DayOfWeek.Friday,
+                    5 => DayOfWeek.Saturday,
+                    6 => DayOfWeek.Sunday,
+                    _ => throw new ArgumentException($"Неверный день недели: {day}")
+                })
                 .Distinct()
                 .ToList();
 
@@ -337,6 +361,12 @@ namespace ZetTechAvio1._0.Services
                             DurationMinutes = (int)(arrivalDt - departureDt).TotalMinutes,
                             Status = Enum.Parse<FlightStatus>(request.Status ?? "Scheduled")
                         };
+
+                        if (request.FareClasses != null && request.FareClasses.Any())
+                        {
+                            flight.Fares = request.FareClasses.Select(fareClass => CreateFareFromRequest(fareClass, flight)).ToList();
+                        }
+
                         flightsToCreate.Add(flight);
                     }
                 }
@@ -353,15 +383,52 @@ namespace ZetTechAvio1._0.Services
             return flightsToCreate;
         }
 
-        public async Task<Flight?> UpdateFlightAsync(int id, Flight updatedFlight)
+        private static Fare CreateFareFromRequest(FareClassRequest request, Flight flight)
         {
-            var existingFlight = await _dbContext.Flights.FindAsync(id);
+            if (!Enum.TryParse<Fare.Fare_class>(request.ClassType, true, out var fareClass))
+            {
+                throw new ArgumentException($"Неверный тип тарифа: {request.ClassType}");
+            }
+
+            return new Fare
+            {
+                Flight = flight,
+                Currency = "RUB",
+                Price = request.Price,
+                SeatsAvailable = request.Seats,
+                BaggageIncluded = !string.IsNullOrWhiteSpace(request.Baggage) && !request.Baggage.Equals("нет", StringComparison.OrdinalIgnoreCase),
+                BaggageWeightKg = ParseBaggageWeight(request.Baggage),
+                Class = fareClass
+            };
+        }
+
+        private static int ParseBaggageWeight(string? baggage)
+        {
+            if (string.IsNullOrWhiteSpace(baggage) || baggage.Equals("нет", StringComparison.OrdinalIgnoreCase))
+            {
+                return 0;
+            }
+
+            var digits = new string(baggage.Where(char.IsDigit).ToArray());
+            return int.TryParse(digits, out var weight) ? weight : 0;
+        }
+
+        public async Task<Flight?> UpdateFlightAsync(int id, Flight updatedFlight, List<FareClassRequest>? fareClasses = null)
+        {
+            var existingFlight = await _dbContext.Flights
+                .Include(f => f.Fares)
+                .FirstOrDefaultAsync(f => f.Id == id);
             if (existingFlight == null)
                 return null;
+
+            if (existingFlight.Status == FlightStatus.Completed)
+                throw new InvalidOperationException("Невозможно редактировать завершённый рейс.");
 
             var routeError = await ValidateAirportRouteAsync(updatedFlight.OriginAirportId, updatedFlight.DestAirportId);
             if (routeError != null)
                 throw new ArgumentException(routeError);
+
+            var previousStatus = existingFlight.Status;
 
             existingFlight.FlightNumber = updatedFlight.FlightNumber;
             existingFlight.AirlineId = updatedFlight.AirlineId;
@@ -372,6 +439,125 @@ namespace ZetTechAvio1._0.Services
             existingFlight.ArrivalDt = updatedFlight.ArrivalDt;
             existingFlight.DurationMinutes = updatedFlight.DurationMinutes;
             existingFlight.Status = updatedFlight.Status;
+
+            if (fareClasses != null)
+            {
+                var aircraft = await _dbContext.Aircrafts.FindAsync(updatedFlight.AircraftId);
+                if (aircraft == null)
+                    throw new ArgumentException("Самолёт не найден.");
+
+                var capacity = aircraft.TotalSeats;
+                var activeTicketCounts = await _dbContext.Tickets
+                    .Where(t => t.FlightId == id && t.Status == TicketStatus.Active)
+                    .GroupBy(t => t.FareId)
+                    .Select(g => new { FareId = g.Key, Count = g.Count() })
+                    .ToListAsync();
+
+                var activeTicketCountsByFare = activeTicketCounts.ToDictionary(x => x.FareId, x => x.Count);
+                var requestedFares = new List<(Fare.Fare_class FareClass, FareClassRequest Request)>();
+
+                foreach (var fareClass in fareClasses)
+                {
+                    if (!Enum.TryParse<Fare.Fare_class>(fareClass.ClassType, true, out var parsedClass))
+                    {
+                        throw new ArgumentException($"Неверный тип тарифа: {fareClass.ClassType}");
+                    }
+
+                    requestedFares.Add((parsedClass, fareClass));
+                }
+
+                var totalAllocatedSeats = 0;
+                foreach (var (fareClass, requestFare) in requestedFares)
+                {
+                    if (requestFare.Seats < 0)
+                        throw new ArgumentException($"Количество мест для тарифа «{requestFare.Name}» не может быть меньше 0.");
+
+                    if (requestFare.Price < 0)
+                        throw new ArgumentException($"Цена тарифа «{requestFare.Name}» должна быть положительной.");
+
+                    totalAllocatedSeats += requestFare.Seats;
+
+                    var existingFare = existingFlight.Fares.FirstOrDefault(f => f.Class == fareClass);
+                    if (existingFare != null)
+                    {
+                        totalAllocatedSeats += activeTicketCountsByFare.GetValueOrDefault(existingFare.Id);
+                    }
+                }
+
+                if (capacity > 0 && totalAllocatedSeats > capacity)
+                {
+                    throw new ArgumentException($"Суммарное количество мест тарифов и проданных билетов ({totalAllocatedSeats}) превышает вместимость самолёта ({capacity}).");
+                }
+
+                var requestedClassSet = requestedFares.Select(x => x.FareClass).ToHashSet();
+                foreach (var existingFare in existingFlight.Fares.ToList())
+                {
+                    if (!requestedClassSet.Contains(existingFare.Class))
+                    {
+                        var activeCount = activeTicketCountsByFare.GetValueOrDefault(existingFare.Id);
+                        if (activeCount > 0)
+                        {
+                            throw new InvalidOperationException($"Нельзя удалить тариф «{existingFare.Class}»: по нему уже есть активные билеты.");
+                        }
+
+                        _dbContext.Fares.Remove(existingFare);
+                    }
+                }
+
+                foreach (var (fareClass, requestFare) in requestedFares)
+                {
+                    var existingFare = existingFlight.Fares.FirstOrDefault(f => f.Class == fareClass);
+                    if (existingFare != null)
+                    {
+                        existingFare.Price = requestFare.Price;
+                        existingFare.SeatsAvailable = requestFare.Seats;
+                        existingFare.BaggageIncluded = !string.IsNullOrWhiteSpace(requestFare.Baggage) && !requestFare.Baggage.Equals("нет", StringComparison.OrdinalIgnoreCase);
+                        existingFare.BaggageWeightKg = ParseBaggageWeight(requestFare.Baggage);
+                    }
+                    else
+                    {
+                        existingFlight.Fares.Add(CreateFareFromRequest(requestFare, existingFlight));
+                    }
+                }
+            }
+
+            if (updatedFlight.Status == FlightStatus.Cancelled)
+            {
+                var activeTickets = await _dbContext.Tickets
+                    .Where(t => t.FlightId == id && t.Status == TicketStatus.Active)
+                    .ToListAsync();
+
+                foreach (var ticket in activeTickets)
+                {
+                    ticket.Status = TicketStatus.Cancelled;
+                    ticket.UpdatedAt = DateTime.UtcNow;
+                }
+            }
+            else if (updatedFlight.Status == FlightStatus.Completed)
+            {
+                var activeTickets = await _dbContext.Tickets
+                    .Where(t => t.FlightId == id && t.Status == TicketStatus.Active)
+                    .ToListAsync();
+
+                foreach (var ticket in activeTickets)
+                {
+                    ticket.Status = TicketStatus.Used;
+                    ticket.UpdatedAt = DateTime.UtcNow;
+                }
+            }
+            else if (previousStatus == FlightStatus.Cancelled &&
+                     (updatedFlight.Status == FlightStatus.Scheduled || updatedFlight.Status == FlightStatus.Delayed))
+            {
+                var cancelledTickets = await _dbContext.Tickets
+                    .Where(t => t.FlightId == id && t.Status == TicketStatus.Cancelled)
+                    .ToListAsync();
+
+                foreach (var ticket in cancelledTickets)
+                {
+                    ticket.Status = TicketStatus.Active;
+                    ticket.UpdatedAt = DateTime.UtcNow;
+                }
+            }
 
             await _dbContext.SaveChangesAsync();
             return existingFlight;
@@ -396,6 +582,15 @@ namespace ZetTechAvio1._0.Services
                 _dbContext.Tickets.RemoveRange(tickets);
             }
 
+            if (ticketCount > 0)
+            {
+                return new DeleteFlightResult
+                {
+                    WasDeleted = false,
+                    TicketCount = ticketCount
+                };
+            }
+
             _dbContext.Flights.Remove(flight);
             await _dbContext.SaveChangesAsync();
 
@@ -404,6 +599,37 @@ namespace ZetTechAvio1._0.Services
                 WasDeleted = true,
                 TicketCount = ticketCount
             };
+        }
+
+        public async Task<Flight?> CancelFlightAsync(int id)
+        {
+            var flight = await _dbContext.Flights
+                .Include(f => f.Tickets)
+                .FirstOrDefaultAsync(f => f.Id == id);
+
+            if (flight == null)
+                return null;
+
+            if (flight.Status == FlightStatus.Completed)
+                throw new InvalidOperationException("Невозможно отменить завершённый рейс.");
+
+            if (flight.Status == FlightStatus.Cancelled)
+                return flight;
+
+            flight.Status = FlightStatus.Cancelled;
+
+            var activeTickets = flight.Tickets
+                .Where(t => t.Status == TicketStatus.Active)
+                .ToList();
+
+            foreach (var ticket in activeTickets)
+            {
+                ticket.Status = TicketStatus.Cancelled;
+                ticket.UpdatedAt = DateTime.UtcNow;
+            }
+
+            await _dbContext.SaveChangesAsync();
+            return flight;
         }
 
         public async Task<List<Fare>> GetFlightFaresAsync(int flightId)
@@ -417,6 +643,24 @@ namespace ZetTechAvio1._0.Services
         public async Task<int> GetFlightTicketCountAsync(int flightId)
         {
             return await _dbContext.Tickets.CountAsync(t => t.FlightId == flightId);
+        }
+
+        public async Task<List<FlightTicketResponse>> GetFlightTicketsAsync(int flightId)
+        {
+            return await _dbContext.Tickets
+                .Where(t => t.FlightId == flightId)
+                .Include(t => t.Booking)
+                    .ThenInclude(b => b.User)
+                .Select(t => new FlightTicketResponse
+                {
+                    Id = t.Id,
+                    TicketNumber = t.TicketNumber,
+                    PassengerName = t.PassengerName,
+                    PassengerType = t.PassengerType.ToString(),
+                    Status = t.Status.ToString(),
+                    Email = t.Booking != null && t.Booking.User != null ? t.Booking.User.Email : string.Empty
+                })
+                .ToListAsync();
         }
     }
 }

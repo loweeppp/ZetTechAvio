@@ -12,6 +12,7 @@ namespace ZetTechAvio1._0.Models
         public int Id { get; set; }
 
         public ICollection<Fare> Fares { get; set; } = new List<Fare>();
+        public ICollection<Ticket> Tickets { get; set; } = new List<Ticket>();
 
         [Required]
         [StringLength(50)]

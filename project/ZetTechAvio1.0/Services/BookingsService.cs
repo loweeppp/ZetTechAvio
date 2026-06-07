@@ -256,6 +256,7 @@ namespace ZetTechAvio1._0.Services
                         DepartureTime = t.Flight.DepartureDt,
                         ArrivalTime = t.Flight.ArrivalDt,
                         Duration = TimeSpan.FromMinutes(t.Flight.DurationMinutes),
+                        Status = t.Flight.Status.ToString(),
                         DepartureAirport = new AirportResponse
                         {
                             Id = t.Flight.OriginAirport?.Id ?? 0,

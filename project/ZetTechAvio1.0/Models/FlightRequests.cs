@@ -30,6 +30,8 @@ namespace ZetTechAvio1._0.Models
 
         [Required]
         public string Status { get; set; } = "Scheduled";
+
+        public List<FareClassRequest> FareClasses { get; set; } = new();
     }
 
     public sealed class FlightScheduleRequest
@@ -56,7 +58,7 @@ namespace ZetTechAvio1._0.Models
         public required string ArrivalTime { get; set; }
 
         [Required]
-        public required List<string> Weekdays { get; set; }
+        public required List<int> Weekdays { get; set; }
 
         [Required]
         public DateTime StartDate { get; set; }
@@ -66,5 +68,26 @@ namespace ZetTechAvio1._0.Models
 
         [Required]
         public string Status { get; set; } = "Scheduled";
+
+        public List<FareClassRequest> FareClasses { get; set; } = new();
+    }
+
+    public sealed class FareClassRequest
+    {
+        [Required]
+        public required string ClassType { get; set; }
+
+        [Required]
+        public required string Name { get; set; }
+
+        [Required]
+        [Range(0, 999999)]
+        public decimal Price { get; set; }
+
+        [Required]
+        [Range(0, 499)]
+        public int Seats { get; set; }
+
+        public string? Baggage { get; set; }
     }
 }

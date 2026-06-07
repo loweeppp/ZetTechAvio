@@ -72,6 +72,17 @@ namespace ZetTechAvio1._0.Controllers
             return Ok(new { ticketCount });
         }
 
+        [HttpGet("{id}/tickets")]
+        public async Task<IActionResult> GetFlightTickets(int id)
+        {
+            var flight = await _flightsService.GetFlightByIdAsync(id);
+            if (flight == null)
+                return NotFound(new { message = "Рейс не найден" });
+
+            var tickets = await _flightsService.GetFlightTicketsAsync(id);
+            return Ok(new { tickets });
+        }
+
         [HttpPost]
         public async Task<IActionResult> CreateFlight([FromBody] FlightCommandRequest request)
         {
@@ -93,7 +104,7 @@ namespace ZetTechAvio1._0.Controllers
 
             var flight = new Flight
             {
-                FlightNumber = request.FlightNumber,
+                FlightNumber = request.FlightNumber ?? string.Empty,
                 AirlineId = request.AirlineId,
                 AircraftId = request.AircraftId,
                 OriginAirportId = request.OriginAirportId,
@@ -103,6 +114,27 @@ namespace ZetTechAvio1._0.Controllers
                 DurationMinutes = request.DurationMinutes,
                 Status = Enum.Parse<FlightStatus>(request.Status ?? "Scheduled")
             };
+
+            if (request.FareClasses != null && request.FareClasses.Any())
+            {
+                foreach (var fareClass in request.FareClasses)
+                {
+                    if (!Enum.TryParse<Fare.Fare_class>(fareClass.ClassType, true, out var parsedClass))
+                    {
+                        return BadRequest(new { message = $"Неверный тип тарифа: {fareClass.ClassType}" });
+                    }
+
+                    flight.Fares.Add(new Fare
+                    {
+                        Flight = flight,
+                        Currency = "RUB",
+                        Price = fareClass.Price,
+                        SeatsAvailable = fareClass.Seats,
+                        BaggageIncluded = !string.IsNullOrWhiteSpace(fareClass.Baggage) && !fareClass.Baggage.Equals("нет", StringComparison.OrdinalIgnoreCase),
+                        Class = parsedClass,
+                    });
+                }
+            }
 
             try
             {
@@ -136,7 +168,7 @@ namespace ZetTechAvio1._0.Controllers
 
             var updatedFlight = new Flight
             {
-                FlightNumber = request.FlightNumber,
+                FlightNumber = request.FlightNumber ?? string.Empty,
                 AirlineId = request.AirlineId,
                 AircraftId = request.AircraftId,
                 OriginAirportId = request.OriginAirportId,
@@ -149,7 +181,7 @@ namespace ZetTechAvio1._0.Controllers
 
             try
             {
-                var flight = await _flightsService.UpdateFlightAsync(id, updatedFlight);
+                var flight = await _flightsService.UpdateFlightAsync(id, updatedFlight, request.FareClasses);
                 if (flight == null)
                     return NotFound(new { message = "Рейс не найден" });
 
@@ -168,15 +200,13 @@ namespace ZetTechAvio1._0.Controllers
             {
                 var result = await _flightsService.DeleteFlightAsync(id);
                 if (!result.WasDeleted)
-                    return NotFound(new { message = "Рейс не найден" });
-
-                if (result.TicketCount > 0)
                 {
-                    return Ok(new
+                    if (result.TicketCount > 0)
                     {
-                        message = $"Рейс удалён вместе с {result.TicketCount} билетами.",
-                        ticketCount = result.TicketCount
-                    });
+                        return Conflict(new { message = "Невозможно удалить рейс, потому что к нему привязаны билеты. Отмените рейс вместо удаления." });
+                    }
+
+                    return NotFound(new { message = "Рейс не найден" });
                 }
 
                 return NoContent();
@@ -184,6 +214,27 @@ namespace ZetTechAvio1._0.Controllers
             catch (Exception)
             {
                 return StatusCode(500, new { message = "Ошибка удаления рейса" });
+            }
+        }
+
+        [HttpPost("{id}/cancel")]
+        public async Task<IActionResult> CancelFlight(int id)
+        {
+            try
+            {
+                var result = await _flightsService.CancelFlightAsync(id);
+                if (result == null)
+                    return NotFound(new { message = "Рейс не найден" });
+
+                return Ok(new { message = "Рейс отменён. Все активные билеты помечены как отменённые." });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (Exception)
+            {
+                return StatusCode(500, new { message = "Ошибка отмены рейса" });
             }
         }
 

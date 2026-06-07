@@ -18,5 +18,8 @@ public class FlightDto
     public int AircraftId { get; set; }
     public int OriginAirportId { get; set; }
     public int DestAirportId { get; set; }
+    public int TicketCount { get; set; }
+    public int RemainingSeats { get; set; }
+    public int MaxSeats { get; set; }
     public required string Status { get; set; }
 }

@@ -56,6 +56,16 @@ namespace ZetTechAvio1._0.Models
         public FlightResponse? Flight { get; set; }
     }
 
+    public class FlightTicketResponse
+    {
+        public int Id { get; set; }
+        public string TicketNumber { get; set; } = "";
+        public string PassengerName { get; set; } = "";
+        public string PassengerType { get; set; } = "";
+        public string Status { get; set; } = "";
+        public string Email { get; set; } = "";
+    }
+
     public class FlightResponse
     {
         public int Id { get; set; }
@@ -63,6 +73,7 @@ namespace ZetTechAvio1._0.Models
         public DateTime DepartureTime { get; set; }
         public DateTime ArrivalTime { get; set; }
         public TimeSpan Duration { get; set; }
+        public string Status { get; set; } = "Scheduled";
         public AirportResponse? DepartureAirport { get; set; }
         public AirportResponse? ArrivalAirport { get; set; }
     }

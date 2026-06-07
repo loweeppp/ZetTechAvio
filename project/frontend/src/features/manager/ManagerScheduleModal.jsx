@@ -6,6 +6,9 @@ import {
   ClockIcon,
   ArrowRightIcon,
   CalendarRangeIcon,
+  TagIcon,
+  CheckCircle2Icon,
+  AlertCircleIcon,
 } from 'lucide-react';
 import '../admin/admin-panel.css';
 
@@ -23,6 +26,21 @@ const MIN_BOOKING_MINUTES = 120;
 const MAX_BOOKING_MONTHS = 6;
 const MIN_FLIGHT_DURATION_MINUTES = 15;
 const MAX_FLIGHT_DURATION_MINUTES = 1440;
+
+const FARE_CLASSES_BASE = [
+  { id: 'economy', name: 'Эконом', price: '5900', seats: '120', baggage: 'нет' },
+  { id: 'business', name: 'Бизнес', price: '14900', seats: '20', baggage: '23кг' },
+  { id: 'first', name: 'Первый', price: '35000', seats: '8', baggage: '32кг' },
+];
+
+const FARE_PRESETS = [
+  { label: 'Только эконом', enabled: ['economy'] },
+  { label: 'Эконом + Бизнес', enabled: ['economy', 'business'] },
+  { label: 'Все классы', enabled: ['economy', 'business', 'first'] },
+];
+
+const makeFareClasses = (enabledIds) =>
+  FARE_CLASSES_BASE.map((fc) => ({ ...fc, enabled: enabledIds.includes(fc.id) }));
 
 const buildDateTime = (date, time) => {
   if (!date || !time) return null;
@@ -52,6 +70,7 @@ const initialState = {
   weekdays: [],
   startDate: '',
   endDate: '',
+  fareClasses: [],
   status: 'Scheduled',
 };
 
@@ -145,6 +164,152 @@ function WeekdayPicker({ value, onChange }) {
   );
 }
 
+function FareClassesSection({ fareClasses = [], aircraftCapacity, onChange }) {
+  const sanitizedFareClasses = Array.isArray(fareClasses) ? fareClasses : [];
+  const enabledIds = sanitizedFareClasses.filter((fare) => fare.enabled).map((fare) => fare.id);
+  const activePreset = FARE_PRESETS.findIndex(
+    (preset) => preset.enabled.length === enabledIds.length && preset.enabled.every((id) => enabledIds.includes(id)),
+  );
+
+  const applyPreset = (index) => {
+    const preset = FARE_PRESETS[index];
+    onChange(
+      fareClasses.length === 0
+        ? makeFareClasses(preset.enabled)
+        : fareClasses.map((fare) => ({ ...fare, enabled: preset.enabled.includes(fare.id) })),
+    );
+  };
+
+  const updateFare = (id, field, value) =>
+    onChange(fareClasses.map((fare) => (fare.id === id ? { ...fare, [field]: value } : fare)));
+
+  const totalSeats = fareClasses.filter((fare) => fare.enabled).reduce((sum, fare) => sum + (Number(fare.seats) || 0), 0);
+  const seatsOk = aircraftCapacity === undefined || totalSeats <= aircraftCapacity;
+  const freeCapacity = aircraftCapacity === undefined ? undefined : aircraftCapacity - totalSeats;
+
+
+  return (
+    <div className="flight-edit-modal__section">
+      <SectionHeader icon={<TagIcon />} label="Тарифы" />
+
+      <div className="fare-presets">
+        {FARE_PRESETS.map((preset, index) => (
+          <button
+            key={preset.label}
+            type="button"
+            onClick={() => applyPreset(index)}
+            className={`fare-preset-btn ${activePreset === index ? 'active' : ''}`}
+          >
+            {preset.label}
+          </button>
+        ))}
+      </div>
+
+      {fareClasses.length > 0 && (
+        <div className="fare-table">
+          <div className="fare-table__header">
+            <div />
+            <div>Класс</div>
+            <div>Цена (₽)</div>
+            <div>Мест</div>
+            <div>Багаж</div>
+          </div>
+
+          {fareClasses.map((fare, idx) => (
+            <div
+              key={fare.id}
+              className={`fare-table__row ${!fare.enabled ? 'fare-table__row--disabled' : ''} ${idx < fareClasses.length - 1 ? 'fare-table__row--bordered' : ''}`}
+            >
+              <label className="fare-table__checkbox-label">
+                <input
+                  type="checkbox"
+                  checked={fare.enabled}
+                  onChange={(e) => updateFare(fare.id, 'enabled', e.target.checked)}
+                  className="fare-table__checkbox-input"
+                />
+                <span className={`fare-table__checkbox-box ${fare.enabled ? 'fare-table__checkbox-box--checked' : ''}`}>
+                  {fare.enabled && (
+                    <svg viewBox="0 0 12 12" className="fare-table__checkbox-tick">
+                      <path d="M2.5 6.5L5 9l4.5-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  )}
+                </span>
+              </label>
+
+              <span className="fare-table__name">{fare.name}</span>
+
+              <input
+                type="number"
+                value={fare.price}
+                onChange={(e) => updateFare(fare.id, 'price', e.target.value)}
+                disabled={!fare.enabled}
+                className="fare-table__input"
+                placeholder="0"
+                min="0"
+              />
+
+              <input
+                type="number"
+                value={fare.seats}
+                onChange={(e) => updateFare(fare.id, 'seats', e.target.value)}
+                disabled={!fare.enabled}
+                className="fare-table__input"
+                placeholder="0"
+                min="1"
+              />
+
+              <select
+                value={fare.baggage}
+                onChange={(e) => updateFare(fare.id, 'baggage', e.target.value)}
+                disabled={!fare.enabled}
+                className="fare-table__select"
+              >
+                {['нет', '10кг', '20кг', '23кг', '32кг'].map((option) => (
+                  <option key={option} value={option}>
+                    {option}
+                  </option>
+                ))}
+              </select>
+
+              {fare.enabled && (fare.ticketCount ?? 0) === 0 ? (
+                <button
+                  type="button"
+                  className="fare-table__remove-btn"
+                  onClick={() => updateFare(fare.id, 'enabled', false)}
+                >
+                  Удалить
+                </button>
+              ) : (
+                <div className="fare-table__action-placeholder" />
+              )}
+            </div>
+          ))}
+
+          <div className={`fare-seat-counter ${seatsOk ? 'fare-seat-counter--ok' : 'fare-seat-counter--error'}`}>
+            {seatsOk ? <CheckCircle2Icon className="fare-seat-counter__icon" /> : <AlertCircleIcon className="fare-seat-counter__icon" />}
+            <span className="fare-seat-counter__text">
+              Итого мест: <strong>{totalSeats}</strong>
+              {aircraftCapacity !== undefined && (
+                <span className="fare-seat-counter__limit"> / {aircraftCapacity} в самолёте</span>
+              )}
+              {!seatsOk && <span className="fare-seat-counter__warning"> — превышает вместимость</span>}
+              {aircraftCapacity !== undefined && freeCapacity !== undefined && (
+                <div className={`fare-seat-remaining ${freeCapacity >= 0 ? 'fare-seat-remaining--ok' : 'fare-seat-remaining--error'}`}>
+                  {freeCapacity >= 0 ? (
+                    <span>Осталось свободных мест: <strong>{freeCapacity}</strong></span>
+                  ) : (
+                    <span>Отрицательное свободное место: <strong>{freeCapacity}</strong></span>
+                  )}
+                </div>
+              )}
+            </span>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function ManagerScheduleModal({ isOpen, onClose, onSave, airlines = [], aircrafts = [], airports = [] }) {
   const [formState, setFormState] = useState(initialState);
   const [validationError, setValidationError] = useState('');
@@ -175,6 +340,7 @@ export default function ManagerScheduleModal({ isOpen, onClose, onSave, airlines
   const getSelectedAirport = (airportId) => airports.find((airport) => String(airport.id) === String(airportId));
   const originAirport = getSelectedAirport(formState.originAirportId);
   const destAirport = getSelectedAirport(formState.destAirportId);
+  const selectedAircraft = aircrafts.find((aircraft) => String(aircraft.id) === String(formState.aircraftId));
 
   const flightsCount = useMemo(() => {
     if (!formState.startDate || !formState.endDate || formState.weekdays.length === 0) return null;
@@ -208,8 +374,17 @@ export default function ManagerScheduleModal({ isOpen, onClose, onSave, airlines
     if (flightDuration === null) return 'Укажите корректные времена вылета и прилёта.';
     if (flightDuration < MIN_FLIGHT_DURATION_MINUTES) return `Время между вылетом и прилётом должно быть не менее ${MIN_FLIGHT_DURATION_MINUTES} минут.`;
     if (flightDuration > MAX_FLIGHT_DURATION_MINUTES) return `Время между вылетом и прилётом не может превышать ${MAX_FLIGHT_DURATION_MINUTES} минут.`;
+    if (formState.fareClasses.length > 0) {
+      const activeClasses = formState.fareClasses.filter((f) => f.enabled);
+      if (activeClasses.length === 0) return 'Включите хотя бы один класс тарифа.';
+      for (const fare of activeClasses) {
+        if (!fare.price || Number(fare.price) <= 0) return `Укажите цену для класса «${fare.name}».`;
+        if (!fare.seats || Number(fare.seats) <= 0) return `Укажите количество мест для класса «${fare.name}».`;
+      }
+    }
     if (formState.weekdays.length === 0) return 'Выберите хотя бы один день недели.';
     return '';
+    
   };
 
   const handleSubmit = (event) => {
@@ -230,6 +405,15 @@ export default function ManagerScheduleModal({ isOpen, onClose, onSave, airlines
       weekdays: formState.weekdays,
       startDate: formState.startDate,
       endDate: formState.endDate,
+      fareClasses: formState.fareClasses
+        .filter((f) => f.enabled)
+        .map((fare) => ({
+          classType: fare.id,
+          name: fare.name,
+          price: Number(fare.price),
+          seats: Number(fare.seats),
+          baggage: fare.baggage,
+        })),
       status: formState.status,
     });
   };
@@ -295,16 +479,16 @@ export default function ManagerScheduleModal({ isOpen, onClose, onSave, airlines
                 ))}
               </FormSelect>
 
-            <div className="flight-route-preview">
+              <div className="flight-route-preview">
 
-              <div className="flight-route-preview__icons">
-                <span className="flight-route-preview__code">{originAirport?.iata || '---'}</span>
-                <PlaneTakeoffIcon />
-                <ArrowRightIcon />
-                <PlaneLandingIcon className="flight-route-preview__plane" />
-                <span className="flight-route-preview__code">{destAirport?.iata || '---'}</span>
+                <div className="flight-route-preview__icons">
+                  <span className="flight-route-preview__code">{originAirport?.iata || '---'}</span>
+                  <PlaneTakeoffIcon />
+                  <ArrowRightIcon />
+                  <PlaneLandingIcon className="flight-route-preview__plane" />
+                  <span className="flight-route-preview__code">{destAirport?.iata || '---'}</span>
+                </div>
               </div>
-            </div>
 
               <FormSelect id="schedule-dest-id" label="Аэропорт прибытия" value={formState.destAirportId} onChange={(value) => handleChange('destAirportId', value)} placeholder="Куда">
                 {airports.map((airport) => (
@@ -353,6 +537,12 @@ export default function ManagerScheduleModal({ isOpen, onClose, onSave, airlines
                 <div>{computedArrival()}</div>
               </div>
             </div>
+
+            <FareClassesSection
+              fareClasses={formState.fareClasses ?? []}
+              aircraftCapacity={selectedAircraft?.capacity}
+              onChange={(classes) => handleChange('fareClasses', classes)}
+            />
           </div>
 
           <div className="flight-edit-modal__section">

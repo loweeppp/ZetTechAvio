@@ -135,43 +135,6 @@ export default function AdminUsersPage() {
     }
   };
 
-  const handleDelete = async (idToDelete) => {
-    if (!token) return;
-    if (idToDelete === currentUserId) {
-      alert('Нельзя удалить собственный аккаунт');
-      return;
-    }
-
-    if (!window.confirm('Вы уверены, что хотите удалить этот аккаунт?')) {
-      return;
-    }
-
-    setLoading(true);
-    try {
-      const response = await fetch(`${API_URL}/api/admin/users/${idToDelete}`, {
-        method: 'DELETE',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      if (!response.ok) {
-        const data = await response.json().catch(() => null);
-        throw new Error(data?.message || 'Ошибка удаления аккаунта');
-      }
-
-      await loadUsers();
-      if (selectedUser?.id === idToDelete) {
-        handleCloseModal();
-      }
-    } catch (err) {
-      alert(err.message || 'Ошибка удаления аккаунта');
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const sortedUsers = users.slice().sort((a, b) => {
     const { field, direction } = sortConfig;
     const aValue = a[field];
@@ -301,14 +264,9 @@ export default function AdminUsersPage() {
                     {user.id === currentUserId ? (
                       <span>⠀</span>
                     ) : (
-                      <>
-                        <button className="admin-panel__action" type="button" onClick={() => handleOpenModal(user)}>
-                          Редактировать
-                        </button>
-                        <button className="admin-panel__action admin-panel__action--danger" type="button" onClick={() => handleDelete(user.id)}>
-                          Удалить
-                        </button>
-                      </>
+                      <button className="admin-panel__action" type="button" onClick={() => handleOpenModal(user)}>
+                        Редактировать
+                      </button>
                     )}
                   </td>
                 </tr>
@@ -325,7 +283,6 @@ export default function AdminUsersPage() {
         currentUserId={currentUserId}
         onSave={handleSave}
         onToggleBlock={handleToggleBlock}
-        onDelete={handleDelete}
       />
     </div>
   );

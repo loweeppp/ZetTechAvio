@@ -17,11 +17,14 @@ const parseDepartureDate = (flight) => {
 
 const getBookingCategory = (booking) => {
   const bookingStatus = normalizeStatus(booking.status);
+  const tickets = Array.isArray(booking.tickets) ? booking.tickets : [];
+  const flightStatus = normalizeStatus(tickets[0]?.flight?.status);
+  const now = new Date();
+
+  if (flightStatus === 'cancelled') return 'cancelled';
+  if (flightStatus === 'completed') return 'completed';
   if (bookingStatus === 'cancelled') return 'cancelled';
   if (bookingStatus === 'completed') return 'completed';
-
-  const tickets = Array.isArray(booking.tickets) ? booking.tickets : [];
-  const now = new Date();
 
   const hasActiveFutureTicket = tickets.some((ticket) => {
     const ticketStatus = normalizeStatus(ticket.status);
@@ -321,6 +324,11 @@ function BookingCard({ booking }) {
     doc.save(`ZetTechAvio_Ticket_${normalize(booking.bookingReference)}.pdf`);
   };
 
+  const openSupportForBooking = (booking) => {
+    const subject = encodeURIComponent(`Вопрос по бронированию ${booking.bookingReference}`);
+    window.location.href = `mailto:ZetTechAvioBot@mail.ru?subject=${subject}`;
+  };
+
   // Получаем информацию о полете из первого билета
   const firstTicket = booking.tickets?.[0];
   const flight = firstTicket?.flight;
@@ -399,6 +407,15 @@ function BookingCard({ booking }) {
         >
           Скачать билет PDF
         </button>
+        {bookingCategory === 'cancelled' && (
+          <button
+            className="btn btn-secondary"
+            onClick={() => openSupportForBooking(booking)}
+            type="button"
+          >
+            Связаться с поддержкой
+          </button>
+        )}
       </div>
     </div>
   );

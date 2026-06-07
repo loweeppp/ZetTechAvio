@@ -334,7 +334,7 @@ namespace ZetTechAvio1._0.Data
                     .OnDelete(DeleteBehavior.Cascade);
 
                 entity.HasOne(t => t.Flight)
-                    .WithMany()
+                    .WithMany(f => f.Tickets)
                     .HasForeignKey(t => t.FlightId)
                     .OnDelete(DeleteBehavior.Restrict);
 
