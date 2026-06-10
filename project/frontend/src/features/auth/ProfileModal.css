@@ -127,7 +127,6 @@
 
 .floating-input:focus ~ .floating-label,
 .floating-input:not(:placeholder-shown) ~ .floating-label {
-  top: 6px;
   transform: scale(0.75);
   color: #0066FF;
 }

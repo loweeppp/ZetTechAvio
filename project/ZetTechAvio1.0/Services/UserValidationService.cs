@@ -25,39 +25,39 @@ namespace ZetTechAvio1._0.Services
         {
             // Validate email
             if (string.IsNullOrWhiteSpace(email))
-                return (false, "Email is required");
+                return (false, "Email обязателен");
 
             if (email.Length > 255)
-                return (false, "Email is too long");
+                return (false, "Email слишком длинный");
 
             var emailValidator = new EmailAddressAttribute();
             if (!emailValidator.IsValid(email))
-                return (false, "Email format is invalid");
+                return (false, "Неверный формат email");
 
             // Check if email already exists
             if (await EmailExistsAsync(email))
-                return (false, "This email is already registered");
+                return (false, "Этот email уже зарегистрирован");
 
             // Validate password
             if (string.IsNullOrWhiteSpace(password))
-                return (false, "Password is required");
+                return (false, "Требуется ввести пароль");
 
             if (password.Length < 6)
-                return (false, "Password must be at least 6 characters long");
+                return (false, "Пароль должен содержать не менее 6 символов");
 
             if (password.Length > 128)
-                return (false, "Password is too long");
+                return (false, "Пароль слишком длинный");
 
             // Validate full name
             if (string.IsNullOrWhiteSpace(fullName))
-                return (false, "Full name is required");
+                return (false, "Имя  обязательно");
 
             if (fullName.Length > 255)
-                return (false, "Full name is too long");
+                return (false, "Имя  слишком длинное");
 
             // Validate phone
             if (!string.IsNullOrWhiteSpace(phone) && phone.Length > 20)
-                return (false, "Phone number is too long");
+                return (false, "Номер телефона слишком длинный");
 
             return (true, null);
         }
@@ -74,42 +74,42 @@ namespace ZetTechAvio1._0.Services
         {
             // Validate email
             if (string.IsNullOrWhiteSpace(email))
-                return (false, "Email is required");
+                return (false, "Email обязателен");
 
             if (email.Length > 255)
-                return (false, "Email is too long");
+                return (false, "Email слишком длинный");
 
             var emailValidator = new EmailAddressAttribute();
             if (!emailValidator.IsValid(email))
-                return (false, "Email format is invalid");
+                return (false, "Неверный формат email");
 
             // Check if email already exists (but exclude current user)
             var emailExists = await Task.Run(() => 
                 _context.Users.Any(u => u.Email == email.ToLower() && u.Id != userId)
             );
             if (emailExists)
-                return (false, "This email is already registered");
+                return (false, "Этот email уже зарегистрирован");
 
             // Validate password (optional for update)
             if (!string.IsNullOrWhiteSpace(password))
             {
                 if (password.Length < 6)
-                    return (false, "Password must be at least 6 characters long");
+                    return (false, "Пароль должен содержать не менее 6 символов");
 
                 if (password.Length > 128)
-                    return (false, "Password is too long");
+                    return (false, "Пароль слишком длинный");
             }
 
             // Validate full name
             if (string.IsNullOrWhiteSpace(fullName))
-                return (false, "Full name is required");
+                return (false, "Имя  обязательно");
 
             if (fullName.Length > 255)
-                return (false, "Full name is too long");
+                return (false, "Имя  слишком длинное");
 
             // Validate phone
             if (!string.IsNullOrWhiteSpace(phone) && phone.Length > 20)
-                return (false, "Phone number is too long");
+                return (false, "Номер телефона слишком длинный");
 
             return (true, null);
         }

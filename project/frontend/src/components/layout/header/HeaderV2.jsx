@@ -187,7 +187,7 @@ export default function HeaderV2() {
           </nav>
 
           <div className="headerv2__actions">
-            <button
+            {/* <button
               className="headerv2__lang"
               type="button"
               onClick={toggleLanguage}
@@ -195,7 +195,7 @@ export default function HeaderV2() {
             >
               <Globe className="headerv2__icon" />
               {language.toUpperCase()}
-            </button>
+            </button> */}
 
             {currentUser ? (
               <>

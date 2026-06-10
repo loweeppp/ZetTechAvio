@@ -227,7 +227,7 @@
 
 .manager-modal__box {
   max-height: calc(100vh - 4rem);
-  width: min(780px, calc(100% - 2rem));
+  width: min(1480px, calc(100% - 2rem));
   overflow-y: auto;
   background: #ffffff;
   border-radius: 24px;
@@ -269,6 +269,15 @@
 }
 
 .floating-input-wrapper::before {
+  /* content: ''; */
+  display: block;
+  height: 1.8rem;
+  font-size: 0.95rem;
+  line-height: 1.4;
+  visibility: hidden;
+}
+
+.floating-input-wrapper-manager::before {
   content: '';
   display: block;
   height: 1.8rem;
@@ -294,7 +303,7 @@
 
 .floating-input-wrapper .floating-label {
   position: absolute;
-  top: 2.6rem;
+  top: 0.6rem;
   left: 1rem;
   pointer-events: none;
   transition: transform 0.18s ease, font-size 0.18s ease, color 0.18s ease;
@@ -304,7 +313,7 @@
 
 .floating-input-wrapper input:not(:placeholder-shown) + .floating-label,
 .floating-input-wrapper input:focus + .floating-label {
-  transform: translateY(-1rem);
+  transform: translateY(-0.5rem);
   font-size: 0.82rem;
   color: #2563eb;
 }
@@ -337,6 +346,40 @@
   flex-wrap: wrap;
   gap: 0.75rem;
   margin-top: 0.5rem;
+}
+
+.manager-modal__grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) minmax(320px, 1fr);
+  gap: 1.5rem;
+  align-items: start;
+}
+
+.manager-modal__main {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  min-width: 0;
+}
+
+.manager-modal__sidebar {
+  border-left: 1px solid #e2e8f0;
+  padding-left: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  min-width: 0;
+}
+
+@media (max-width: 992px) {
+  .manager-modal__grid {
+    grid-template-columns: 1fr;
+  }
+
+  .manager-modal__sidebar {
+    border-left: none;
+    padding-left: 0;
+  }
 }
 
 .btn {

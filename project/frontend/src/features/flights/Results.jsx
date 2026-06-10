@@ -4,14 +4,9 @@ import { useAuth } from '../auth/useAuth';
 import BookingModal from '../bookings/BookingModal';
 import ResultsFilters from './ResultsFilters';
 import SearchFormV2 from './SearchFormV2';
+import { SORTS } from './flightSorting';
 
 const API_URL = process.env.REACT_APP_API_URL || 'https://api.zettechavio.ru';
-
-const SORTS = [
-  { id: 'cheapest', label: 'Дешевле' },
-  { id: 'fastest', label: 'Быстрее' },
-  { id: 'best', label: 'Лучшие' },
-];
 
 export default function Results({ query, onBack, onSearch }) {
   const { currentUser } = useAuth();

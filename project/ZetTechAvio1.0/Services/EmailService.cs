@@ -1,12 +1,18 @@
+using System.Linq;
+using System.Net;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
+using System.Text.RegularExpressions;
 
 namespace ZetTechAvio1._0.Services
 {
+    public record EmailAttachment(string Type, string Name, string Content, string? ContentId = null);
+
     public interface IEmailService
     {
-        Task<bool> SendEmailAsync(string to, string subject, string body, bool isHtml = true);
+        Task<bool> SendEmailAsync(string to, string subject, string body, bool isHtml = true, IEnumerable<EmailAttachment>? attachments = null);
     }
 
     public class EmailService : IEmailService
@@ -39,7 +45,7 @@ namespace ZetTechAvio1._0.Services
             }
         }
 
-        public async Task<bool> SendEmailAsync(string to, string subject, string body, bool isHtml = true)
+        public async Task<bool> SendEmailAsync(string to, string subject, string body, bool isHtml = true, IEnumerable<EmailAttachment>? attachments = null)
         {
             if (string.IsNullOrWhiteSpace(_apiKey))
             {
@@ -61,7 +67,7 @@ namespace ZetTechAvio1._0.Services
 
             try
             {
-                return await SendWithResendAsync(to, subject, body, isHtml);
+                return await SendWithResendAsync(to, subject, body, isHtml, attachments);
             }
             catch (Exception ex)
             {
@@ -70,7 +76,7 @@ namespace ZetTechAvio1._0.Services
             }
         }
 
-        private async Task<bool> SendWithResendAsync(string to, string subject, string body, bool isHtml)
+        private async Task<bool> SendWithResendAsync(string to, string subject, string body, bool isHtml, IEnumerable<EmailAttachment>? attachments)
         {
             if (string.IsNullOrWhiteSpace(_apiKey))
             {
@@ -84,12 +90,18 @@ namespace ZetTechAvio1._0.Services
                 to = new[] { to },
                 subject,
                 html = isHtml ? body : null,
-                text = isHtml ? null : body
+                text = isHtml ? ConvertHtmlToPlainText(body) : body,
+                attachments = attachments?.Select(a => new { type = a.Type, name = a.Name, content = a.Content, content_id = a.ContentId }).ToArray()
+            };
+
+            var serializerOptions = new JsonSerializerOptions
+            {
+                DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
             };
 
             using var request = new HttpRequestMessage(HttpMethod.Post, "https://api.resend.com/emails")
             {
-                Content = new StringContent(JsonSerializer.Serialize(payload), Encoding.UTF8, "application/json")
+                Content = new StringContent(JsonSerializer.Serialize(payload, serializerOptions), Encoding.UTF8, "application/json")
             };
 
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _apiKey);
@@ -105,6 +117,19 @@ namespace ZetTechAvio1._0.Services
             var errorText = await response.Content.ReadAsStringAsync();
             _logger.LogWarning("Resend отправка не удалась: {StatusCode} {Body}", response.StatusCode, errorText);
             return false;
+        }
+
+        private static string ConvertHtmlToPlainText(string html)
+        {
+            if (string.IsNullOrWhiteSpace(html))
+                return string.Empty;
+
+            var text = Regex.Replace(html, "<style[^>]*>.*?</style>", string.Empty, RegexOptions.Singleline | RegexOptions.IgnoreCase);
+            text = Regex.Replace(text, "<script[^>]*>.*?</script>", string.Empty, RegexOptions.Singleline | RegexOptions.IgnoreCase);
+            text = Regex.Replace(text, "<[^>]+>", string.Empty);
+            text = WebUtility.HtmlDecode(text);
+            text = Regex.Replace(text, @"\s+", " ").Trim();
+            return text;
         }
 
         private static bool IsValidEmail(string email)

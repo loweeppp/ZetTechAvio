@@ -12,6 +12,7 @@ import Results from '../../features/flights/Results';
 export default function HomePageV2() {
   const { t } = useTranslation();
   const [query, setQuery] = React.useState(null);
+  const [draftQuery, setDraftQuery] = React.useState(null);
 
   return (
     <section className="homev2">
@@ -41,13 +42,13 @@ export default function HomePageV2() {
               </div>
 
               <div className="homev2__formWrap">
-                <SearchFormV2 onSearch={(q) => setQuery(q)} />
+                <SearchFormV2 onSearch={(q) => setQuery(q)} onDraftChange={setDraftQuery} />
                 <AISearch onSearch={(q) => setQuery(q)} />
               </div>
             </div>
           </div>
 
-          <RecommendedFlights onSearch={(q) => setQuery(q)} />
+          <RecommendedFlights currentSearch={draftQuery} onSearch={(q) => setQuery(q)} />
           <PopularDestinations onSearch={(q) => setQuery(q)} />
           <Benefits />
         </>

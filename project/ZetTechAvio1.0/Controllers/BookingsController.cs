@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.ComponentModel.DataAnnotations;
 using System.Security.Claims;
 using ZetTechAvio1._0.Models;
 using ZetTechAvio1._0.Services;
@@ -100,8 +101,11 @@ namespace ZetTechAvio1._0.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            if (string.IsNullOrEmpty(request.Email))
+            if (string.IsNullOrWhiteSpace(request.Email))
                 return BadRequest(new { message = "Email обязателен" });
+
+            if (!new EmailAddressAttribute().IsValid(request.Email))
+                return BadRequest(new { message = "Неверный формат email" });
 
             await _confirmationService.GenerateCodeAsync(request.Email, Response);
             return Ok(new { success = true, message = "Код подтверждения отправлен на почту" });
@@ -113,7 +117,13 @@ namespace ZetTechAvio1._0.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            if (string.IsNullOrEmpty(request.Code))
+            if (string.IsNullOrWhiteSpace(request.Email))
+                return BadRequest(new { message = "Email обязателен" });
+
+            if (!new EmailAddressAttribute().IsValid(request.Email))
+                return BadRequest(new { message = "Неверный формат email" });
+
+            if (string.IsNullOrWhiteSpace(request.Code))
                 return BadRequest(new { message = "Код подтверждения обязателен" });
 
             var isValid = await _confirmationService.VerifyCodeAsync(request.Email, request.Code, Request, Response);

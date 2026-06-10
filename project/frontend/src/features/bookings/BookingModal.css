@@ -290,14 +290,33 @@
   margin-bottom: 8px;
 }
 
-.\.passenger-form-selector {
+.counted-input-wrapper {
+  position: relative;
+}
+
+.counted-input {
   width: 100%;
-  padding: 8px;
+  padding: 10px 12px;
   margin-bottom: 8px;
   border: 1px solid #ddd;
   border-radius: 4px;
   font-size: 14px;
   font-family: inherit;
+  box-sizing: border-box;
+}
+
+.counted-input:focus {
+  outline: none;
+  border-color: #0066cc;
+  box-shadow: 0 0 4px rgba(0, 102, 204, 0.2);
+}
+
+.counted-input-counter {
+  position: absolute;
+  right: 12px;
+  bottom: 10px;
+  font-size: 12px;
+  color: #777;
 }
 
 @media (max-width: 600px) {

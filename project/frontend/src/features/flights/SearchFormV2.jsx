@@ -104,7 +104,7 @@ function CityInput({ label, value, onChange, placeholder, items = CITIES }) {
   );
 }
 
-export default function SearchFormV2({ onSearch }) {
+export default function SearchFormV2({ onSearch, onDraftChange }) {
   const { t } = useTranslation();
   const [from, setFrom] = React.useState(null);
   const [to, setTo] = React.useState(null);
@@ -118,6 +118,11 @@ export default function SearchFormV2({ onSearch }) {
   const [dateOpen, setDateOpen] = React.useState(false);
   const [dateQuery, setDateQuery] = React.useState('');
   const dateDropdownRef = React.useRef(null);
+
+  React.useEffect(() => {
+    if (!onDraftChange) return;
+    onDraftChange({ from, to, date, passengers });
+  }, [from, to, date, passengers, onDraftChange]);
 
   const swap = () => {
     setSwapping(true);

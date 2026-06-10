@@ -257,10 +257,10 @@ export default function UserProfile() {
                                 <span className="security-action-icon"></span>
                                 Изменить данные
                             </button>
-                            <button className="security-action">
+                            {/* <button className="security-action">
                                 <span className="security-action-icon"></span>
                                 Двухфакторная аутентификация
-                            </button>
+                            </button> */}
                         </div>
                     </section>
 

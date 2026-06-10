@@ -11,7 +11,6 @@ const DESTINATIONS = [
     price: 3800,
     img: 'https://images.unsplash.com/photo-1524231757912-21f4fe3a7200?w=800&auto=format&fit=crop',
     search: {
-      from: { code: 'MOW', name: 'Москва', query: 'Москва' },
       to: { code: 'IST', name: 'Стамбул', query: 'Стамбул' },
       passengers: 1,
     },
@@ -22,7 +21,6 @@ const DESTINATIONS = [
     price: 4349,
     img: 'https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=800&auto=format&fit=crop',
     search: {
-      from: { code: 'MOW', name: 'Москва', query: 'Москва' },
       to: { code: 'DXB', name: 'Дубай', query: 'Дубай ' },
       passengers: 1,
     },
@@ -33,7 +31,6 @@ const DESTINATIONS = [
     price: 3279,
     img: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=800&auto=format&fit=crop',
     search: {
-      from: { code: 'MOW', name: 'Москва', query: 'Москва' },
       to: { code: 'PAR', name: 'Париж', query: 'Париж' },
       passengers: 1,
     },
@@ -44,7 +41,6 @@ const DESTINATIONS = [
     price: 3520,
     img: 'https://images.unsplash.com/photo-1508009603885-50cf7c579365?w=800&auto=format&fit=crop',
     search: {
-      from: { code: 'MOW', name: 'Москва', query: 'Москва' },
       to: { code: 'BKK', name: 'Бангкок', query: 'Бангкок' },
       passengers: 1,
     },
@@ -55,7 +51,6 @@ const DESTINATIONS = [
     price: 4612,
     img: 'https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?w=800&auto=format&fit=crop',
     search: {
-      from: { code: 'MOW', name: 'Москва', query: 'Москва' },
       to: { code: 'JFK', name: 'Нью-Йорк', query: 'Нью-Йорк' },
       passengers: 1,
     },
@@ -66,7 +61,6 @@ const DESTINATIONS = [
     price: 3745,
     img: 'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=800&auto=format&fit=crop',
     search: {
-      from: { code: 'MOW', name: 'Москва', query: 'Moscow' },
       to: { code: 'HND', name: 'Токио', query: 'Tokyo' },
       passengers: 1,
     },
@@ -156,7 +150,7 @@ export default function PopularDestinations({ onSearch }) {
                   </div>
                   <div className="homev2__destPrice">
                     <span className="homev2__destPriceFrom">от </span>
-                    {d.price} ₽
+                    {(destinationPrices[d.city] ?? d.price)} ₽
                   </div>
                 </div>
               </div>

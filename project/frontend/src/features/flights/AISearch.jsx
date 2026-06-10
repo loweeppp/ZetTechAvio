@@ -132,8 +132,26 @@ export default function AISearch({ onSearch }) {
       });
 
       if (!response.ok) {
-        const payload = await response.json().catch(() => null);
-        throw new Error(payload?.message || 'Ошибка анализа запроса');
+        let payload = null;
+        let errorText = 'Ошибка анализа запроса';
+
+        try {
+          payload = await response.json();
+        } catch (jsonError) {
+          const rawText = await response.text().catch(() => '');
+          if (rawText) {
+            errorText = rawText;
+          }
+        }
+
+        if (payload) {
+          errorText = payload.message || payload.statusMessage || payload.error || errorText;
+          if (payload.details) {
+            errorText += ` ${payload.details}`;
+          }
+        }
+
+        throw new Error(errorText);
       }
 
       const payload = await response.json();

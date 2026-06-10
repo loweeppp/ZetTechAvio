@@ -3,6 +3,8 @@ using ZetTechAvio1._0.Data;
 using ZetTechAvio1._0.Models;
 using System.Net;
 using System.Net.Mail;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace ZetTechAvio1._0.Services
 {
@@ -40,8 +42,7 @@ namespace ZetTechAvio1._0.Services
             // Генерация 6-значного кода
             string code = new Random().Next(100000, 999999).ToString();
 
-            // Заменяем мешающие символы @ и . на подчёркивание
-            var safeCookieName = $"ConfirmationCode_{email.Replace("@", "_").Replace(".", "_")}";
+            var safeCookieName = GetSafeCookieName(email);
 
             response.Cookies.Append(safeCookieName, code,
             new CookieOptions
@@ -80,7 +81,7 @@ namespace ZetTechAvio1._0.Services
         public Task<bool> VerifyCodeAsync(string email, string code, HttpRequest request, HttpResponse response)
         {
             // Пытаемся получить куки
-            var safeCookieName = $"ConfirmationCode_{email.Replace("@", "_").Replace(".", "_")}";
+            var safeCookieName = GetSafeCookieName(email);
 
             if (!request.Cookies.TryGetValue(safeCookieName, out var storedCode))
                 return Task.FromResult(false);  // куки не найдена или истекла
@@ -92,6 +93,13 @@ namespace ZetTechAvio1._0.Services
             response.Cookies.Delete(safeCookieName);
 
             return Task.FromResult(true);
+        }
+
+        private static string GetSafeCookieName(string email)
+        {
+            var normalizedEmail = email.Trim().ToLowerInvariant();
+            var hash = SHA256.HashData(Encoding.UTF8.GetBytes(normalizedEmail));
+            return $"ConfirmationCode_{Convert.ToHexString(hash)}";
         }
     }
 
@@ -125,6 +133,17 @@ namespace ZetTechAvio1._0.Services
 
                 if (childCount > 0 && adultCount == 0)
                     throw new InvalidOperationException("Ребёнок не может лететь без взрослого");
+
+                var existingTicketsOnFlight = await _dbContext.Tickets
+                    .Where(t => t.FlightId == request.FlightId
+                             && t.Booking != null && t.Booking.UserId == userId
+                             && t.Status != TicketStatus.Cancelled)
+                    .CountAsync();
+
+                if (existingTicketsOnFlight + request.Quantity > 5)
+                    throw new InvalidOperationException("Нельзя купить более 5 билетов на один рейс.");
+
+                var selectedSeats = await AllocateSeatsAsync(request.FlightId, request.Quantity, fare.Class);
 
                 // Создаём бронирование
                 var booking = new Booking
@@ -170,10 +189,14 @@ namespace ZetTechAvio1._0.Services
                         ? Math.Round(fare.Price * 0.7M, 2)
                         : fare.Price;
 
+                    var selectedSeat = selectedSeats[i];
+
                     var ticket = new Ticket
                     {
                         FlightId = request.FlightId,
                         FareId = request.FareId,
+                        SeatId = selectedSeat.Id,
+                        Seat = selectedSeat,
                         TicketNumber = GenerateTicketNumber(booking.BookingReference, i + 1),
                         PassengerName = passenger.FullName,
                         PassengerType = passengerType,
@@ -183,6 +206,7 @@ namespace ZetTechAvio1._0.Services
                         Status = TicketStatus.Active
                     };
 
+                    selectedSeat.Status = SeatStatus.Booked;
                     booking.Tickets.Add(ticket);
                     totalPrice += passengerPrice;
                 }
@@ -214,6 +238,8 @@ namespace ZetTechAvio1._0.Services
                 .Include(b => b.Tickets)
                     .ThenInclude(t => t.Flight)
                         .ThenInclude(f => f.DestAirport)
+                .Include(b => b.Tickets)
+                    .ThenInclude(t => t.Seat)
                 .Where(b => b.UserId == userId)
                 .OrderByDescending(b => b.CreatedAt)
                 .ToListAsync();
@@ -225,6 +251,7 @@ namespace ZetTechAvio1._0.Services
         {
             var booking = await _dbContext.Bookings
                 .Include(b => b.Tickets)
+                    .ThenInclude(t => t.Seat)
                 .FirstOrDefaultAsync(b => b.Id == bookingId);
 
             return booking == null ? null : MapToResponse(booking);
@@ -248,6 +275,7 @@ namespace ZetTechAvio1._0.Services
                     PassengerName = t.PassengerName,
                     Price = t.Price,
                     Status = t.Status.ToString(),
+                    SeatNumber = t.Seat?.SeatNumber ?? string.Empty,
                     FlightId = t.FlightId,
                     Flight = t.Flight != null ? new FlightResponse
                     {
@@ -289,7 +317,142 @@ namespace ZetTechAvio1._0.Services
             return $"{bookingRef}-{sequence:D3}";
         }
 
+        private async Task<List<Seat>> AllocateSeatsAsync(int flightId, int quantity, Fare.Fare_class fareClass)
+        {
+            var preferredSeatClass = Enum.TryParse<SeatClass>(fareClass.ToString(), true, out var seatClass)
+                ? seatClass
+                : SeatClass.Economy;
 
+            await EnsureSeatsExistAsync(flightId);
+
+            var availableSeats = await _dbContext.Seats
+                .Where(s => s.FlightId == flightId && s.Status == SeatStatus.Available && s.SeatClass == preferredSeatClass)
+                .OrderBy(s => s.SeatNumber)
+                .ToListAsync();
+
+            if (availableSeats.Count < quantity)
+            {
+                availableSeats = await _dbContext.Seats
+                    .Where(s => s.FlightId == flightId && s.Status == SeatStatus.Available)
+                    .OrderBy(s => s.SeatNumber)
+                    .ToListAsync();
+            }
+
+            if (availableSeats.Count < quantity)
+                throw new InvalidOperationException("Недостаточно доступных мест на этом рейсе.");
+
+            var groupedByRow = availableSeats
+                .Select(s => new
+                {
+                    Seat = s,
+                    Row = ParseSeatRow(s.SeatNumber),
+                    Column = ParseSeatColumn(s.SeatNumber)
+                })
+                .Where(x => x.Row.HasValue)
+                .GroupBy(x => x.Row.Value)
+                .Where(g => g.Count() >= quantity)
+                .ToList();
+
+            var random = new Random();
+            if (groupedByRow.Any())
+            {
+                var chosenGroup = groupedByRow[random.Next(groupedByRow.Count)];
+                return chosenGroup
+                    .OrderBy(x => x.Column)
+                    .Take(quantity)
+                    .Select(x => x.Seat)
+                    .ToList();
+            }
+
+            var shuffled = availableSeats.OrderBy(_ => random.Next()).ToList();
+            return shuffled.Take(quantity).ToList();
+        }
+
+        private async Task EnsureSeatsExistAsync(int flightId)
+        {
+            if (await _dbContext.Seats.AnyAsync(s => s.FlightId == flightId))
+                return;
+
+            var flight = await _dbContext.Flights
+                .Include(f => f.Aircraft)
+                .Include(f => f.Fares)
+                .FirstOrDefaultAsync(f => f.Id == flightId);
+
+            if (flight == null)
+                throw new InvalidOperationException("Рейс не найден при распределении мест.");
+
+            if (flight.Fares == null || !flight.Fares.Any())
+                return;
+
+            var seatDefinitions = flight.Fares
+                .OrderBy(f => f.Class == Fare.Fare_class.First ? 0 : f.Class == Fare.Fare_class.Business ? 1 : 2)
+                .Select(f => new { SeatClass = GetSeatClassFromFare(f.Class), SeatsCount = Math.Max(f.SeatsAvailable, 0) })
+                .Where(x => x.SeatsCount > 0)
+                .ToList();
+
+            if (!seatDefinitions.Any())
+                return;
+
+            var seats = new List<Seat>();
+            var nextRow = 1;
+            foreach (var definition in seatDefinitions)
+            {
+                seats.AddRange(GenerateSeatLayout(flight.Id, definition.SeatClass, definition.SeatsCount, ref nextRow));
+            }
+
+            if (seats.Any())
+            {
+                await _dbContext.Seats.AddRangeAsync(seats);
+                await _dbContext.SaveChangesAsync();
+            }
+        }
+
+        private static SeatClass GetSeatClassFromFare(Fare.Fare_class fareClass)
+        {
+            return Enum.TryParse<SeatClass>(fareClass.ToString(), true, out var seatClass)
+                ? seatClass
+                : SeatClass.Economy;
+        }
+
+        private static IEnumerable<Seat> GenerateSeatLayout(int flightId, SeatClass seatClass, int count, ref int rowCounter)
+        {
+            const string seatColumns = "ABCDEF";
+            var seats = new List<Seat>(count);
+
+            for (int i = 0; i < count; i++)
+            {
+                var row = rowCounter + (i / seatColumns.Length);
+                var column = seatColumns[i % seatColumns.Length].ToString();
+                seats.Add(new Seat
+                {
+                    FlightId = flightId,
+                    SeatNumber = $"{row}{column}",
+                    SeatClass = seatClass,
+                    Status = SeatStatus.Available,
+                });
+            }
+
+            rowCounter += (int)Math.Ceiling(count / (double)seatColumns.Length);
+            return seats;
+        }
+
+        private static int? ParseSeatRow(string seatNumber)
+        {
+            if (string.IsNullOrWhiteSpace(seatNumber))
+                return null;
+
+            var digits = new string(seatNumber.TakeWhile(char.IsDigit).ToArray());
+            return int.TryParse(digits, out var row) ? row : null;
+        }
+
+        private static string ParseSeatColumn(string seatNumber)
+        {
+            if (string.IsNullOrWhiteSpace(seatNumber))
+                return string.Empty;
+
+            var column = new string(seatNumber.SkipWhile(char.IsDigit).ToArray());
+            return column.ToUpperInvariant();
+        }
     }
 
 }

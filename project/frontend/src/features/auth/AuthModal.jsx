@@ -13,6 +13,8 @@ function FloatingInput({
   placeholder,
   maxLength,
 }) {
+  const count = value?.length || 0;
+
   return (
     <div className="floating-input-wrapper">
       <input
@@ -28,6 +30,53 @@ function FloatingInput({
       <label htmlFor={id} className="floating-label">
         {label}
       </label>
+      {maxLength ? (
+        <div className="floating-input-counter">
+          {count}/{maxLength}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+function PasswordInput({
+  id,
+  label,
+  value,
+  onChange,
+  isVisible,
+  onToggleVisibility,
+  maxLength,
+}) {
+  const count = value?.length || 0;
+
+  return (
+    <div className="password-input-wrapper">
+      <input
+        id={id}
+        type={isVisible ? 'text' : 'password'}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        maxLength={maxLength}
+        placeholder=" "
+        className="password-input"
+      />
+      <label htmlFor={id} className="password-label">
+        {label}
+      </label>
+      <button
+        type="button"
+        onClick={onToggleVisibility}
+        tabIndex="-1"
+        className="password-toggle"
+      >
+        <EyeIcon isVisible={isVisible} size={20} />
+      </button>
+      {maxLength ? (
+        <div className="floating-input-counter">
+          {count}/{maxLength}
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -106,6 +155,11 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess }) {
       return false;
     }
 
+    if (fullName.length < 3) {
+      setError('Имя должно содержать минимум 3 символа');
+      return false;
+    }
+
     function isvalidateEmail(e) {
       return /\S+@\S+\.\S+/.test(e);
     }
@@ -115,10 +169,10 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess }) {
     }
 
     function isvalidatePhone(p) {
-      return /^\+?[0-9]{10,12}$/.test(p);
+      return /^(?:\+7|8)\d{10}$/.test(p);
     }
     if (phone && !isvalidatePhone(phone)) {
-      setError('Неверный формат телефона');
+      setError('Номер должен начинаться с +7 или 8 и содержать 11 цифр');
       return false;
     }
 
@@ -131,7 +185,6 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess }) {
       setError('Неверный формат имени, не больше 19 символов');
       return false;
     }
-
 
     if (password.length < 6) {
       setError('Пароль должен быть не менее 6 символов');
@@ -226,7 +279,11 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess }) {
         setTimeout(() => window.location.reload(), 100);
       } else {
         const errorData = await response.json().catch(() => ({}));
-        setError(errorData.message || 'Неверный email или пароль');
+        const message =
+          errorData.message === 'Invalid email or password'
+            ? 'Неверный email или пароль'
+            : errorData.message || 'Неверный email или пароль';
+        setError(message);
       }
     } catch (err) {
       setError('Ошибка подключения');
@@ -281,35 +338,24 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess }) {
           <form onSubmit={handleLogin}>
             <h3 className="modal-title">Вход в аккаунт</h3>
 
-            <FloatingInput
+              <FloatingInput
               id="login-email"
               label="Email"
               type="email"
               value={loginEmail}
               onChange={setLoginEmail}
+              maxLength={100}
             />
 
-            <div className="password-input-wrapper">
-              <input
-                id="login-password"
-                type={showLoginPassword ? 'text' : 'password'}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder=" "
-                className="password-input"
-              />
-              <label htmlFor="login-password" className="password-label">
-                Пароль
-              </label>
-              <button
-                type="button"
-                onClick={() => setShowLoginPassword(!showLoginPassword)}
-                tabIndex="-1"
-                className="password-toggle"
-              >
-                <EyeIcon isVisible={showLoginPassword} size={20} />
-              </button>
-            </div>
+            <PasswordInput
+              id="login-password"
+              label="Пароль"
+              value={password}
+              onChange={setPassword}
+              isVisible={showLoginPassword}
+              onToggleVisibility={() => setShowLoginPassword(!showLoginPassword)}
+              maxLength={50}
+            />
 
             {error && <div className="error-message">{error}</div>}
 
@@ -351,6 +397,7 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess }) {
               type="text"
               value={fullName}
               onChange={setFullName}
+              maxLength={50}
             />
 
             <FloatingInput
@@ -359,6 +406,7 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess }) {
               type="email"
               value={email}
               onChange={setEmail}
+              maxLength={100}
             />
 
             <FloatingInput
@@ -367,33 +415,22 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess }) {
               type="tel"
               value={phone}
               onChange={(val) => {
-                const value = val.replace(/\D/g, '');
+                let value = val.replace(/[^0-9+]/g, '');
+                value = value.replace(/\+/g, (match, index) => (index === 0 ? match : ''));
                 setPhone(value);
               }}
               maxLength={11}
             />
 
-            <div className="password-input-wrapper">
-              <input
-                id="reg-password"
-                type={showRegisterPassword ? 'text' : 'password'}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder=" "
-                className="password-input"
-              />
-              <label htmlFor="reg-password" className="password-label">
-                Пароль
-              </label>
-              <button
-                type="button"
-                onClick={() => setShowRegisterPassword(!showRegisterPassword)}
-                tabIndex="-1"
-                className="password-toggle"
-              >
-                <EyeIcon isVisible={showRegisterPassword} size={20} />
-              </button>
-            </div>
+            <PasswordInput
+              id="reg-password"
+              label="Пароль"
+              value={password}
+              onChange={setPassword}
+              isVisible={showRegisterPassword}
+              onToggleVisibility={() => setShowRegisterPassword(!showRegisterPassword)}
+              maxLength={50}
+            />
 
             {hovered !== false && (
               <FloatingInput

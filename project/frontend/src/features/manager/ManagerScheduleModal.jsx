@@ -271,7 +271,7 @@ function FareClassesSection({ fareClasses = [], aircraftCapacity, onChange }) {
                 ))}
               </select>
 
-              {fare.enabled && (fare.ticketCount ?? 0) === 0 ? (
+              {/* {fare.enabled && (fare.ticketCount ?? 0) === 0 ? (
                 <button
                   type="button"
                   className="fare-table__remove-btn"
@@ -281,7 +281,7 @@ function FareClassesSection({ fareClasses = [], aircraftCapacity, onChange }) {
                 </button>
               ) : (
                 <div className="fare-table__action-placeholder" />
-              )}
+              )} */}
             </div>
           ))}
 
@@ -439,157 +439,162 @@ export default function ManagerScheduleModal({ isOpen, onClose, onSave, airlines
         </div>
 
         <form className="admin-modal__form" onSubmit={handleSubmit}>
-          <div className="flight-edit-modal__grid-3">
-            <div className="floating-input-wrapper">
-              <input
-                id="schedule-flight-number"
-                type="text"
-                value={formState.flightNumber}
-                onChange={(e) => handleChange('flightNumber', e.target.value)}
-                placeholder=" "
+          <div className="manager-modal__grid">
+            <div className="manager-modal__main">
+              <div className="flight-edit-modal__grid-3">
+                <div className="floating-input-wrapper">
+                  <input
+                    id="schedule-flight-number"
+                    type="text"
+                    value={formState.flightNumber}
+                    onChange={(e) => handleChange('flightNumber', e.target.value)}
+                    placeholder=" "
+                  />
+                  <label htmlFor="schedule-flight-number" className="floating-label">Номер рейса</label>
+                </div>
+
+                <FormSelect id="schedule-airline-id" label="Авиакомпания" value={formState.airlineId} onChange={(value) => handleChange('airlineId', value)} placeholder="Выберите авиакомпанию">
+                  {airlines.map((airline) => (
+                    <option key={airline.id} value={String(airline.id)}>
+                      {airline.name} ({airline.iataCode})
+                    </option>
+                  ))}
+                </FormSelect>
+
+                <FormSelect id="schedule-aircraft-id" label="Самолёт" value={formState.aircraftId} onChange={(value) => handleChange('aircraftId', value)} placeholder="Выберите самолёт">
+                  {aircrafts.map((aircraft) => (
+                    <option key={aircraft.id} value={String(aircraft.id)}>
+                      {aircraft.manufacturer} {aircraft.model}
+                    </option>
+                  ))}
+                </FormSelect>
+              </div>
+
+              <div className="flight-edit-modal__section">
+                <SectionHeader icon={<PlaneTakeoffIcon />} label="Маршрут" />
+                <div className="flight-edit-modal__route-grid">
+                  <FormSelect id="schedule-origin-id" label="Аэропорт отправления" value={formState.originAirportId} onChange={(value) => handleChange('originAirportId', value)} placeholder="Откуда">
+                    {airports.map((airport) => (
+                      <option key={airport.id} value={String(airport.id)}>
+                        {airport.iata} — {airport.city}
+                      </option>
+                    ))}
+                  </FormSelect>
+
+                  <div className="flight-route-preview">
+                    <div className="flight-route-preview__icons">
+                      <span className="flight-route-preview__code">{originAirport?.iata || '---'}</span>
+                      <PlaneTakeoffIcon />
+                      <ArrowRightIcon />
+                      <PlaneLandingIcon className="flight-route-preview__plane" />
+                      <span className="flight-route-preview__code">{destAirport?.iata || '---'}</span>
+                    </div>
+                  </div>
+
+                  <FormSelect id="schedule-dest-id" label="Аэропорт прибытия" value={formState.destAirportId} onChange={(value) => handleChange('destAirportId', value)} placeholder="Куда">
+                    {airports.map((airport) => (
+                      <option key={airport.id} value={String(airport.id)}>
+                        {airport.iata} — {airport.city}
+                      </option>
+                    ))}
+                  </FormSelect>
+                </div>
+              </div>
+
+              <div className="flight-edit-modal__section">
+                <SectionHeader icon={<ClockIcon />} label="Расписание" />
+                <div className="admin-modal__select-wrapper">
+                  <label>Дни вылета</label>
+                  <WeekdayPicker value={formState.weekdays} onChange={(days) => handleChange('weekdays', days)} />
+                </div>
+
+                <div className="flight-edit-modal__grid-3">
+                  <div className="floating-input-wrapper">
+                    <input
+                      id="departure-time"
+                      type="time"
+                      value={formState.departureTime}
+                      onChange={(e) => handleChange('departureTime', e.target.value)}
+                      placeholder=" "
+                      required
+                    />
+                    <label htmlFor="departure-time" className="floating-label">Время вылета</label>
+                  </div>
+
+                  <div className="floating-input-wrapper">
+                    <input
+                      id="arrival-time"
+                      type="time"
+                      value={formState.arrivalTime}
+                      onChange={(e) => handleChange('arrivalTime', e.target.value)}
+                      placeholder=" "
+                      required
+                    />
+                    <label htmlFor="arrival-time" className="floating-label">Время прилёта</label>
+                  </div>
+
+                  <div className="schedule-summary-box">
+                    <label className="schedule-summary-label">Расчётное время прилёта</label>
+                    <div>{computedArrival()}</div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flight-edit-modal__section">
+                <SectionHeader icon={<CalendarRangeIcon />} label="Период действия" />
+                <div className="flight-edit-modal__grid-3">
+                  <div className="floating-input-wrapper">
+                    <input
+                      id="schedule-start-date"
+                      type="date"
+                      value={formState.startDate}
+                      onChange={(e) => handleChange('startDate', e.target.value)}
+                      placeholder=" "
+                      required
+                      min={minStartDateValue}
+                      max={maxStartDateValue}
+                    />
+                    <label htmlFor="schedule-start-date" className="floating-label">Дата начала</label>
+                  </div>
+
+                  <div className="floating-input-wrapper">
+                    <input
+                      id="schedule-end-date"
+                      type="date"
+                      value={formState.endDate}
+                      onChange={(e) => handleChange('endDate', e.target.value)}
+                      placeholder=" "
+                      required
+                      min={formState.startDate || minStartDateValue}
+                      max={maxStartDateValue}
+                    />
+                    <label htmlFor="schedule-end-date" className="floating-label">Дата окончания</label>
+                  </div>
+
+                  <div className="schedule-summary-box">
+                    <label className="schedule-summary-label">Количество рейсов</label>
+                    <div>
+                      {flightsCount === null ? '—' : `${flightsCount} ${flightsCount === 1 ? 'рейс' : flightsCount >= 2 && flightsCount <= 4 ? 'рейса' : 'рейсов'}`}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {validationError && (
+                <div className="admin-panel__error" role="alert" style={{ marginBottom: '1rem' }}>
+                  {validationError}
+                </div>
+              )}
+            </div>
+
+            <aside className="manager-modal__sidebar">
+              <FareClassesSection
+                fareClasses={formState.fareClasses ?? []}
+                aircraftCapacity={selectedAircraft?.capacity}
+                onChange={(classes) => handleChange('fareClasses', classes)}
               />
-              <label htmlFor="schedule-flight-number" className="floating-label">Номер рейса</label>
-            </div>
-
-            <FormSelect id="schedule-airline-id" label="Авиакомпания" value={formState.airlineId} onChange={(value) => handleChange('airlineId', value)} placeholder="Выберите авиакомпанию">
-              {airlines.map((airline) => (
-                <option key={airline.id} value={String(airline.id)}>
-                  {airline.name} ({airline.iataCode})
-                </option>
-              ))}
-            </FormSelect>
-
-            <FormSelect id="schedule-aircraft-id" label="Самолёт" value={formState.aircraftId} onChange={(value) => handleChange('aircraftId', value)} placeholder="Выберите самолёт">
-              {aircrafts.map((aircraft) => (
-                <option key={aircraft.id} value={String(aircraft.id)}>
-                  {aircraft.manufacturer} {aircraft.model}
-                </option>
-              ))}
-            </FormSelect>
+            </aside>
           </div>
-
-          <div className="flight-edit-modal__section">
-            <SectionHeader icon={<PlaneTakeoffIcon />} label="Маршрут" />
-            <div className="flight-edit-modal__route-grid">
-              <FormSelect id="schedule-origin-id" label="Аэропорт отправления" value={formState.originAirportId} onChange={(value) => handleChange('originAirportId', value)} placeholder="Откуда">
-                {airports.map((airport) => (
-                  <option key={airport.id} value={String(airport.id)}>
-                    {airport.iata} — {airport.city}
-                  </option>
-                ))}
-              </FormSelect>
-
-              <div className="flight-route-preview">
-
-                <div className="flight-route-preview__icons">
-                  <span className="flight-route-preview__code">{originAirport?.iata || '---'}</span>
-                  <PlaneTakeoffIcon />
-                  <ArrowRightIcon />
-                  <PlaneLandingIcon className="flight-route-preview__plane" />
-                  <span className="flight-route-preview__code">{destAirport?.iata || '---'}</span>
-                </div>
-              </div>
-
-              <FormSelect id="schedule-dest-id" label="Аэропорт прибытия" value={formState.destAirportId} onChange={(value) => handleChange('destAirportId', value)} placeholder="Куда">
-                {airports.map((airport) => (
-                  <option key={airport.id} value={String(airport.id)}>
-                    {airport.iata} — {airport.city}
-                  </option>
-                ))}
-              </FormSelect>
-            </div>
-          </div>
-
-          <div className="flight-edit-modal__section">
-            <SectionHeader icon={<ClockIcon />} label="Расписание" />
-            <div className="admin-modal__select-wrapper">
-              <label>Дни вылета</label>
-              <WeekdayPicker value={formState.weekdays} onChange={(days) => handleChange('weekdays', days)} />
-            </div>
-
-            <div className="flight-edit-modal__grid-3">
-              <div className="floating-input-wrapper">
-                <input
-                  id="departure-time"
-                  type="time"
-                  value={formState.departureTime}
-                  onChange={(e) => handleChange('departureTime', e.target.value)}
-                  placeholder=" "
-                  required
-                />
-                <label htmlFor="departure-time" className="floating-label">Время вылета</label>
-              </div>
-
-              <div className="floating-input-wrapper">
-                <input
-                  id="arrival-time"
-                  type="time"
-                  value={formState.arrivalTime}
-                  onChange={(e) => handleChange('arrivalTime', e.target.value)}
-                  placeholder=" "
-                  required
-                />
-                <label htmlFor="arrival-time" className="floating-label">Время прилёта</label>
-              </div>
-
-              <div className="schedule-summary-box">
-                <label className="schedule-summary-label">Расчётное время прилёта</label>
-                <div>{computedArrival()}</div>
-              </div>
-            </div>
-
-            <FareClassesSection
-              fareClasses={formState.fareClasses ?? []}
-              aircraftCapacity={selectedAircraft?.capacity}
-              onChange={(classes) => handleChange('fareClasses', classes)}
-            />
-          </div>
-
-          <div className="flight-edit-modal__section">
-            <SectionHeader icon={<CalendarRangeIcon />} label="Период действия" />
-            <div className="flight-edit-modal__grid-3">
-              <div className="floating-input-wrapper">
-                <input
-                  id="schedule-start-date"
-                  type="date"
-                  value={formState.startDate}
-                  onChange={(e) => handleChange('startDate', e.target.value)}
-                  placeholder=" "
-                  required
-                  min={minStartDateValue}
-                  max={maxStartDateValue}
-                />
-                <label htmlFor="schedule-start-date" className="floating-label">Дата начала</label>
-              </div>
-
-              <div className="floating-input-wrapper">
-                <input
-                  id="schedule-end-date"
-                  type="date"
-                  value={formState.endDate}
-                  onChange={(e) => handleChange('endDate', e.target.value)}
-                  placeholder=" "
-                  required
-                  min={formState.startDate || minStartDateValue}
-                  max={maxStartDateValue}
-                />
-                <label htmlFor="schedule-end-date" className="floating-label">Дата окончания</label>
-              </div>
-
-              <div className="schedule-summary-box">
-                <label className="schedule-summary-label">Количество рейсов</label>
-                <div>
-                  {flightsCount === null ? '—' : `${flightsCount} ${flightsCount === 1 ? 'рейс' : flightsCount >= 2 && flightsCount <= 4 ? 'рейса' : 'рейсов'}`}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {validationError && (
-            <div className="admin-panel__error" role="alert" style={{ marginBottom: '1rem' }}>
-              {validationError}
-            </div>
-          )}
 
           <div className="admin-modal__actions">
             <button type="button" className="btn btn-secondary" onClick={onClose}>Отмена</button>

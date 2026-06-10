@@ -52,7 +52,27 @@ export const verifyPaymentStatus = async (bookingId, yooKassaPaymentId, token) =
   return data;
 };
 
+export const resendConfirmationEmail = async (bookingId, token) => {
+  const response = await fetch(`${API_URL}/api/payment/resend-confirmation-email`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ bookingId }),
+  });
+
+  const data = await response.json().catch(() => ({}));
+
+  if (!response.ok) {
+    throw new Error(data.message || 'Ошибка при отправке письма');
+  }
+
+  return data;
+};
+
 export default {
   createPayment,
   verifyPaymentStatus,
+  resendConfirmationEmail,
 };

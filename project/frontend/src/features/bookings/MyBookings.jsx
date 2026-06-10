@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { jsPDF } from 'jspdf';
 import QRCode from 'qrcode';
 import { useAuth } from '../auth/useAuth';
-import { verifyPaymentStatus } from './paymentService';
+import { verifyPaymentStatus, resendConfirmationEmail } from './paymentService';
 import './MyBookings.css';
 
 const API_URL = process.env.REACT_APP_API_URL || 'https://api.zettechavio.ru';
@@ -172,7 +172,7 @@ export default function MyBookings() {
         </div>
 
         {/* Статус загрузки */}
-        {loading && <p className="status-message loading">⏳ Загрузка...</p>}
+        {loading && <p className="status-message loading"> Загрузка...</p>}
         {error && <p className="status-message error"> {error}</p>}
 
         {/* Список билетов */}
@@ -196,10 +196,14 @@ export default function MyBookings() {
 
 // Компонент карточки билета
 function BookingCard({ booking }) {
+  const [resendLoading, setResendLoading] = useState(false);
+  const [resendMessage, setResendMessage] = useState('');
+  const [resendDisabled, setResendDisabled] = useState(false);
+
   const getStatusBadge = (status) => {
     const normalized = normalizeStatus(status);
     const statusMap = {
-      created: { label: '⏳ Ожидание оплаты', color: '#ff9800' },
+      created: { label: ' Ожидание оплаты', color: '#ff9800' },
       confirmed: { label: 'Подтверждено', color: '#4caf50' },
       completed: { label: 'Завершено', color: '#2196f3' },
       cancelled: { label: 'Отменено', color: '#f44336' },
@@ -258,7 +262,7 @@ function BookingCard({ booking }) {
     const flightDate = flight?.departureTime ? new Date(flight.departureTime).toLocaleDateString('ru-RU') : 'Unknown';
     const flightTime = flight?.departureTime ? new Date(flight.departureTime).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' }) : 'Unknown';
     const ticketCount = booking.tickets?.length || 0;
-    const seatValue = normalize(firstTicket?.seat || 'N/A');
+    const seatValue = normalize(firstTicket?.seatNumber || firstTicket?.seat || 'N/A');
     const gateValue = normalize(flight?.gate || 'N/A');
 
     doc.setFont('helvetica', 'bold');
@@ -294,7 +298,7 @@ function BookingCard({ booking }) {
     doc.setFontSize(11);
     (booking.tickets || []).forEach((ticket, index) => {
       const passengerName = normalize(ticket.passengerName || `Passenger ${index + 1}`);
-      const seat = normalize(ticket.seat || 'N/A');
+      const seat = normalize(ticket.seatNumber || ticket.seat || 'N/A');
       doc.text(`${index + 1}. ${passengerName}`, padding, y);
       doc.text(`Seat: ${seat}`, padding + 320, y);
       y += 16;
@@ -322,6 +326,27 @@ function BookingCard({ booking }) {
     doc.text('Please keep this PDF ticket for airport registration.', padding, qrY + 140 + 20);
 
     doc.save(`ZetTechAvio_Ticket_${normalize(booking.bookingReference)}.pdf`);
+  };
+
+  const resendBookingConfirmationEmail = async () => {
+    setResendMessage('');
+    setResendLoading(true);
+
+    try {
+      const token = localStorage.getItem('token');
+      const data = await resendConfirmationEmail(booking.id, token);
+
+      setResendMessage(data?.message || 'Письмо успешно отправлено');
+      setResendDisabled(true);
+      window.setTimeout(() => setResendDisabled(false), 5 * 60 * 1000);
+    } catch (err) {
+      const message = err?.message || 'Ошибка при отправке письма';
+      setResendMessage(message);
+      setResendDisabled(true);
+      window.setTimeout(() => setResendDisabled(false), 5 * 60 * 1000);
+    } finally {
+      setResendLoading(false);
+    }
   };
 
   const openSupportForBooking = (booking) => {
@@ -407,6 +432,16 @@ function BookingCard({ booking }) {
         >
           Скачать билет PDF
         </button>
+        {(booking.status && normalizeStatus(booking.status) === 'confirmed') && (
+          <button
+            className="btn btn-secondary"
+            onClick={resendBookingConfirmationEmail}
+            type="button"
+            disabled={resendLoading || resendDisabled}
+          >
+            {resendLoading ? 'Отправка...' : 'Отправить на почту'}
+          </button>
+        )}
         {bookingCategory === 'cancelled' && (
           <button
             className="btn btn-secondary"
@@ -417,6 +452,11 @@ function BookingCard({ booking }) {
           </button>
         )}
       </div>
+      {resendMessage && (
+        <div className="resend-message">
+          {resendMessage}
+        </div>
+      )}
     </div>
   );
 }

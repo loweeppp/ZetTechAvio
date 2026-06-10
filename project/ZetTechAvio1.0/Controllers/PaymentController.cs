@@ -113,6 +113,42 @@ namespace ZetTechAvio1._0.Controllers
                 return StatusCode(500, new { message = "Внутренняя ошибка сервера" });
             }
         }
+
+        [HttpPost("resend-confirmation-email")]
+        [Authorize]
+        public async Task<IActionResult> ResendConfirmationEmail([FromBody] ResendConfirmationEmailRequest request)
+        {
+            if (request?.BookingId <= 0)
+            {
+                return BadRequest(new { message = "BookingId обязателен" });
+            }
+
+            if (!this.TryGetUserId(out int userId))
+            {
+                return Unauthorized(new { message = "Не авторизован" });
+            }
+
+            try
+            {
+                var result = await _paymentService.SendBookingConfirmationEmailAsync(request.BookingId, userId);
+                if (result == null)
+                {
+                    return StatusCode(500, new { message = "Внутренняя ошибка сервера" });
+                }
+
+                if (!result.Success)
+                {
+                    return BadRequest(new { message = result.Message, isThrottled = result.IsThrottled });
+                }
+
+                return Ok(new { message = result.Message });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"[RESEND_EMAIL] Ошибка: {ex.Message}");
+                return StatusCode(500, new { message = "Внутренняя ошибка сервера" });
+            }
+        }
     }
 
     public class CreatePaymentRequest
@@ -124,5 +160,10 @@ namespace ZetTechAvio1._0.Controllers
     {
         public int BookingId { get; set; }
         public string YooKassaPaymentId { get; set; }
+    }
+
+    public class ResendConfirmationEmailRequest
+    {
+        public int BookingId { get; set; }
     }
 }

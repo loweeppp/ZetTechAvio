@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using ZetTechAvio1._0.Data;
 using ZetTechAvio1._0.Models;
 using Newtonsoft.Json;
@@ -10,14 +11,20 @@ using System.Net;
 
 namespace ZetTechAvio1._0.Services
 {
+    public record EmailSendResult(bool Success, string Message, bool IsThrottled = false);
+
     public interface IPaymentService
     {
         Task<Payment?> CreatePaymentAsync(int bookingId, string description);
         Task<Payment?> VerifyAndUpdatePaymentStatusAsync(int bookingId, string yooKassaPaymentId);
+        Task<EmailSendResult> SendBookingConfirmationEmailAsync(int bookingId, int userId);
     }
 
     public class PaymentService : IPaymentService
     {
+        private static readonly TimeSpan EmailConfirmationCooldown = TimeSpan.FromMinutes(5);
+        private static readonly ConcurrentDictionary<int, DateTime> _lastEmailConfirmationSentAt = new();
+
         private readonly ApplicationDbContext _context;
         private readonly ILogger<PaymentService> _logger;
         private readonly IConfiguration _config;
@@ -155,7 +162,7 @@ namespace ZetTechAvio1._0.Services
         /// <summary>
         /// Отправляет письмо с подтверждением платежа и QR-кодом билета
         /// </summary>
-        private async Task SendPaymentConfirmationEmailAsync(Booking booking, Payment payment)
+        private async Task<bool> SendPaymentConfirmationEmailAsync(Booking booking, Payment payment)
         {
             try
             {
@@ -167,7 +174,7 @@ namespace ZetTechAvio1._0.Services
                 if (string.IsNullOrWhiteSpace(userEmail))
                 {
                     _logger.LogWarning("Email пользователя не найден для бронирования {BookingId}", booking.Id);
-                    return;
+                    return false;
                 }
 
                 var smtpHost = _config["SmtpSettings:Host"] ?? _config["SMTP_HOST"];
@@ -180,7 +187,7 @@ namespace ZetTechAvio1._0.Services
                 if (string.IsNullOrWhiteSpace(smtpHost) || string.IsNullOrWhiteSpace(senderEmail))
                 {
                     _logger.LogWarning("[PAYMENT_EMAIL] SMTP не настроен, письмо не отправлено");
-                    return;
+                    return false;
                 }
 
                 if (!int.TryParse(smtpPortStr, out int smtpPort))
@@ -213,7 +220,7 @@ namespace ZetTechAvio1._0.Services
 
                             <h3 style='color: #333;'>Ваш QR-код билета:</h3>
                             <div style='background: #fff; padding: 15px; border: 1px solid #ddd; border-radius: 5px; margin: 20px 0; text-align: center;'>
-                                <img src='data:image/png;base64,{qrCodeBase64}' alt='QR-код билета' style='width: 240px; height: 240px; display: block; margin: 0 auto;' />
+                                <img src='cid:ticket-qr' alt='QR-код билета' style='width: 240px; height: 240px; display: block; margin: 0 auto;' />
                             </div>
 
                             <p style='color: #666; font-size: 12px;'>
@@ -233,7 +240,12 @@ namespace ZetTechAvio1._0.Services
                     </html>
                     ";
 
-                    var emailSent = await _emailService.SendEmailAsync(userEmail, subject, emailBody, isHtml: true);
+                    var attachments = new[]
+                    {
+                        new EmailAttachment("image/png", "ticket-qr.png", qrCodeBase64, "ticket-qr")
+                    };
+
+                    var emailSent = await _emailService.SendEmailAsync(userEmail, subject, emailBody, isHtml: true, attachments: attachments);
                     if (emailSent)
                     {
                         _logger.LogInformation($"[PAYMENT_EMAIL] Письмо успешно отправлено на {userEmail}");
@@ -242,6 +254,8 @@ namespace ZetTechAvio1._0.Services
                     {
                         _logger.LogWarning($"[PAYMENT_EMAIL] Не удалось отправить письмо подтверждения платежа на {userEmail}");
                     }
+
+                    return emailSent;
                 }
             }
             catch (Exception ex)
@@ -249,6 +263,58 @@ namespace ZetTechAvio1._0.Services
                 _logger.LogError($"[PAYMENT_EMAIL] ❌ ОШИБКА при отправке письма подтверждения платежа: {ex.GetType().Name} - {ex.Message}\n{ex.StackTrace}");
                 // Не выбрасываем исключение - платеж уже принят
             }
+
+            return false;
+        }
+
+        public async Task<EmailSendResult> SendBookingConfirmationEmailAsync(int bookingId, int userId)
+        {
+            var now = DateTime.UtcNow;
+            if (_lastEmailConfirmationSentAt.TryGetValue(bookingId, out var lastSent))
+            {
+                var elapsed = now - lastSent;
+                if (elapsed < EmailConfirmationCooldown)
+                {
+                    var remaining = EmailConfirmationCooldown - elapsed;
+                    var minutes = remaining.Minutes;
+                    var seconds = remaining.Seconds;
+                    var waitText = minutes > 0 ? $"{minutes} мин {seconds} сек" : $"{seconds} сек";
+                    return new EmailSendResult(false, $"Повторная отправка доступна через {waitText}.", true);
+                }
+            }
+
+            var booking = await _context.Bookings
+                .Include(b => b.User)
+                .FirstOrDefaultAsync(b => b.Id == bookingId);
+
+            if (booking == null)
+            {
+                return new EmailSendResult(false, "Бронирование не найдено.");
+            }
+
+            if (booking.UserId != userId)
+            {
+                return new EmailSendResult(false, "Недостаточно прав для отправки письма.");
+            }
+
+            var payment = await _context.Payments
+                .Where(p => p.BookingId == bookingId && p.Status == Payment.PaymentStatus.Succeeded)
+                .OrderByDescending(p => p.UpdatedAt)
+                .FirstOrDefaultAsync();
+
+            if (payment == null)
+            {
+                return new EmailSendResult(false, "Не найден подтверждённый платёж для этого бронирования.");
+            }
+
+            var emailSent = await SendPaymentConfirmationEmailAsync(booking, payment);
+            if (!emailSent)
+            {
+                return new EmailSendResult(false, "Не удалось отправить письмо. Попробуйте позже.");
+            }
+
+            _lastEmailConfirmationSentAt[bookingId] = now;
+            return new EmailSendResult(true, "Письмо успешно отправлено.");
         }
 
         /// <summary>
@@ -342,7 +408,11 @@ namespace ZetTechAvio1._0.Services
                             _logger.LogInformation($"[PAYMENT_VERIFY] Бронирование {bookingId} обновлено на Confirmed");
 
                             // Отправляем письмо с подтверждением
-                            await SendPaymentConfirmationEmailAsync(booking, payment);
+                            var emailSent = await SendPaymentConfirmationEmailAsync(booking, payment);
+                            if (emailSent)
+                            {
+                                _lastEmailConfirmationSentAt[bookingId] = DateTime.UtcNow;
+                            }
                         }
                         else
                         {

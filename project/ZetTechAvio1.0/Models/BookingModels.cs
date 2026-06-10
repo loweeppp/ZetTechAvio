@@ -52,6 +52,7 @@ namespace ZetTechAvio1._0.Models
         public string PassengerName { get; set; } = "";
         public decimal Price { get; set; }
         public string Status { get; set; } = "";
+        public string SeatNumber { get; set; } = "";
         public int FlightId { get; set; }
         public FlightResponse? Flight { get; set; }
     }
