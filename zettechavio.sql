@@ -19,9 +19,9 @@
 -- Current Database: `zettechaviodb`
 --
 
-CREATE DATABASE /*!32312 IF NOT EXISTS*/ `ZetTechAvioDB` /*!40100 DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci */ /*!80016 DEFAULT ENCRYPTION='N' */;
+CREATE DATABASE /*!32312 IF NOT EXISTS*/ `zettechaviodb` /*!40100 DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci */ /*!80016 DEFAULT ENCRYPTION='N' */;
 
-USE `ZetTechAvioDB`;
+USE `zettechaviodb`;
 
 --
 -- Table structure for table `__EFMigrationsHistory`
