@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using System.ComponentModel.DataAnnotations;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using ZetTechAvio1._0.Models;
@@ -16,6 +17,7 @@ namespace ZetTechAvio1._0.Controllers
         private readonly IAuthStateService _authStateService;
         private readonly IJwtTokenService _jwtTokenService;
         private readonly IDeviceTokenService _deviceTokenService;
+        private readonly IConfirmationService _confirmationService;
         private readonly ILogger<AuthController> _logger;
 
         public AuthController(
@@ -23,12 +25,14 @@ namespace ZetTechAvio1._0.Controllers
             IAuthStateService authStateService,
             IJwtTokenService jwtTokenService,
             IDeviceTokenService deviceTokenService,
+            IConfirmationService confirmationService,
             ILogger<AuthController> logger)
         {
             _authService = authService;
             _authStateService = authStateService;
             _jwtTokenService = jwtTokenService;
             _deviceTokenService = deviceTokenService;
+            _confirmationService = confirmationService;
             _logger = logger;
         }
 
@@ -205,6 +209,62 @@ namespace ZetTechAvio1._0.Controllers
             }
 
             return Ok(new { message = "Logged out successfully" });
+        }
+
+        [HttpPost("request-password-reset")]
+        public async Task<IActionResult> RequestPasswordReset([FromBody] PasswordResetRequest request)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            if (string.IsNullOrWhiteSpace(request.Email))
+                return BadRequest(new { message = "Email обязателен" });
+
+            if (!new EmailAddressAttribute().IsValid(request.Email))
+                return BadRequest(new { message = "Неверный формат email" });
+
+            var success = await _confirmationService.GenerateCodeAsync(request.Email, Response);
+
+            if (!success)
+                return StatusCode(500, new { message = "Не удалось отправить код. Попробуйте позже." });
+
+            return Ok(new { success = true, message = "Код для сброса пароля отправлен на почту." });
+        }
+
+        [HttpPost("verify-password-reset-code")]
+        public async Task<IActionResult> VerifyPasswordResetCode([FromBody] VerifyCodeRequest request)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            if (string.IsNullOrWhiteSpace(request.Email) || string.IsNullOrWhiteSpace(request.Code))
+                return BadRequest(new { message = "Email и код обязательны" });
+
+            var isValid = await _confirmationService.VerifyCodeAsync(request.Email, request.Code, Request, Response, deleteOnSuccess: false);
+            if (!isValid)
+                return BadRequest(new { message = "Неверный или истёкший код" });
+
+            return Ok(new { success = true, message = "Код подтвержден" });
+        }
+
+        [HttpPost("reset-password")]
+        public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequest request)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            if (string.IsNullOrWhiteSpace(request.Email) || string.IsNullOrWhiteSpace(request.Code) || string.IsNullOrWhiteSpace(request.NewPassword))
+                return BadRequest(new { message = "Email, код и новый пароль обязательны" });
+
+            var codeValid = await _confirmationService.VerifyCodeAsync(request.Email, request.Code, Request, Response);
+            if (!codeValid)
+                return BadRequest(new { message = "Неверный или истёкший код" });
+
+            var (success, message) = await _authService.ResetPasswordAsync(request.Email, request.NewPassword);
+            if (!success)
+                return BadRequest(new { message });
+
+            return Ok(new { success = true, message });
         }
     }
 }

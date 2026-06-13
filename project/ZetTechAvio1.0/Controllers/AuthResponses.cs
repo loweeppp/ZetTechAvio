@@ -55,4 +55,22 @@ namespace ZetTechAvio1._0.Controllers
         public string FullName { get; set; } = "";
         public string Phone { get; set; } = "";
     }
+
+    public class PasswordResetRequest
+    {
+        public string Email { get; set; } = "";
+    }
+
+    public class VerifyCodeRequest
+    {
+        public string Email { get; set; } = "";
+        public string Code { get; set; } = "";
+    }
+
+    public class ResetPasswordRequest
+    {
+        public string Email { get; set; } = "";
+        public string Code { get; set; } = "";
+        public string NewPassword { get; set; } = "";
+    }
 }

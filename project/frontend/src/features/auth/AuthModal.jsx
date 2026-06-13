@@ -105,6 +105,13 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess }) {
   const [showRegisterPassword, setShowRegisterPassword] = useState(false);
   const isVerifyingCode = useRef(false);
 
+  const [isResetMode, setIsResetMode] = useState(false);
+  const [resetEmail, setResetEmail] = useState('');
+  const [resetCode, setResetCode] = useState('');
+  const [resetStage, setResetStage] = useState('email');
+  const [resetCodeRequested, setResetCodeRequested] = useState(false);
+  const [newPassword, setNewPassword] = useState('');
+
   const API_URL = process.env.REACT_APP_API_URL || 'https://api.zettechavio.ru';
 
   // Очистка полей при открытии модального окна
@@ -122,6 +129,12 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess }) {
       setAgreeToPolicy(false);
       setShowLoginPassword(false);
       setShowRegisterPassword(false);
+      setIsResetMode(false);
+      setResetEmail('');
+      setResetCode('');
+      setResetStage('email');
+      setResetCodeRequested(false);
+      setNewPassword('');
       isHovered(false);
       isVerifyingCode.current = false;
     }
@@ -140,13 +153,24 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess }) {
     }
   }, [isOpen]);
 
+  const handleRequestResetCode = async () => {
+    setError('');
+
+    if (!resetEmail || !/\S+@\S+\.\S+/.test(resetEmail)) {
+      setError('Введите корректный email для восстановления');
+      return;
+    }
+
+    await sendResetCode(resetEmail);
+  };
+
   // Автоматическая проверка кода при заполнении 6 цифр
   useEffect(() => {
-    if (code.length === 6 && codeStage === 'code' && !isVerifyingCode.current) {
+    if (resetCode.length === 6 && resetStage === 'code' && !isVerifyingCode.current) {
       isVerifyingCode.current = true;
-      confirmCode(email, code);
+      verifyResetCode(resetEmail, resetCode);
     }
-  }, [code, codeStage, email]);
+  }, [resetCode, resetStage, resetEmail]);
 
   const validateRegistration = () => {
 
@@ -249,6 +273,109 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess }) {
     }
   }, [API_URL, validateRegistration]);
 
+  const sendResetCode = useCallback(async (emailArg) => {
+    if (!emailArg || !/\S+@\S+\.\S+/.test(emailArg)) {
+      setError('Введите корректный email для восстановления');
+      return;
+    }
+
+    setError('');
+    setLoading(true);
+    try {
+      const response = await fetch(`${API_URL}/api/auth/request-password-reset`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ email: emailArg })
+      });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        setError(result.message || 'Ошибка отправки кода');
+        return;
+      }
+      setResetStage('code');
+      setResetCodeRequested(true);
+    } catch (err) {
+      setError('Ошибка подключения');
+    } finally {
+      setLoading(false);
+    }
+  }, [API_URL]);
+
+  const verifyResetCode = useCallback(async (emailArg, codeArg) => {
+    if (!emailArg || !codeArg) {
+      setError('Введите email и код');
+      isVerifyingCode.current = false;
+      return;
+    }
+
+    setError('');
+    try {
+      const response = await fetch(`${API_URL}/api/auth/verify-password-reset-code`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ email: emailArg, code: codeArg })
+      });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        setError(result.message || 'Неверный код');
+        isVerifyingCode.current = false;
+        return;
+      }
+
+      setResetStage('verified');
+      setError('');
+      isVerifyingCode.current = false;
+    } catch (err) {
+      console.error('Ошибка проверки кода:', err);
+      setError('Ошибка проверки кода');
+      isVerifyingCode.current = false;
+    }
+  }, [API_URL]);
+
+  const handleResetPassword = async (e) => {
+    e.preventDefault();
+    setError('');
+
+    if (!resetEmail || !resetCode || !newPassword) {
+      setError('Email, код и новый пароль обязательны');
+      return;
+    }
+
+    if (newPassword.length < 6) {
+      setError('Пароль должен быть не менее 6 символов');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await fetch(`${API_URL}/api/auth/reset-password`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ email: resetEmail, code: resetCode, newPassword })
+      });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        setError(result.message || 'Не удалось сбросить пароль');
+        return;
+      }
+
+      setError('');
+      setIsResetMode(false);
+      setResetStage('email');
+      setResetCode('');
+      setNewPassword('');
+      setPassword('');
+      setError('Пароль сброшен. Введите новый пароль и войдите.');
+    } catch (err) {
+      setError('Ошибка подключения');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   //Переключение на режим входа
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -334,58 +461,153 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess }) {
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-box" onClick={(e) => e.stopPropagation()}>
         {isLoginMode ? (
-          // РЕЖИМ ВХОДА
-          <form onSubmit={handleLogin}>
-            <h3 className="modal-title">Вход в аккаунт</h3>
+          isResetMode ? (
+            <form onSubmit={handleResetPassword}>
+              <h3 className="modal-title">Сброс пароля</h3>
 
               <FloatingInput
-              id="login-email"
-              label="Email"
-              type="email"
-              value={loginEmail}
-              onChange={setLoginEmail}
-              maxLength={100}
-            />
+                id="reset-email"
+                label="Email"
+                type="email"
+                value={resetEmail}
+                onChange={setResetEmail}
+                maxLength={100}
+              />
 
-            <PasswordInput
-              id="login-password"
-              label="Пароль"
-              value={password}
-              onChange={setPassword}
-              isVisible={showLoginPassword}
-              onToggleVisibility={() => setShowLoginPassword(!showLoginPassword)}
-              maxLength={50}
-            />
+              {resetStage !== 'verified' && (
+                <button
+                  type="button"
+                  disabled={loading}
+                  className="btn btn-submit"
+                  onClick={handleRequestResetCode}
+                >
+                  {loading ? 'Загрузка...' : 'Отправить код'}
+                </button>
+              )}
 
-            {error && <div className="error-message">{error}</div>}
+              {resetStage !== 'email' && (
+                <PasswordInput
+                  id="reset-code"
+                  label="Код из письма"
+                  value={resetCode}
+                  onChange={setResetCode}
+                  isVisible={false}
+                  onToggleVisibility={() => {}}
+                  maxLength={6}
+                />
+              )}
 
-            <div className="button-group">
-              <button
-                type="submit"
-                disabled={loading}
-                className="btn btn-submit"
-              >
-                {loading ? 'Загрузка...' : 'Войти'}
-              </button>
+              {resetStage === 'verified' && (
+                <PasswordInput
+                  id="reset-new-password"
+                  label="Новый пароль"
+                  value={newPassword}
+                  onChange={setNewPassword}
+                  isVisible={showLoginPassword}
+                  onToggleVisibility={() => setShowLoginPassword(!showLoginPassword)}
+                  maxLength={50}
+                />
+              )}
 
-              <button
-                type="button"
-                onClick={onClose}
-                disabled={loading}
-                className="btn btn-secondary"
-              >
-                Отмена
-              </button>
+              {resetStage === 'verified' && (
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="btn btn-submit"
+                >
+                  {loading ? 'Загрузка...' : 'Сохранить пароль'}
+                </button>
+              )}
 
-              <button
-                type="button"
-                onClick={() => setIsLoginMode(false)}
-                className="btn btn-outline"
-              >
-                Создать аккаунт →
-              </button>
-            </div>
-          </form>
+              {error && <div className="error-message">{error}</div>}
+
+              <div className="button-group">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsResetMode(false);
+                    setError('');
+                    setResetStage('email');
+                    setResetCode('');
+                    setNewPassword('');
+                  }}
+                  disabled={loading}
+                  className="btn btn-secondary"
+                >
+                  ← Вернуться к входу
+                </button>
+
+                <button
+                  type="button"
+                  onClick={onClose}
+                  disabled={loading}
+                  className="btn btn-outline"
+                >
+                  Отмена
+                </button>
+              </div>
+            </form>
+          ) : (
+            <form onSubmit={handleLogin}>
+              <h3 className="modal-title">Вход в аккаунт</h3>
+
+              <FloatingInput
+                id="login-email"
+                label="Email"
+                type="email"
+                value={loginEmail}
+                onChange={setLoginEmail}
+                maxLength={100}
+              />
+
+              <PasswordInput
+                id="login-password"
+                label="Пароль"
+                value={password}
+                onChange={setPassword}
+                isVisible={showLoginPassword}
+                onToggleVisibility={() => setShowLoginPassword(!showLoginPassword)}
+                maxLength={50}
+              />
+
+              {error && <div className="error-message">{error}</div>}
+
+              <div className="button-group">
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="btn btn-submit"
+                >
+                  {loading ? 'Загрузка...' : 'Войти'}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={onClose}
+                  disabled={loading}
+                  className="btn btn-secondary"
+                >
+                  Отмена
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setIsResetMode(true)}
+                  className="btn btn-outline"
+                >
+                  Забыли пароль?
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setIsLoginMode(false)}
+                  className="btn btn-outline"
+                >
+                  Создать аккаунт →
+                </button>
+              </div>
+            </form>
+          )
         ) : (
           // РЕЖИМ РЕГИСТРАЦИИ
           <form onSubmit={handleRegister}>

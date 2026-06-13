@@ -2,6 +2,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using ZetTechAvio1._0.Components;
@@ -33,13 +34,15 @@ builder.Services.AddScoped<IFlightsService, FlightsService>();
 builder.Services.AddScoped<IBookingsService, BookingsService>();
 builder.Services.AddScoped<IPaymentService, PaymentService>();
 builder.Services.AddHostedService<FlightStatusUpdateService>();
+builder.Services.AddMemoryCache();
 builder.Services.AddScoped<IConfirmationService>(sp => 
     new ConfirmationService(
     sp.GetRequiredService<ApplicationDbContext>(),
     sp.GetRequiredService<IConfiguration>(),
     sp.GetRequiredService<IWebHostEnvironment>(),
     sp.GetRequiredService<ILogger<ConfirmationService>>(),
-    sp.GetRequiredService<IEmailService>()));
+    sp.GetRequiredService<IEmailService>(),
+    sp.GetRequiredService<IMemoryCache>()));
         //  builder.Configuration));
 
 

@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 using ZetTechAvio1._0.Data;
 using ZetTechAvio1._0.Models;
 using System.Net;
@@ -18,7 +19,7 @@ namespace ZetTechAvio1._0.Services
     public interface IConfirmationService
     {
         Task<bool> GenerateCodeAsync(string email, HttpResponse response);
-        Task<bool> VerifyCodeAsync(string email, string code, HttpRequest request, HttpResponse response);
+        Task<bool> VerifyCodeAsync(string email, string code, HttpRequest request, HttpResponse response, bool deleteOnSuccess = true);
     }
 
     public class ConfirmationService : IConfirmationService
@@ -28,30 +29,29 @@ namespace ZetTechAvio1._0.Services
         private readonly IWebHostEnvironment _env;
         private readonly ILogger<ConfirmationService> _logger;
         private readonly IEmailService _emailService;
-        public ConfirmationService(ApplicationDbContext dbContext, IConfiguration config, IWebHostEnvironment env, ILogger<ConfirmationService> logger, IEmailService emailService)
+        private readonly IMemoryCache _cache;
+
+        public ConfirmationService(
+            ApplicationDbContext dbContext,
+            IConfiguration config,
+            IWebHostEnvironment env,
+            ILogger<ConfirmationService> logger,
+            IEmailService emailService,
+            IMemoryCache cache)
         {
             _dbContext = dbContext;
             _config = config;
             _env = env;
             _logger = logger;
             _emailService = emailService;
+            _cache = cache;
         }
 
         public async Task<bool> GenerateCodeAsync(string email, HttpResponse response)
         {
-            // Генерация 6-значного кода
             string code = new Random().Next(100000, 999999).ToString();
-
-            var safeCookieName = GetSafeCookieName(email);
-
-            response.Cookies.Append(safeCookieName, code,
-            new CookieOptions
-            {
-                Secure = !_env.IsDevelopment(),
-                HttpOnly = true,
-                SameSite = SameSiteMode.Strict,
-                Expires = DateTimeOffset.UtcNow.AddMinutes(10)
-            });
+            var cacheKey = GetSafeCacheKey(email);
+            _cache.Set(cacheKey, code, TimeSpan.FromMinutes(10));
 
             try
             {
@@ -78,24 +78,25 @@ namespace ZetTechAvio1._0.Services
             }
         }
 
-        public Task<bool> VerifyCodeAsync(string email, string code, HttpRequest request, HttpResponse response)
+        public Task<bool> VerifyCodeAsync(string email, string code, HttpRequest request, HttpResponse response, bool deleteOnSuccess = true)
         {
-            // Пытаемся получить куки
-            var safeCookieName = GetSafeCookieName(email);
+            var cacheKey = GetSafeCacheKey(email);
 
-            if (!request.Cookies.TryGetValue(safeCookieName, out var storedCode))
-                return Task.FromResult(false);  // куки не найдена или истекла
+            if (!_cache.TryGetValue(cacheKey, out string? storedCode))
+                return Task.FromResult(false);
 
             if (storedCode != code)
-                return Task.FromResult(false);  // коды не совпадают
+                return Task.FromResult(false);
 
-            // Удаляем куки после успешной проверки
-            response.Cookies.Delete(safeCookieName);
+            if (deleteOnSuccess)
+            {
+                _cache.Remove(cacheKey);
+            }
 
             return Task.FromResult(true);
         }
 
-        private static string GetSafeCookieName(string email)
+        private static string GetSafeCacheKey(string email)
         {
             var normalizedEmail = email.Trim().ToLowerInvariant();
             var hash = SHA256.HashData(Encoding.UTF8.GetBytes(normalizedEmail));

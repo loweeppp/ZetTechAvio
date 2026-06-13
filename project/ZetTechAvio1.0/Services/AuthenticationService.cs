@@ -10,6 +10,7 @@ namespace ZetTechAvio1._0.Services
         Task<(bool Success, string? Message, User? User)> RegisterAsync(string email, string password, string fullName, string phone);
         Task<(bool Success, string? Message, User? User)> LoginAsync(string email, string password);
         Task<(bool Success, string? Message, User? User)> ChangeAsync(string email, string password, string fullName, string phone, int Id);
+        Task<(bool Success, string? Message)> ResetPasswordAsync(string email, string newPassword);
         Task<User?> GetUserByIdAsync(int userId);
     }
 
@@ -147,6 +148,36 @@ namespace ZetTechAvio1._0.Services
             {
                 Console.WriteLine($"[LOGIN] Exception: {ex.Message}\n{ex.StackTrace}");
                 return (false, $"Login error: {ex.Message}", null);
+            }
+        }
+
+        public async Task<(bool Success, string? Message)> ResetPasswordAsync(string email, string newPassword)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(newPassword))
+                    return (false, "Email и новый пароль обязательны");
+
+                if (newPassword.Length < 6)
+                    return (false, "Пароль должен содержать не менее 6 символов");
+
+                if (newPassword.Length > 128)
+                    return (false, "Пароль слишком длинный");
+
+                var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == email.ToLower());
+                if (user == null)
+                    return (false, "Пользователь с таким email не найден");
+
+                user.PasswordHash = _passwordService.HashPassword(newPassword);
+                user.UpdatedAt = DateTime.UtcNow;
+
+                await _context.SaveChangesAsync();
+
+                return (true, "Пароль успешно обновлён");
+            }
+            catch (Exception ex)
+            {
+                return (false, $"Ошибка сброса пароля: {ex.Message}");
             }
         }
 
