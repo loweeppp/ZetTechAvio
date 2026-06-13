@@ -65,10 +65,6 @@ CREATE TABLE `Admindevices` (
 ) ENGINE=InnoDB AUTO_INCREMENT=24 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
-LOCK TABLES `Aircraft` WRITE;
-
-UNLOCK TABLES;
-
 --
 -- Table structure for table `Aircraft`
 --
