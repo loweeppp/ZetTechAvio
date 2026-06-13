@@ -1,6 +1,7 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using ZetTechAvio1._0.Models;
 
@@ -55,11 +56,14 @@ namespace ZetTechAvio1._0.Services
                 };
 
                 var token = tokenHandler.CreateToken(tokenDescriptor);
-                return tokenHandler.WriteToken(token);
+                var tokenValue = tokenHandler.WriteToken(token);
+                _logger.LogInformation("Generated JWT token for user {UserId} role={Role} claims=[NameIdentifier={NameIdentifier}, Email={Email}]",
+                    user.Id, user.Role, user.Id, user.Email);
+                return tokenValue;
             }
             catch (Exception ex)
             {
-                _logger.LogError($"Error generating JWT token: {ex.Message}");
+                _logger.LogError(ex, "Error generating JWT token for user {UserId}", user?.Id);
                 throw;
             }
         }

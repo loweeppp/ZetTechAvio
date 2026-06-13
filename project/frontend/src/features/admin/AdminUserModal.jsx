@@ -1,8 +1,12 @@
 import { useEffect, useState } from 'react';
 import './admin-panel.css';
 
+const SADMIN = process.env.REACT_APP_SADMIN?.trim().toLowerCase();
+const isProtectedSuperAdmin = (email) => String(email || '').trim().toLowerCase() === SADMIN;
+
 export default function AdminUserModal({ isOpen, onClose, user, currentUserId, onSave, onToggleBlock }) {
   const isSelfUser = user?.id === currentUserId;
+  const isHardcodedSuperAdmin = isProtectedSuperAdmin(user?.email);
   const [formState, setFormState] = useState({
     email: '',
     fullName: '',
@@ -103,8 +107,12 @@ export default function AdminUserModal({ isOpen, onClose, user, currentUserId, o
             </select>
           </div>
 
-          {isSelfUser && (
-            <div className="admin-modal__warning">Нельзя редактировать, блокировать или удалять собственный аккаунт</div>
+          {(isSelfUser || isHardcodedSuperAdmin) && (
+            <div className="admin-modal__warning">
+              {isHardcodedSuperAdmin
+                ? 'Нельзя редактировать, блокировать или удалять супер-админа.'
+                : 'Нельзя редактировать, блокировать или удалять собственный аккаунт.'}
+            </div>
           )}
 
           <div className="admin-modal__actions">
@@ -112,11 +120,11 @@ export default function AdminUserModal({ isOpen, onClose, user, currentUserId, o
               type="button"
               className="btn btn-danger"
               onClick={() => onToggleBlock(!user.isActive)}
-              disabled={isSelfUser}
+              disabled={isSelfUser || isHardcodedSuperAdmin}
             >
               {user.isActive ? 'Заблокировать' : 'Разблокировать'}
             </button>
-            <button type="submit" className="btn btn-submit" disabled={isSelfUser}>
+            <button type="submit" className="btn btn-submit" disabled={isSelfUser || isHardcodedSuperAdmin}>
               Сохранить
             </button>
             <button type="button" className="btn btn-secondary" onClick={onClose}>

@@ -1,4 +1,6 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -38,10 +40,12 @@ namespace ZetTechAvio1._0.Services
     public class FlightsService : IFlightsService
     {
         private readonly ApplicationDbContext _dbContext;
+        private readonly IEmailService? _emailService;
 
-        public FlightsService(ApplicationDbContext dbContext)
+        public FlightsService(ApplicationDbContext dbContext, IEmailService? emailService = null)
         {
             _dbContext = dbContext;
+            _emailService = emailService;
         }
 
         public async Task<List<FlightDto>> GetAllFlightsAsync()
@@ -301,16 +305,70 @@ namespace ZetTechAvio1._0.Services
             if (request.StartDate.Date > request.EndDate.Date)
                 throw new ArgumentException("Дата начала не может быть позже даты окончания.");
 
-            if (string.IsNullOrWhiteSpace(request.FlightNumber))
+            var airline = await _dbContext.Airlines.FindAsync(request.AirlineId);
+            if (airline == null)
             {
-                var airline = await _dbContext.Airlines.FindAsync(request.AirlineId);
-                if (airline == null)
+                throw new ArgumentException("Авиакомпания не найдена для генерации номера рейса.");
+            }
+
+            var prefix = airline.IataCode?.Trim().ToUpperInvariant() ?? throw new InvalidOperationException("Префикс авиакомпании отсутствует.");
+            var existingSuffixes = await _dbContext.Flights
+                .Where(f => !string.IsNullOrEmpty(f.FlightNumber) && f.FlightNumber.StartsWith(prefix))
+                .Select(f => f.FlightNumber!.Substring(prefix.Length))
+                .ToListAsync();
+
+            var usedNumbers = new HashSet<int>();
+            foreach (var suffix in existingSuffixes)
+            {
+                if (int.TryParse(suffix, out var number) && number >= 100)
                 {
-                    throw new ArgumentException("Авиакомпания не найдена для генерации номера рейса.");
+                    usedNumbers.Add(number);
+                }
+            }
+
+            var nextCandidate = 100;
+            if (!string.IsNullOrWhiteSpace(request.FlightNumber)
+                && request.FlightNumber.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)
+                && int.TryParse(request.FlightNumber[prefix.Length..], out var manualNumber)
+                && manualNumber >= 100)
+            {
+                nextCandidate = manualNumber;
+            }
+
+            string GetNextFlightNumber()
+            {
+                while (usedNumbers.Contains(nextCandidate))
+                {
+                    nextCandidate++;
                 }
 
-                request.FlightNumber = await GenerateFlightNumberAsync(airline.IataCode);
+                usedNumbers.Add(nextCandidate);
+                return prefix + nextCandidate++;
             }
+
+            if (string.IsNullOrWhiteSpace(request.FlightNumber)
+                || !request.FlightNumber.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)
+                || !int.TryParse(request.FlightNumber[prefix.Length..], out var startNumber)
+                || startNumber < 100)
+            {
+                request.FlightNumber = GetNextFlightNumber();
+            }
+            else if (request.FlightNumber.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)
+                     && int.TryParse(request.FlightNumber[prefix.Length..], out var parsedNumber)
+                     && parsedNumber >= 100)
+            {
+                if (usedNumbers.Contains(parsedNumber))
+                {
+                    request.FlightNumber = GetNextFlightNumber();
+                }
+                else
+                {
+                    usedNumbers.Add(parsedNumber);
+                    nextCandidate = parsedNumber + 1;
+                }
+            }
+
+            var currentFlightNumber = request.FlightNumber;
 
             var targetDays = request.Weekdays
                 .Select(day => day switch
@@ -345,13 +403,13 @@ namespace ZetTechAvio1._0.Services
                     }
 
                     var duplicate = await _dbContext.Flights.AnyAsync(f =>
-                        f.FlightNumber == request.FlightNumber && f.DepartureDt == departureDt);
+                        f.FlightNumber == currentFlightNumber && f.DepartureDt == departureDt);
 
                     if (!duplicate)
                     {
                         var flight = new Flight
                         {
-                            FlightNumber = request.FlightNumber,
+                            FlightNumber = currentFlightNumber,
                             AirlineId = request.AirlineId,
                             AircraftId = request.AircraftId,
                             OriginAirportId = request.OriginAirportId,
@@ -369,6 +427,8 @@ namespace ZetTechAvio1._0.Services
 
                         flightsToCreate.Add(flight);
                     }
+
+                    currentFlightNumber = GetNextFlightNumber();
                 }
 
                 currentDate = currentDate.AddDays(1);
@@ -532,6 +592,8 @@ namespace ZetTechAvio1._0.Services
                     ticket.Status = TicketStatus.Cancelled;
                     ticket.UpdatedAt = DateTime.UtcNow;
                 }
+
+                await _dbContext.SaveChangesAsync();
             }
             else if (updatedFlight.Status == FlightStatus.Completed)
             {
@@ -544,6 +606,9 @@ namespace ZetTechAvio1._0.Services
                     ticket.Status = TicketStatus.Used;
                     ticket.UpdatedAt = DateTime.UtcNow;
                 }
+
+                await _dbContext.SaveChangesAsync();
+                return existingFlight;
             }
             else if (previousStatus == FlightStatus.Cancelled &&
                      (updatedFlight.Status == FlightStatus.Scheduled || updatedFlight.Status == FlightStatus.Delayed))
@@ -557,9 +622,33 @@ namespace ZetTechAvio1._0.Services
                     ticket.Status = TicketStatus.Active;
                     ticket.UpdatedAt = DateTime.UtcNow;
                 }
+
+                await _dbContext.SaveChangesAsync();
+            }
+            else if (previousStatus != updatedFlight.Status)
+            {
+                await _dbContext.SaveChangesAsync();
+            }
+            else
+            {
+                await _dbContext.SaveChangesAsync();
+                return existingFlight;
             }
 
-            await _dbContext.SaveChangesAsync();
+            if (previousStatus != updatedFlight.Status && updatedFlight.Status != FlightStatus.Completed)
+            {
+                var recipientEmails = await _dbContext.Tickets
+                    .Where(t => t.FlightId == id)
+                    .Include(t => t.Booking)
+                        .ThenInclude(b => b.User)
+                    .Select(t => t.Booking != null && t.Booking.User != null ? t.Booking.User.Email : null)
+                    .Where(email => !string.IsNullOrWhiteSpace(email))
+                    .Distinct()
+                    .ToListAsync();
+
+                await NotifyTicketHoldersAsync(existingFlight, recipientEmails);
+            }
+
             return existingFlight;
         }
 
@@ -605,6 +694,8 @@ namespace ZetTechAvio1._0.Services
         {
             var flight = await _dbContext.Flights
                 .Include(f => f.Tickets)
+                    .ThenInclude(t => t.Booking)
+                        .ThenInclude(b => b.User)
                 .FirstOrDefaultAsync(f => f.Id == id);
 
             if (flight == null)
@@ -629,7 +720,48 @@ namespace ZetTechAvio1._0.Services
             }
 
             await _dbContext.SaveChangesAsync();
+
+            var recipientEmails = flight.Tickets
+                .Select(t => t.Booking != null && t.Booking.User != null ? t.Booking.User.Email : null)
+                .Where(email => !string.IsNullOrWhiteSpace(email))
+                .Distinct()
+                .ToList();
+
+            await NotifyTicketHoldersAsync(flight, recipientEmails);
             return flight;
+        }
+
+        private async Task NotifyTicketHoldersAsync(Flight flight, IEnumerable<string> recipientEmails)
+        {
+            if (_emailService == null)
+                return;
+
+            if (flight.Status == FlightStatus.Completed)
+                return;
+
+            var statusDescription = flight.Status.ToString();
+            var subject = $"Статус рейса {flight.FlightNumber} изменён";
+            var body = $"<p>Здравствуйте!</p>"
+                     + $"<p>Статус вашего рейса <strong>{flight.FlightNumber}</strong> изменён на <strong>{statusDescription}</strong>.</p>"
+                     + $"<p>Дата вылета: {flight.DepartureDt:yyyy-MM-dd HH:mm}</p>"
+                     + $"<p>Дата прилёта: {flight.ArrivalDt:yyyy-MM-dd HH:mm}</p>"
+                     + $"<p>Пожалуйста, проверьте детали рейса в личном кабинете или свяжитесь с поддержкой при необходимости.</p>"
+                     + $"<p>С уважением,<br/>ZetTechAvio</p>";
+
+            foreach (var email in recipientEmails.Distinct(StringComparer.OrdinalIgnoreCase))
+            {
+                if (string.IsNullOrWhiteSpace(email))
+                    continue;
+
+                try
+                {
+                    await _emailService.SendEmailAsync(email, subject, body, isHtml: true);
+                }
+                catch
+                {
+                    // Ошибки логируются в EmailService.
+                }
+            }
         }
 
         public async Task<List<Fare>> GetFlightFaresAsync(int flightId)
@@ -658,7 +790,8 @@ namespace ZetTechAvio1._0.Services
                     PassengerName = t.PassengerName,
                     PassengerType = t.PassengerType.ToString(),
                     Status = t.Status.ToString(),
-                    Email = t.Booking != null && t.Booking.User != null ? t.Booking.User.Email : string.Empty
+                    Email = t.Booking != null && t.Booking.User != null ? t.Booking.User.Email : string.Empty,
+                    FareId = t.FareId
                 })
                 .ToListAsync();
         }

@@ -20,6 +20,7 @@ namespace ZetTechAvio1._0.Data
         public DbSet<Ticket> Tickets { get; set; }
         public DbSet<Seat> Seats { get; set; }
         public DbSet<Payment> Payments { get; set; }
+        public DbSet<AdminDevice> AdminDevices { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);

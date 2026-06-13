@@ -9,10 +9,18 @@ import PopularDestinations from '../../features/flights/PopularDestinations';
 import Benefits from '../../features/flights/Benefits';
 import Results from '../../features/flights/Results';
 
+const LLM_SEARCH_DISABLED_KEY = 'disableAisSearch';
+
 export default function HomePageV2() {
   const { t } = useTranslation();
   const [query, setQuery] = React.useState(null);
   const [draftQuery, setDraftQuery] = React.useState(null);
+  const [isAisSearchEnabled, setIsAisSearchEnabled] = React.useState(true);
+
+  React.useEffect(() => {
+    if (typeof window === 'undefined') return;
+    setIsAisSearchEnabled(localStorage.getItem(LLM_SEARCH_DISABLED_KEY) !== 'true');
+  }, []);
 
   return (
     <section className="homev2">
@@ -43,7 +51,7 @@ export default function HomePageV2() {
 
               <div className="homev2__formWrap">
                 <SearchFormV2 onSearch={(q) => setQuery(q)} onDraftChange={setDraftQuery} />
-                <AISearch onSearch={(q) => setQuery(q)} />
+                {isAisSearchEnabled && <AISearch onSearch={(q) => setQuery(q)} />}
               </div>
             </div>
           </div>

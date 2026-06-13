@@ -1,6 +1,8 @@
 using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using ZetTechAvio1._0.Components;
 using ZetTechAvio1._0.Data;
@@ -23,6 +25,7 @@ builder.Services.AddScoped<IUserValidationService, UserValidationService>();
 builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
 builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
 builder.Services.AddScoped<IAuthStateService, AuthStateService>();
+builder.Services.AddScoped<IDeviceTokenService, DeviceTokenService>();
 builder.Services.AddScoped<IUserManagementService, UserManagementService>();
 builder.Services.AddScoped<IFaresService, FaresService>();
 builder.Services.AddScoped<IUserManagementService, UserManagementService>();
@@ -133,11 +136,40 @@ builder.Services.AddAuthentication(options =>
         ValidateLifetime = true,
         ClockSkew = TimeSpan.Zero
     };
+
+    options.Events = new JwtBearerEvents
+    {
+        OnMessageReceived = context =>
+        {
+            var authHeader = context.Request.Headers["Authorization"].FirstOrDefault();
+            var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<Program>>();
+            logger.LogDebug("JwtBearer OnMessageReceived: Authorization header present={AuthHeaderPresent} headerValue={HeaderValue}",
+                !string.IsNullOrWhiteSpace(authHeader),
+                authHeader?.Split(' ', 2).FirstOrDefault() ?? "none");
+            return Task.CompletedTask;
+        },
+        OnTokenValidated = context =>
+        {
+            var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<Program>>();
+            logger.LogInformation("JwtBearer token validated for user {NameIdentifier} authType={AuthType}",
+                context.Principal?.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "none",
+                context.Principal?.Identity?.AuthenticationType ?? "none");
+            return Task.CompletedTask;
+        },
+        OnAuthenticationFailed = context =>
+        {
+            var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<Program>>();
+            logger.LogWarning(context.Exception, "JwtBearer authentication failed for request {Path}", context.Request.Path);
+            return Task.CompletedTask;
+        }
+    };
 });
 
 builder.Services.AddAuthorization();
 
 var app = builder.Build();
+
+var appLogger = app.Services.GetRequiredService<ILogger<Program>>();
 
 // Настройка конвейера обработки HTTP-запросов
 if (!app.Environment.IsDevelopment())
@@ -159,6 +191,25 @@ if (!app.Environment.IsDevelopment())
 // Аутентификация
 app.UseAuthentication();
 app.UseAuthorization();
+
+app.Use(async (context, next) =>
+{
+    var authHeader = context.Request.Headers["Authorization"].FirstOrDefault();
+    var deviceTokenHeader = context.Request.Headers["X-Device-Token"].FirstOrDefault();
+
+    appLogger.LogInformation("Incoming request {Method} {Path} authHeaderPresent={AuthHeaderPresent} deviceTokenHeaderPresent={DeviceTokenHeaderPresent} isAuthenticated={IsAuthenticated} authScheme={AuthScheme} authHeaderValue={AuthHeaderValue}",
+        context.Request.Method,
+        context.Request.Path,
+        !string.IsNullOrWhiteSpace(authHeader),
+        !string.IsNullOrWhiteSpace(deviceTokenHeader),
+        context.User?.Identity?.IsAuthenticated ?? false,
+        context.User?.Identity?.AuthenticationType ?? "none",
+        authHeader?.Split(' ', 2).FirstOrDefault() ?? "none");
+
+    await next();
+});
+
+app.UseMiddleware<AdminDeviceValidationMiddleware>();
 
 app.MapControllers();
 app.UseStaticFiles();

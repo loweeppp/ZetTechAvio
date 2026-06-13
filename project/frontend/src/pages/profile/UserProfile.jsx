@@ -7,6 +7,13 @@ import ProfileModal from '../../features/auth/ProfileModal';
 import './UserProfile.css';
 
 const API_URL = process.env.REACT_APP_API_URL || 'https://api.zettechavio.ru';
+const SADMIN = (process.env.REACT_APP_SADMIN || process.env.SADMIN || '').trim().toLowerCase();
+const LLM_SEARCH_DISABLED_KEY = 'disableAisSearch';
+
+function getAisSearchEnabled() {
+    if (typeof window === 'undefined') return true;
+    return localStorage.getItem(LLM_SEARCH_DISABLED_KEY) !== 'true';
+}
 
 function formatMoney(value) {
     return Number(value || 0).toLocaleString('ru-RU');
@@ -28,12 +35,14 @@ export default function UserProfile() {
     const { currentUser, logout, changeUser } = useAuth();
     const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
     const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+    const [isAisSearchEnabled, setIsAisSearchEnabled] = useState(true);
     const [stats, setStats] = useState({
         totalTickets: 0,
         spent: 0,
         activeFlights: 0,
         completed: 0
     });
+    const isSuperAdmin = currentUser?.email?.trim().toLowerCase() === SADMIN;
     const [loadingStats, setLoadingStats] = useState(true);
 
     // Загружаем статистику при загрузке страницы
@@ -134,6 +143,12 @@ export default function UserProfile() {
         changeUser(updatedUser);
     };
 
+    const handleToggleAisSearch = () => {
+        const nextValue = !isAisSearchEnabled;
+        localStorage.setItem(LLM_SEARCH_DISABLED_KEY, nextValue ? 'false' : 'true');
+        setIsAisSearchEnabled(nextValue);
+    };
+
     const handleLoginSuccess = async (loginResponse) => {
         setIsAuthModalOpen(false);
         if (loginResponse?.user) {
@@ -142,6 +157,10 @@ export default function UserProfile() {
     };
 
     const navigate = useNavigate();
+
+    useEffect(() => {
+        setIsAisSearchEnabled(getAisSearchEnabled());
+    }, []);
 
     const handleLogout = () => {
         if (window.confirm('Вы уверены, что хотите выйти?')) {
@@ -253,9 +272,22 @@ export default function UserProfile() {
                         </div>
 
                         <div className="security-list">
-                            <button className="security-action" onClick={() => setIsProfileModalOpen(true)}>
+                            <button
+                                className="security-action"
+                                onClick={() => !isSuperAdmin && setIsProfileModalOpen(true)}
+                                disabled={isSuperAdmin}
+                                title={isSuperAdmin ? 'Супер-админ не может менять данные' : 'Изменить данные'}
+                            >
                                 <span className="security-action-icon"></span>
-                                Изменить данные
+                                {isSuperAdmin ? 'Супер-админ не может менять данные' : 'Изменить данные'}
+                            </button>
+                            <button
+                                className="security-action"
+                                type="button"
+                                onClick={handleToggleAisSearch}
+                            >
+                                <span className="security-action-icon"></span>
+                                {isAisSearchEnabled ? 'Отключить LLM-поиск' : 'Включить LLM-поиск'}
                             </button>
                             {/* <button className="security-action">
                                 <span className="security-action-icon"></span>

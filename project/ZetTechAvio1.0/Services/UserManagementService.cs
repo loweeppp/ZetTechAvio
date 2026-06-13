@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using ZetTechAvio1._0.Data;
 using ZetTechAvio1._0.Models;
@@ -34,6 +35,7 @@ namespace ZetTechAvio1._0.Services
 
     public class UserManagementService : IUserManagementService
     {
+        private readonly string _protectedSuperAdminEmail;
         private readonly ApplicationDbContext _context;
         private readonly IPasswordHashingService _hashService;
         private readonly IUserValidationService _validationService;
@@ -43,12 +45,14 @@ namespace ZetTechAvio1._0.Services
             ApplicationDbContext context,
             IPasswordHashingService hashService,
             IUserValidationService validationService,
-            ILogger<UserManagementService> logger)
+            ILogger<UserManagementService> logger,
+            IConfiguration configuration)
         {
             _context = context;
             _hashService = hashService;
             _validationService = validationService;
             _logger = logger;
+            _protectedSuperAdminEmail = configuration["SADMIN"]?.Trim().ToLowerInvariant();
         }
 
         public async Task<(bool Success, string Message, List<AdminUserDto>? Data, int TotalCount)> GetUsersAsync(int page = 1, int pageSize = 20, string? search = null)
@@ -138,6 +142,12 @@ namespace ZetTechAvio1._0.Services
                 if (user == null)
                     return (false, "Пользователь не найден");
 
+                if (string.Equals(user.Email, _protectedSuperAdminEmail, StringComparison.OrdinalIgnoreCase) ||
+                    string.Equals(request.Email?.Trim(), _protectedSuperAdminEmail, StringComparison.OrdinalIgnoreCase))
+                {
+                    return (false, "Нельзя редактировать супер-админа.");
+                }
+
                 user.Email = request.Email.ToLower().Trim();
                 user.FullName = request.FullName.Trim();
                 user.Phone = request.Phone.Trim();
@@ -173,6 +183,11 @@ namespace ZetTechAvio1._0.Services
                 if (user == null)
                     return (false, "Пользователь не найден");
 
+                if (string.Equals(user.Email, _protectedSuperAdminEmail, StringComparison.OrdinalIgnoreCase))
+                {
+                    return (false, "Нельзя блокировать или разблокировать супер-админа.");
+                }
+
                 var newState = isActive ?? !user.IsActive;
                 user.IsActive = newState;
                 user.UpdatedAt = DateTime.UtcNow;
@@ -193,6 +208,11 @@ namespace ZetTechAvio1._0.Services
                 var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == id);
                 if (user == null)
                     return (false, "Пользователь не найден");
+
+                if (string.Equals(user.Email, _protectedSuperAdminEmail, StringComparison.OrdinalIgnoreCase))
+                {
+                    return (false, "Нельзя удалять супер-админа.");
+                }
 
                 _context.Users.Remove(user);
                 await _context.SaveChangesAsync();

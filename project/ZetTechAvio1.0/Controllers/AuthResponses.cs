@@ -8,6 +8,7 @@ namespace ZetTechAvio1._0.Controllers
         public string Message { get; set; } = "";
         public string Token { get; set; } = "";
         public int UserId { get; set; }
+        public string? DeviceToken { get; set; }
     }
 
     /// <summary>

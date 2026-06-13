@@ -1,6 +1,9 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
+using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using ZetTechAvio1._0.Models;
 using ZetTechAvio1._0.Services;
 
 namespace ZetTechAvio1._0.Controllers
@@ -12,15 +15,21 @@ namespace ZetTechAvio1._0.Controllers
         private readonly IAuthenticationService _authService;
         private readonly IAuthStateService _authStateService;
         private readonly IJwtTokenService _jwtTokenService;
+        private readonly IDeviceTokenService _deviceTokenService;
+        private readonly ILogger<AuthController> _logger;
 
         public AuthController(
             IAuthenticationService authService, 
             IAuthStateService authStateService,
-            IJwtTokenService jwtTokenService)
+            IJwtTokenService jwtTokenService,
+            IDeviceTokenService deviceTokenService,
+            ILogger<AuthController> logger)
         {
             _authService = authService;
             _authStateService = authStateService;
             _jwtTokenService = jwtTokenService;
+            _deviceTokenService = deviceTokenService;
+            _logger = logger;
         }
 
         /// <summary>
@@ -63,14 +72,32 @@ namespace ZetTechAvio1._0.Controllers
             if (!success || user == null)
                 return BadRequest(new { message });
 
+            if (user.Role == UserRole.Admin)
+            {
+                var hasActiveDevice = await _deviceTokenService.HasActiveDeviceTokenAsync(user.Id);
+                if (hasActiveDevice)
+                {
+                    return BadRequest(new { message = "Неверный логин или пароль." });
+                }
+            }
+
             await _authStateService.SetUserAsync(user);
             
             var token = _jwtTokenService.GenerateToken(user);
+            string? deviceToken = null;
+
+            if (user.Role == UserRole.Admin)
+            {
+                deviceToken = _deviceTokenService.GenerateDeviceToken();
+                await _deviceTokenService.StoreDeviceTokenAsync(user.Id, deviceToken, request.Email);
+            }
+
             return Ok(new LoginResponse
             {
                 Message = message,
                 Token = token,
-                UserId = user.Id
+                UserId = user.Id,
+                DeviceToken = deviceToken
             });
         }
 
@@ -83,7 +110,9 @@ namespace ZetTechAvio1._0.Controllers
         [Authorize]
         public async Task<IActionResult> GetCurrentUser()
         {
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value
+                ?? User.FindFirst("id")?.Value
+                ?? User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value;
             
             if (!int.TryParse(userIdClaim, out var userId))
                 return Unauthorized();
@@ -137,7 +166,44 @@ namespace ZetTechAvio1._0.Controllers
         [Authorize]
         public async Task<IActionResult> Logout()
         {
-            await _authStateService.ClearUserAsync();
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value
+                ?? User.FindFirst("id")?.Value
+                ?? User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value;
+            var deviceToken = Request.Headers["X-Device-Token"].FirstOrDefault();
+            var logoutPerformed = false;
+
+            _logger.LogInformation("Logout request received. userIdClaim={UserIdClaim} deviceTokenPresent={DeviceTokenPresent}", userIdClaim, !string.IsNullOrWhiteSpace(deviceToken));
+
+            if (!string.IsNullOrWhiteSpace(deviceToken))
+            {
+                await _deviceTokenService.DeleteDeviceTokensByRawValueAsync(deviceToken);
+                logoutPerformed = true;
+                _logger.LogInformation("Deleted admin device token by raw deviceToken.");
+            }
+            else if (int.TryParse(userIdClaim, out var userId))
+            {
+                await _deviceTokenService.DeleteDeviceTokensAsync(userId);
+                logoutPerformed = true;
+                _logger.LogInformation("Deleted admin device tokens by userId {UserId}.", userId);
+            }
+
+
+
+            if (!logoutPerformed)
+            {
+                _logger.LogWarning("Logout failed: no userId or device token found. userIdClaim={UserIdClaim} deviceTokenPresent={DeviceTokenPresent}", userIdClaim, !string.IsNullOrWhiteSpace(deviceToken));
+                return Unauthorized(new { message = "Не удалось определить пользователя или устройство" });
+            }
+
+            try
+            {
+                await _authStateService.ClearUserAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to clear auth state during logout for userIdClaim={UserIdClaim}", userIdClaim);
+            }
+
             return Ok(new { message = "Logged out successfully" });
         }
     }

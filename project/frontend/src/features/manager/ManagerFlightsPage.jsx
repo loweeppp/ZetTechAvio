@@ -22,7 +22,7 @@ function formatDateTime(dateString) {
 }
 
 export default function ManagerFlightsPage() {
-  const { currentUser, token, isLoading } = useAuth();
+  const { currentUser, token, deviceToken, isLoading } = useAuth();
   const navigate = useNavigate();
   const [flights, setFlights] = useState([]);
   const [airlines, setAirlines] = useState([]);
@@ -60,6 +60,19 @@ export default function ManagerFlightsPage() {
     }
   }, [currentUser, isManager, isLoading, navigate]);
 
+  const managerHeaders = () => {
+    const headers = {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    };
+
+    if (deviceToken) {
+      headers['X-Device-Token'] = deviceToken;
+    }
+
+    return headers;
+  };
+
   const loadFlights = useCallback(async () => {
     if (!token || !isManager) return;
 
@@ -68,10 +81,7 @@ export default function ManagerFlightsPage() {
 
     try {
       const response = await fetch(`${API_URL}/api/manager/flights`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
+        headers: managerHeaders()
       });
 
       if (!response.ok) {
@@ -94,10 +104,7 @@ export default function ManagerFlightsPage() {
 
     try {
       const response = await fetch(`${API_URL}/api/manager/flights/references`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
+        headers: managerHeaders()
       });
 
       if (!response.ok) {
@@ -164,9 +171,9 @@ export default function ManagerFlightsPage() {
 
   const mergeFareClassesWithDefaults = (fareClasses, ticketCounts = {}) => {
     const defaultClasses = [
-      { id: 'economy', name: 'Эконом', price: '5900', seats: '120', baggage: 'нет' },
-      { id: 'business', name: 'Бизнес', price: '14900', seats: '20', baggage: '23кг' },
-      { id: 'first', name: 'Первый', price: '35000', seats: '8', baggage: '32кг' }
+      { id: 'economy', name: 'Эконом', price: '4900', seats: '120', baggage: 'нет' },
+      { id: 'business', name: 'Бизнес', price: '8500', seats: '80', baggage: '23кг' },
+      { id: 'first', name: 'Первый', price: '12000', seats: '20', baggage: '32кг' }
     ];
 
     return defaultClasses.map((base) => {
@@ -203,10 +210,7 @@ export default function ManagerFlightsPage() {
           }
         }),
         fetch(`${API_URL}/api/manager/flights/${flight.id}/tickets`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
+          headers: managerHeaders()
         })
       ]);
 
@@ -243,20 +247,34 @@ export default function ManagerFlightsPage() {
     setError(null);
 
     try {
-      const response = await fetch(`${API_URL}/api/manager/flights/${flight.id}/tickets`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
+      const [ticketsResponse, faresResponse] = await Promise.all([
+        fetch(`${API_URL}/api/manager/flights/${flight.id}/tickets`, {
+          headers: managerHeaders()
+        }),
+        fetch(`${API_URL}/api/flights/${flight.id}/fares`)
+      ]);
 
-      if (!response.ok) {
-        const payload = await response.json().catch(() => null);
+      if (!ticketsResponse.ok) {
+        const payload = await ticketsResponse.json().catch(() => null);
         throw new Error(payload?.message || 'Ошибка загрузки билетов рейса');
       }
 
-      const data = await response.json();
-      setSelectedFlightTickets(data.tickets || []);
+      const ticketsData = await ticketsResponse.json();
+      const fares = faresResponse.ok ? await faresResponse.json() : [];
+      const fareMap = Array.isArray(fares)
+        ? fares.reduce((map, fare) => {
+            const mappedFare = mapApiFareToFormFare(fare);
+            map[fare.id] = mappedFare.name;
+            return map;
+          }, {})
+        : {};
+
+      const ticketsWithFareNames = (ticketsData.tickets || []).map((ticket) => ({
+        ...ticket,
+        fareName: fareMap[ticket.fareId ?? ticket.FareId] || String(ticket.fareId ?? ticket.FareId ?? '—')
+      }));
+
+      setSelectedFlightTickets(ticketsWithFareNames);
       setSelectedFlightForTickets(flight);
       setIsTicketsModalOpen(true);
     } catch (err) {
@@ -311,10 +329,7 @@ export default function ManagerFlightsPage() {
 
       const response = await fetch(url, {
         method,
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
+        headers: managerHeaders(),
         body
       });
 
@@ -343,10 +358,7 @@ export default function ManagerFlightsPage() {
     let ticketCount = 0;
     try {
       const countResponse = await fetch(`${API_URL}/api/manager/flights/${flight.id}/ticket-count`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
+        headers: managerHeaders()
       });
 
       if (!countResponse.ok) {
@@ -378,10 +390,7 @@ export default function ManagerFlightsPage() {
 
       const response = await fetch(url, {
         method,
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
+        headers: managerHeaders()
       });
 
       if (!response.ok) {
@@ -409,10 +418,7 @@ export default function ManagerFlightsPage() {
     try {
       const response = await fetch(`${API_URL}/api/manager/flights/schedule`, {
         method: 'POST',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
+        headers: managerHeaders(),
         body: JSON.stringify(payload)
       });
 

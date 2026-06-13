@@ -170,6 +170,15 @@
     border-color: #c7d2fe;
 }
 
+.security-action-description {
+    color: #6b7280;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    margin-top: -0.5rem;
+    margin-bottom: 0.5rem;
+    padding-left: 1.5rem;
+}
+
 .logout-panel {
     display: flex;
     flex-direction: column;

@@ -51,7 +51,7 @@
 }
 
 .admin-panel__search {
-  min-width: 240px;
+  min-width: 440px;
   padding: 0.85rem 1rem;
   border: 1px solid #d9dde6;
   border-radius: 12px;
@@ -348,39 +348,6 @@
   margin-top: 0.5rem;
 }
 
-.manager-modal__grid {
-  display: grid;
-  grid-template-columns: minmax(0, 1.6fr) minmax(320px, 1fr);
-  gap: 1.5rem;
-  align-items: start;
-}
-
-.manager-modal__main {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-  min-width: 0;
-}
-
-.manager-modal__sidebar {
-  border-left: 1px solid #e2e8f0;
-  padding-left: 1.5rem;
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-  min-width: 0;
-}
-
-@media (max-width: 992px) {
-  .manager-modal__grid {
-    grid-template-columns: 1fr;
-  }
-
-  .manager-modal__sidebar {
-    border-left: none;
-    padding-left: 0;
-  }
-}
 
 .btn {
   min-width: 120px;

@@ -45,16 +45,22 @@ export default function ProfileModal({ isOpen, onClose, user, onLogout, onChange
 
     try {
       const token = localStorage.getItem('token');
+      const deviceToken = localStorage.getItem('deviceToken');
+      const headers = {
+        'Authorization': `Bearer ${token}`
+      };
+      if (deviceToken) {
+        headers['X-Device-Token'] = deviceToken;
+      }
+
       const response = await fetch(`${API_URL}/api/auth/logout`, {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+        headers
       });
       if (response.ok) {
         onLogout();
-        onClose();
-        setTimeout(() => window.location.reload(), 100);
+        // onClose();
+        // setTimeout(() => window.location.reload(), 100);
 
       } else {
         const errorData = await response.json().catch(() => ({}));

@@ -206,6 +206,7 @@ export default function AISearch({ onSearch }) {
             if (!hasDateRange && parsedDate && availableDates.length > 0 && !availableDates.includes(parsedDate)) {
               const dateList = availableDates.slice(0, 5).map(formatDate).join(', ');
               parsed.reasoning = `На эту дату нет рейсов, но есть на эти даты: ${dateList}`;
+              parsed.date = availableDates[0];
             } else if (!parsed.date && !hasDateRange && availableDates.length > 0) {
               const dateList = availableDates.slice(0, 5).map(formatDate).join(', ');
               parsed.reasoning = `Есть рейсы на маршруте ${parsed.from.name} → ${parsed.to.name}. Доступные даты: ${dateList}`;

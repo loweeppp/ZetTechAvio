@@ -4,12 +4,29 @@ import { useNavigate } from 'react-router-dom';
 import AdminUserModal from './AdminUserModal';
 import './admin-panel.css';
 
+const SADMIN = process.env.REACT_APP_SADMIN?.trim().toLowerCase();
+
+const isProtectedSuperAdmin = (email) => String(email || '').trim().toLowerCase() === SADMIN;
+
 const API_URL = process.env.REACT_APP_API_URL || 'https://api.zettechavio.ru';
 
 export default function AdminUsersPage() {
-  const { currentUser, token, isLoading } = useAuth();
+  const { currentUser, token, deviceToken, isLoading } = useAuth();
   const currentUserId = currentUser?.id;
   const navigate = useNavigate();
+
+  const adminHeaders = () => {
+    const headers = {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    };
+
+    if (deviceToken) {
+      headers['X-Device-Token'] = deviceToken;
+    }
+
+    return headers;
+  };
   const [users, setUsers] = useState([]);
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
@@ -38,10 +55,7 @@ export default function AdminUsersPage() {
     try {
       const params = new URLSearchParams({ page: String(page), pageSize: '20', search }).toString();
       const response = await fetch(`${API_URL}/api/admin/users?${params}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
+        headers: adminHeaders()
       });
 
       if (!response.ok) {
@@ -82,10 +96,7 @@ export default function AdminUsersPage() {
     try {
       const response = await fetch(`${API_URL}/api/admin/users/${selectedUser.id}`, {
         method: 'PUT',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
+        headers: adminHeaders(),
         body: JSON.stringify(payload)
       });
 
@@ -114,10 +125,7 @@ export default function AdminUsersPage() {
     try {
       const response = await fetch(`${API_URL}/api/admin/users/${selectedUser.id}/toggle-block`, {
         method: 'POST',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
+        headers: adminHeaders(),
         body: JSON.stringify({ isBlocked })
       });
 
@@ -261,7 +269,7 @@ export default function AdminUsersPage() {
                   </td>
                   <td>{new Date(user.createdAt).toLocaleDateString('ru-RU')}</td>
                   <td className="admin-panel__action-group">
-                    {user.id === currentUserId ? (
+                    {user.id === currentUserId || isProtectedSuperAdmin(user.email) ? (
                       <span>⠀</span>
                     ) : (
                       <button className="admin-panel__action" type="button" onClick={() => handleOpenModal(user)}>

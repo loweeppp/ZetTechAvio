@@ -4,10 +4,21 @@ import '../admin/admin-panel.css';
 
 const statusOptions = [
   { value: 'Scheduled', label: 'Запланирован' },
-  { value: 'Delayed', label: 'Задержан' },
-  { value: 'Cancelled', label: 'Отменён' },
-  { value: 'Completed', label: 'Выполнен' }
 ];
+
+const editStatusOptions = (currentStatus) => {
+  const options = [
+    { value: 'Scheduled', label: 'Запланирован' },
+    { value: 'Cancelled', label: 'Отменён' },
+    { value: 'Delayed', label: 'Задержан' },
+  ];
+
+  if (currentStatus && !options.some((option) => option.value === currentStatus)) {
+    options.splice(1, 0, { value: currentStatus, label: currentStatus === 'Completed' ? 'Выполнен' : currentStatus === 'Delayed' ? 'Задержан' : currentStatus });
+  }
+
+  return options;
+};
 
 const MIN_BOOKING_MINUTES = 120;
 const MAX_BOOKING_MONTHS = 6;
@@ -16,15 +27,21 @@ const MAX_FLIGHT_DURATION_MINUTES = 1440;
 const DURATION_TOLERANCE_MINUTES = 200;
 
 const FARE_CLASSES_BASE = [
-  { id: 'economy', name: 'Эконом', price: '5900', seats: '120', baggage: 'нет' },
-  { id: 'business', name: 'Бизнес', price: '14900', seats: '20', baggage: '23кг' },
-  { id: 'first', name: 'Первый', price: '35000', seats: '8', baggage: '32кг' },
+  { id: 'economy', name: 'Эконом', price: '4900', seats: '120', baggage: 'нет' },
+  { id: 'business', name: 'Бизнес', price: '8500', seats: '80', baggage: '23кг' },
+  { id: 'first', name: 'Первый', price: '12000', seats: '20', baggage: '32кг' },
 ];
 
 const MIN_FARE_PRICES = {
-  economy: 5900,
-  business: 14900,
-  first: 35000
+  economy: 4900,
+  business: 8500,
+  first: 12000
+};
+
+const MAX_FARE_PRICES = {
+  economy: 50000,
+  business: 100000,
+  first: 300000
 };
 
 const FARE_PRESETS = [
@@ -34,8 +51,19 @@ const FARE_PRESETS = [
 ];
 
 const makeFareClasses = (enabledIds) =>
+  FARE_CLASSES_BASE.map((fc) => ({
+    id: fc.id,
+    name: fc.name,
+    price: '0',
+    seats: '0',
+    baggage: 'нет',
+    enabled: enabledIds.includes(fc.id)
+  }));
+
+const makePresetFareClasses = (enabledIds) =>
   FARE_CLASSES_BASE.map((fc) => ({ ...fc, enabled: enabledIds.includes(fc.id) }));
 
+const getAircraftCapacity = (aircraft) => aircraft?.totalSeats ?? aircraft?.TotalSeats ?? aircraft?.capacity;
 
 const getLocalDateTimeString = (date) => {
   const pad = (value) => String(value).padStart(2, '0');
@@ -55,7 +83,7 @@ const buildFareClassesForForm = (loadedFareClasses = []) => {
       return {
         ...base,
         ...existing,
-        enabled: true,
+        enabled: existing.enabled ?? false,
         fareId: existing.fareId,
         ticketCount: existing.ticketCount ?? 0
       };
@@ -104,8 +132,22 @@ function FareClassesSection({ fareClasses = [], aircraftCapacity, onChange, onVa
     const preset = FARE_PRESETS[index];
     onChange(
       sanitizedFareClasses.length === 0
-        ? makeFareClasses(preset.enabled)
-        : sanitizedFareClasses.map((fare) => ({ ...fare, enabled: preset.enabled.includes(fare.id) })),
+        ? makePresetFareClasses(preset.enabled)
+        : sanitizedFareClasses.map((fare) => {
+          const shouldEnable = fare.ticketCount > 0 ? true : preset.enabled.includes(fare.id);
+          if (!fare.enabled && shouldEnable) {
+            const presetBase = FARE_CLASSES_BASE.find((base) => base.id === fare.id);
+            return {
+              ...fare,
+              ...presetBase,
+              enabled: true,
+            };
+          }
+          return {
+            ...fare,
+            enabled: shouldEnable,
+          };
+        }),
     );
   };
 
@@ -117,8 +159,19 @@ function FareClassesSection({ fareClasses = [], aircraftCapacity, onChange, onVa
     onChange(sanitizedFareClasses.map((item) => (item.id === fare.id ? { ...item, enabled: value } : item)));
   };
 
-  const updateFare = (id, field, value) =>
+  const updateFare = (id, field, value) => {
+    const fare = sanitizedFareClasses.find((item) => item.id === id);
+    if (fare && field === 'seats' && fare.ticketCount > 0) {
+      const newSeats = value === '' ? NaN : Number(value);
+      const soldSeats = Number(fare.ticketCount);
+      if (!Number.isNaN(newSeats) && newSeats < soldSeats) {
+        onValidationError?.(`Нельзя уменьшать количество мест в тарифе «${fare.name}» ниже числа проданных билетов (${soldSeats}).`);
+        return;
+      }
+    }
+
     onChange(sanitizedFareClasses.map((fare) => (fare.id === id ? { ...fare, [field]: value } : fare)));
+  };
 
   const activeFares = sanitizedFareClasses.filter((fare) => fare.enabled);
   const totalAvailableSeats = activeFares.reduce((sum, fare) => sum + (Number(fare.seats) || 0), 0);
@@ -149,6 +202,7 @@ function FareClassesSection({ fareClasses = [], aircraftCapacity, onChange, onVa
             <div />
             <div>Класс</div>
             <div>Цена (₽)</div>
+            <div>Продано</div>
             <div>Мест</div>
             <div>Багаж</div>
           </div>
@@ -158,11 +212,12 @@ function FareClassesSection({ fareClasses = [], aircraftCapacity, onChange, onVa
               key={fare.id}
               className={`fare-table__row ${!fare.enabled ? 'fare-table__row--disabled' : ''} ${idx < sanitizedFareClasses.length - 1 ? 'fare-table__row--bordered' : ''}`}
             >
-              <label className="fare-table__checkbox-label">
+              <label className={`fare-table__checkbox-label ${fare.ticketCount > 0 ? 'fare-table__checkbox-label--locked' : ''}`}>
                 <input
                   type="checkbox"
                   checked={fare.enabled}
                   onChange={(e) => handleToggleEnabled(fare, e.target.checked)}
+                  disabled={fare.ticketCount > 0}
                   className="fare-table__checkbox-input"
                 />
                 <span className={`fare-table__checkbox-box ${fare.enabled ? 'fare-table__checkbox-box--checked' : ''}`}>
@@ -176,9 +231,6 @@ function FareClassesSection({ fareClasses = [], aircraftCapacity, onChange, onVa
 
               <div className="fare-table__name-wrapper">
                 <span className="fare-table__name">{fare.name}</span>
-                {fare.ticketCount > 0 && (
-                  <span className="fare-table__ticket-count">Продано: {fare.ticketCount}</span>
-                )}
               </div>
 
               <input
@@ -189,7 +241,12 @@ function FareClassesSection({ fareClasses = [], aircraftCapacity, onChange, onVa
                 className="fare-table__input"
                 placeholder="0"
                 min="0"
+                max={MAX_FARE_PRICES[fare.id]}
               />
+
+              <div className="fare-table__sold-count">
+                {fare.ticketCount || 0}
+              </div>
 
               <input
                 type="number"
@@ -198,7 +255,7 @@ function FareClassesSection({ fareClasses = [], aircraftCapacity, onChange, onVa
                 disabled={!fare.enabled}
                 className="fare-table__input"
                 placeholder="0"
-                min="0"
+                min="5"
               />
 
               <select
@@ -214,30 +271,23 @@ function FareClassesSection({ fareClasses = [], aircraftCapacity, onChange, onVa
                 ))}
               </select>
 
-              {/* {fare.enabled && fare.ticketCount === 0 ? (
-                <button
-                  type="button"
-                  className="fare-table__remove-btn"
-                  onClick={() => handleToggleEnabled(fare, false)}
-                >
-                  Удалить
-                </button>
-              ) : (
-                <div className="fare-table__action-placeholder" />
-              )} */}
             </div>
           ))}
 
           <div className={`fare-seat-counter ${seatsOk ? 'fare-seat-counter--ok' : 'fare-seat-counter--error'}`}>
             {seatsOk ? <CheckCircle2Icon className="fare-seat-counter__icon" /> : <AlertCircleIcon className="fare-seat-counter__icon" />}
             <span className="fare-seat-counter__text">
-              Итого свободных мест: <strong>{totalAvailableSeats}</strong>
+              Занято мест: <strong>{totalAvailableSeats}</strong>
               {totalSoldSeats > 0 && (
                 <span> + продано <strong>{totalSoldSeats}</strong></span>
               )}
               {aircraftCapacity !== undefined && (
+                <span className="fare-seat-counter__target"> / Целевая загрузка: <strong>{Math.round(aircraftCapacity * 0.75)}</strong> мест</span>
+              )}
+              {aircraftCapacity !== undefined && (
                 <span className="fare-seat-counter__limit"> / вместимость {aircraftCapacity}</span>
               )}
+
               {!seatsOk && <span className="fare-seat-counter__warning"> — превышает вместимость</span>}
               {aircraftCapacity !== undefined && freeCapacity !== undefined && (
                 <div className={`fare-seat-remaining ${freeCapacity >= 0 ? 'fare-seat-remaining--ok' : 'fare-seat-remaining--error'}`}>
@@ -246,6 +296,7 @@ function FareClassesSection({ fareClasses = [], aircraftCapacity, onChange, onVa
                   ) : (
                     <span>Отрицательное свободное место: <strong>{freeCapacity}</strong></span>
                   )}
+
                 </div>
               )}
             </span>
@@ -309,7 +360,7 @@ export default function ManagerFlightModal({ isOpen, onClose, flight, onSave, ai
   const getSelectedAirport = (airportId) => airports.find((airport) => String(airport.id) === String(airportId));
   const originAirport = getSelectedAirport(formState.originAirportId);
   const destAirport = getSelectedAirport(formState.destAirportId);
-  const selectedAircraftCapacity = aircrafts.find((aircraft) => String(aircraft.id) === String(formState.aircraftId))?.totalSeats ?? aircrafts.find((aircraft) => String(aircraft.id) === String(formState.aircraftId))?.TotalSeats;
+  const selectedAircraftCapacity = getAircraftCapacity(aircrafts.find((aircraft) => String(aircraft.id) === String(formState.aircraftId)));
 
   const calculateDuration = () => {
     const departure = new Date(formState.departureDt);
@@ -407,6 +458,17 @@ export default function ManagerFlightModal({ isOpen, onClose, flight, onSave, ai
         return `Суммарное количество мест тарифов и проданных билетов (${totalAllocatedSeats}) превышает вместимость самолёта (${selectedAircraftCapacity}).`;
       }
 
+      if (activeClasses.some((fare) => Number(fare.seats) < 5)) {
+        return 'В каждом активном тарифе должно быть не менее 5 мест.';
+      }
+
+      if (selectedAircraftCapacity !== undefined) {
+        const minSeats = Math.ceil(selectedAircraftCapacity * 0.75);
+        if (totalAvailableSeats < minSeats) {
+          return `Суммарное количество мест по тарифам должно быть не менее ${minSeats} — это 75% от вместимости самолёта.`;
+        }
+      }
+
       const economyFare = activeClasses.find((fare) => fare.id === 'economy');
       const businessFare = activeClasses.find((fare) => fare.id === 'business');
       const firstFare = activeClasses.find((fare) => fare.id === 'first');
@@ -426,6 +488,11 @@ export default function ManagerFlightModal({ isOpen, onClose, flight, onSave, ai
         const minPrice = MIN_FARE_PRICES[fare.id];
         if (minPrice && price < minPrice) {
           return `Минимальная цена для класса «${fare.name}» — ${minPrice} ₽.`;
+        }
+
+        const maxPrice = MAX_FARE_PRICES[fare.id];
+        if (maxPrice && price > maxPrice) {
+          return `Максимальная цена для класса «${fare.name}» — ${maxPrice} ₽.`;
         }
       }
 
@@ -673,7 +740,7 @@ export default function ManagerFlightModal({ isOpen, onClose, flight, onSave, ai
                     value={formState.status}
                     onChange={(e) => handleChange('status', e.target.value)}
                   >
-                    {statusOptions.map((option) => (
+                    {editStatusOptions(formState.status).map((option) => (
                       <option key={option.value} value={option.value}>{option.label}</option>
                     ))}
                   </select>

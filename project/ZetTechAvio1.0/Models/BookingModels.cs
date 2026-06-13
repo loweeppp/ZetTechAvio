@@ -65,6 +65,7 @@ namespace ZetTechAvio1._0.Models
         public string PassengerType { get; set; } = "";
         public string Status { get; set; } = "";
         public string Email { get; set; } = "";
+        public int FareId { get; set; }
     }
 
     public class FlightResponse
