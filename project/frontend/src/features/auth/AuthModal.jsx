@@ -168,7 +168,7 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess }) {
       return false;
     }
 
-    function cc(p) {
+    function isvalidatePhone(p) {
       return /^(?:\+7|8)\d{10}$/.test(p);
     }
     if (phone && !isvalidatePhone(phone)) {
