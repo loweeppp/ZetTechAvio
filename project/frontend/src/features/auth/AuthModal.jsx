@@ -168,7 +168,7 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess }) {
       return false;
     }
 
-    function isvalidatePhone(p) {
+    function cc(p) {
       return /^(?:\+7|8)\d{10}$/.test(p);
     }
     if (phone && !isvalidatePhone(phone)) {
@@ -419,7 +419,7 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess }) {
                 value = value.replace(/\+/g, (match, index) => (index === 0 ? match : ''));
                 setPhone(value);
               }}
-              maxLength={11}
+              maxLength={12}
             />
 
             <PasswordInput
