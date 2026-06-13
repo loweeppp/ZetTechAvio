@@ -43,18 +43,18 @@ CREATE TABLE `__EFMigrationsHistory` (
 
 LOCK TABLES `__EFMigrationsHistory` WRITE;
 /*!40000 ALTER TABLE `__EFMigrationsHistory` DISABLE KEYS */;
-INSERT INTO `__EFMigrationsHistory` VALUES ('20251118093212_InitialCreate','9.0.0'),('20251125142642_AddAviationTables','9.0.0'),('20251201144448_MakeLogoNullable','9.0.0'),('20251208194845_AddFares','9.0.0'),('20251208200730_FixPriceDecimalPrecision','9.0.0'),('20260130160630_FaresInFlights','9.0.0'),('20260130161424_FaresInFlights2','9.0.0'),('20260227163318_AddBookingsSeatsTicketsV2','9.0.0'),('20260227170926_AddPassportToTickets','9.0.0'),('20260312160422_AddConfirmationCodes','9.0.0'),('20260403064737_AddPaymentTable','9.0.0'),('20260511104725_AddIsActiveToUser','9.0.0'),('20260513091524_AddIsActiveToUser','9.0.0'),('20260612125803_AddAdmindevices','9.0.0');
+INSERT INTO `__EFMigrationsHistory` VALUES ('20251118093212_InitialCreate','9.0.0'),('20251125142642_AddAviationTables','9.0.0'),('20251201144448_MakeLogoNullable','9.0.0'),('20251208194845_AddFares','9.0.0'),('20251208200730_FixPriceDecimalPrecision','9.0.0'),('20260130160630_FaresInFlights','9.0.0'),('20260130161424_FaresInFlights2','9.0.0'),('20260227163318_AddBookingsSeatsTicketsV2','9.0.0'),('20260227170926_AddPassportToTickets','9.0.0'),('20260312160422_AddConfirmationCodes','9.0.0'),('20260403064737_AddPaymentTable','9.0.0'),('20260511104725_AddIsActiveToUser','9.0.0'),('20260513091524_AddIsActiveToUser','9.0.0'),('20260612125803_AddAdminDevices','9.0.0');
 /*!40000 ALTER TABLE `__EFMigrationsHistory` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
--- Table structure for table `Admindevices`
+-- Table structure for table `AdminDevices`
 --
 
-DROP TABLE IF EXISTS `Admindevices`;
+DROP TABLE IF EXISTS `AdminDevices`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `Admindevices` (
+CREATE TABLE `AdminDevices` (
   `Id` int NOT NULL AUTO_INCREMENT,
   `AdminUserId` int NOT NULL,
   `DeviceTokenHash` varchar(512) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
