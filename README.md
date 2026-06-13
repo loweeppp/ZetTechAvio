@@ -6,11 +6,15 @@
 
 ## Технологии
 
-Frontend: React, JavaScript, CSS, HTML
+Frontend: React 19, JavaScript, CSS, HTML
 
-Backend: C#, ASP.NET Core 8.0, Entity Framework Core 
+Backend: C#, ASP.NET Core 9 / .NET 9, Entity Framework Core 9
 
 БД: MySQL 8.0
+
+Инфраструктура: Docker Compose, Nginx, контейнеры для frontend/backend/mysql
+
+LLM / AI: AI-парсер запросов через LLMService
 
 ## Архитектурная диаграмма
 
