@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import './ProfileModal.css';
 
 const API_URL = process.env.REACT_APP_API_URL || 'https://api.zettechavio.ru';
@@ -38,7 +38,15 @@ export default function ProfileModal({ isOpen, onClose, user, onLogout, onChange
   const [fullName, setFullName] = useState(user?.fullName || '');
   const [phone, setPhone] = useState(user?.phone || '');
   const [email, setEmail] = useState(user?.email || '');
-  const [password, setPassword] = useState('')  
+  const [password, setPassword] = useState('');
+
+  const [isResetMode, setIsResetMode] = useState(false);
+  const [resetStage, setResetStage] = useState('email');
+  const [resetEmail, setResetEmail] = useState(user?.email || '');
+  const [resetCode, setResetCode] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [resetCooldown, setResetCooldown] = useState(0);
 
   const handleLogout = async () => {
     setError('');
@@ -77,7 +85,7 @@ export default function ProfileModal({ isOpen, onClose, user, onLogout, onChange
 
     try {
       const token = localStorage.getItem('token');
-      
+
       // Всегда отправляем пароль, но пустую строку если не изменялся
       const changeData = {
         email,
@@ -86,10 +94,10 @@ export default function ProfileModal({ isOpen, onClose, user, onLogout, onChange
         password: password, // Отправляем как есть (пустой или заполненный)
         id: user.id
       };
-      
+
       const response = await fetch(`${API_URL}/api/auth/change`, {
         method: 'POST',
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
@@ -125,6 +133,115 @@ export default function ProfileModal({ isOpen, onClose, user, onLogout, onChange
     }
   };
 
+  useEffect(() => {
+    if (resetCooldown <= 0) return;
+
+    const timer = window.setInterval(() => {
+      setResetCooldown((prev) => (prev > 0 ? prev - 1 : 0));
+    }, 1000);
+
+    return () => window.clearInterval(timer);
+  }, [resetCooldown]);
+
+  const handleRequestResetCode = async () => {
+    setError('');
+
+    if (!resetEmail || !/\S+@\S+\.\S+/.test(resetEmail)) {
+      setError('Введите корректный email для восстановления');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await fetch(`${API_URL}/api/auth/request-password-reset`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ email: resetEmail })
+      });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        setError(result.message || 'Ошибка отправки кода');
+        return;
+      }
+      setResetStage('code');
+      setResetCooldown(30);
+    } catch (err) {
+      setError('Ошибка подключения');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const verifyResetCode = async (emailArg, codeArg) => {
+    if (!emailArg || !codeArg) {
+      setError('Введите email и код');
+      return;
+    }
+
+    setError('');
+    try {
+      const response = await fetch(`${API_URL}/api/auth/verify-password-reset-code`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ email: emailArg, code: codeArg })
+      });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        setError(result.message || 'Неверный код');
+        return;
+      }
+
+      setResetStage('verified');
+      setError('');
+    } catch (err) {
+      console.error('Ошибка проверки кода:', err);
+      setError('Ошибка проверки кода');
+    }
+  };
+
+  const handleResetPassword = async (e) => {
+    e.preventDefault();
+    setError('');
+
+    if (!resetEmail || !resetCode || !newPassword) {
+      setError('Email, код и новый пароль обязательны');
+      return;
+    }
+
+    if (newPassword.length < 6) {
+      setError('Пароль должен быть не менее 6 символов');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await fetch(`${API_URL}/api/auth/reset-password`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ email: resetEmail, code: resetCode, newPassword })
+      });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        setError(result.message || 'Не удалось сбросить пароль');
+        return;
+      }
+
+      setError('Пароль сброшен. Введите новый пароль и войдите.');
+      setIsResetMode(false);
+      setResetStage('email');
+      setResetCode('');
+      setNewPassword('');
+      setPassword('');
+    } catch (err) {
+      setError('Ошибка подключения');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   if (!isOpen || !user) return null;
 
   return (
@@ -145,52 +262,131 @@ export default function ProfileModal({ isOpen, onClose, user, onLogout, onChange
 
         {/* Content */}
         <div className="modal-content">
-          <FloatingInput
-            id="fullName"
-            label="Полное имя"
-            type="text"
-            value={fullName}
-            onChange={setFullName}
-            disabled={!changeMode}
-          />
+          {isResetMode ? (
+            <form onSubmit={handleResetPassword} className="profile-reset-form">
+              <FloatingInput
+                id="reset-email"
+                label="Email"
+                type="email"
+                value={resetEmail}
+                onChange={setResetEmail}
+              />
 
-          <FloatingInput
-            id="email"
-            label="Email"
-            type="email"
-            value={email}
-            onChange={setEmail}
-            disabled={!changeMode}
-          />
 
-          <FloatingInput
-            id="phone"
-            label="Телефон"
-            type="text"
-            value={phone}
-            onChange={setPhone}
-            disabled={!changeMode}
-          />
+              {resetStage !== 'email' && (
+                <FloatingInput
+                  id="reset-code"
+                  label="Код из письма"
+                  type="text"
+                  value={resetCode}
+                  onChange={setResetCode}
+                />
+              )}
+              {resetStage !== 'verified' && (
+                <button
+                  type="button"
+                  disabled={loading || resetCooldown > 0}
+                  className="btn btn-submit"
+                  onClick={handleRequestResetCode}
+                >
+                  {loading
+                    ? 'Загрузка...'
+                    : resetCooldown > 0
+                      ? `Отправить код (${resetCooldown}s)`
+                      : 'Отправить код'}
+                </button>
+              )}
 
-          <FloatingInput
-            id="password"
-            label="Пароль"
-            type="password"
-            value={password}
-            onChange={setPassword}
-            disabled={!changeMode}
-            placeholder={changeMode ? "Введите новый пароль" : ""}
-          />
+              {resetStage === 'verified' && (
+                <FloatingInput
+                  id="reset-new-password"
+                  label="Новый пароль"
+                  type="password"
+                  value={newPassword}
+                  onChange={setNewPassword}
+                />
+              )}
 
-          {/* Registration date */}
-          <div style={{ marginBottom: '1.5rem' }}>
-            <label className="profile-date-label">
-              Дата регистрации
-            </label>
-            <p className="profile-date-value">
-              {new Date(user.createdAt).toLocaleDateString('ru-RU')}
-            </p>
-          </div>
+              {resetStage === 'verified' && (
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="btn btn-submit"
+                >
+                  {loading ? 'Загрузка...' : 'Сохранить пароль'}
+                </button>
+              )}
+
+              <div className="button-group">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsResetMode(false);
+                    setError('');
+                    setResetStage('email');
+                    setResetCode('');
+                    setNewPassword('');
+                  }}
+                  disabled={loading}
+                  className="btn btn-secondary"
+                >
+                  ← Вернуться к профилю
+                </button>
+              </div>
+            </form>
+          ) : (
+            <>
+              <FloatingInput
+                id="fullName"
+                label="Полное имя"
+                type="text"
+                value={fullName}
+                onChange={setFullName}
+                disabled={!changeMode}
+              />
+
+              <FloatingInput
+                id="email"
+                label="Email"
+                type="email"
+                value={email}
+                onChange={setEmail}
+                disabled={!changeMode}
+              />
+
+              <FloatingInput
+                id="phone"
+                label="Телефон"
+                type="text"
+                value={phone}
+                onChange={setPhone}
+                disabled={!changeMode}
+              />
+              {!isResetMode && (
+                <a
+                  href="#"
+                  className="text-link"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setIsResetMode(true);
+                  }}
+                >
+                  Сброс пароля
+                </a>
+              )}
+              {/* 
+              <FloatingInput
+                id="password"
+                label="Пароль"
+                type="password"
+                value={password}
+                onChange={setPassword}
+                disabled={!changeMode}
+                placeholder={changeMode ? "Введите новый пароль" : ""}
+              /> */}
+
+            </>
+          )}
         </div>
 
         {/* Error message */}
@@ -206,7 +402,21 @@ export default function ProfileModal({ isOpen, onClose, user, onLogout, onChange
             Выход
           </button>
 
-          {changeMode ? (
+          {isResetMode ? (
+            <button
+              type="button"
+              onClick={() => {
+                setIsResetMode(false);
+                setError('');
+                setResetStage('email');
+                setResetCode('');
+                setNewPassword('');
+              }}
+              className="btn btn-secondary"
+            >
+              Отмена
+            </button>
+          ) : changeMode ? (
             <>
               <button
                 type="button"

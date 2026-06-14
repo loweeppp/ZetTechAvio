@@ -209,3 +209,16 @@
 .btn-secondary:hover:not(:disabled) {
   background-color: #D1D5DB;
 }
+
+.text-link {
+  color: #0066FF;
+  text-decoration: underline;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  align-self: center;
+}
+
+.text-link:hover {
+  color: #0047B3;
+}

@@ -111,6 +111,7 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess }) {
   const [resetStage, setResetStage] = useState('email');
   const [resetCodeRequested, setResetCodeRequested] = useState(false);
   const [newPassword, setNewPassword] = useState('');
+  const [resetCooldown, setResetCooldown] = useState(0);
 
   const API_URL = process.env.REACT_APP_API_URL || 'https://api.zettechavio.ru';
 
@@ -152,6 +153,16 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess }) {
       isVerifyingCode.current = false;
     }
   }, [isOpen]);
+
+  useEffect(() => {
+    if (resetCooldown <= 0) return;
+
+    const timerId = window.setInterval(() => {
+      setResetCooldown((prev) => (prev > 0 ? prev - 1 : 0));
+    }, 1000);
+
+    return () => window.clearInterval(timerId);
+  }, [resetCooldown]);
 
   const handleRequestResetCode = async () => {
     setError('');
@@ -245,7 +256,7 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess }) {
   }, [API_URL, validateRegistration]);
 
   const confirmCode = useCallback(async (emailArg, codeArg) => {
-    if(!validateRegistration()) return;
+    if (!validateRegistration()) return;
     setError('');
     try {
       const response = await fetch(`${API_URL}/api/bookings/verify-code`, {
@@ -295,6 +306,7 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess }) {
       }
       setResetStage('code');
       setResetCodeRequested(true);
+      setResetCooldown(30);
     } catch (err) {
       setError('Ошибка подключения');
     } finally {
@@ -421,7 +433,7 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess }) {
 
   //Переключение на режим регистрации
   const handleRegister = async (e) => {
-    if(!validateRegistration()) return;
+    if (!validateRegistration()) return;
     setError('');
 
     setLoading(true);
@@ -474,17 +486,6 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess }) {
                 maxLength={100}
               />
 
-              {resetStage !== 'verified' && (
-                <button
-                  type="button"
-                  disabled={loading}
-                  className="btn btn-submit"
-                  onClick={handleRequestResetCode}
-                >
-                  {loading ? 'Загрузка...' : 'Отправить код'}
-                </button>
-              )}
-
               {resetStage !== 'email' && (
                 <PasswordInput
                   id="reset-code"
@@ -492,9 +493,23 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess }) {
                   value={resetCode}
                   onChange={setResetCode}
                   isVisible={false}
-                  onToggleVisibility={() => {}}
+                  onToggleVisibility={() => { }}
                   maxLength={6}
                 />
+              )}
+              {resetStage !== 'verified' && (
+                <button
+                  type="button"
+                  disabled={loading || resetCooldown > 0}
+                  className="btn btn-submit"
+                  onClick={handleRequestResetCode}
+                >
+                  {loading
+                    ? 'Загрузка...'
+                    : resetCooldown > 0
+                      ? `Отправить код (${resetCooldown}s)`
+                      : 'Отправить код'}
+                </button>
               )}
 
               {resetStage === 'verified' && (
@@ -569,6 +584,16 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess }) {
                 onToggleVisibility={() => setShowLoginPassword(!showLoginPassword)}
                 maxLength={50}
               />
+              <a
+                href="#"
+                className="text-link"
+                onClick={(e) => {
+                  e.preventDefault();
+                  setIsResetMode(true);
+                }}
+              >
+                Забыли пароль?
+              </a>
 
               {error && <div className="error-message">{error}</div>}
 
@@ -590,13 +615,7 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess }) {
                   Отмена
                 </button>
 
-                <button
-                  type="button"
-                  onClick={() => setIsResetMode(true)}
-                  className="btn btn-outline"
-                >
-                  Забыли пароль?
-                </button>
+
 
                 <button
                   type="button"

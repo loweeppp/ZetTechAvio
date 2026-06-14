@@ -245,6 +245,19 @@
   background-color: rgba(0, 102, 255, 0.08);
 }
 
+.text-link {
+  display: inline-block;
+  color: #0066FF;
+  text-decoration: underline;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.text-link:hover {
+  color: #0047B3;
+}
+
 .btn-danger {
   background-color: #DC2626;
   color: white;
