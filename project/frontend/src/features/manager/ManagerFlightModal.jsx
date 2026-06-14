@@ -405,6 +405,13 @@ export default function ManagerFlightModal({ isOpen, onClose, flight, onSave, ai
       return 'Выберите аэропорт отправления и прибытия.';
     }
 
+    if (formState.flightNumber) {
+      const flightNumber = formState.flightNumber.trim();
+      if (!/^[A-Z0-9]{6}$/.test(flightNumber)) {
+        return 'Номер рейса должен содержать ровно 6 символов: только латинские буквы и цифры.';
+      }
+    }
+
     if (formState.originAirportId === formState.destAirportId) {
       return 'Аэропорт отправления и прибытия не могут совпадать.';
     }
@@ -572,10 +579,13 @@ export default function ManagerFlightModal({ isOpen, onClose, flight, onSave, ai
                       id="flight-number"
                       type="text"
                       value={formState.flightNumber}
-                      onChange={(e) => handleChange('flightNumber', e.target.value)}
+                      onChange={(e) => handleChange('flightNumber', e.target.value.toUpperCase())}
                       placeholder=" "
+                      maxLength={6}
+                      pattern="[A-Z0-9]{6}"
                     />
                     <label htmlFor="flight-number" className="floating-label">Номер рейса</label>
+                    <div className="admin-modal__hint">Опционально. </div>
                   </div>
 
                   <div className="admin-modal__select-wrapper">
