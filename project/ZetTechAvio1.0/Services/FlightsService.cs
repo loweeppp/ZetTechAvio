@@ -775,7 +775,7 @@ namespace ZetTechAvio1._0.Services
 
         public async Task<int> MarkPastFlightsCompletedAsync()
         {
-            var now = DateTime.UtcNow;
+            var now = GetMoscowNow();
             var flightsToComplete = await _dbContext.Flights
                 .Where(f => f.Status != FlightStatus.Completed && f.Status != FlightStatus.Cancelled && f.ArrivalDt <= now)
                 .ToListAsync();
@@ -792,6 +792,23 @@ namespace ZetTechAvio1._0.Services
 
             await _dbContext.SaveChangesAsync();
             return flightsToComplete.Count;
+        }
+
+        private static DateTime GetMoscowNow()
+        {
+            try
+            {
+                var moscowZone = TimeZoneInfo.FindSystemTimeZoneById("Europe/Moscow");
+                return TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, moscowZone);
+            }
+            catch (TimeZoneNotFoundException)
+            {
+                return DateTime.UtcNow.AddHours(3);
+            }
+            catch (InvalidTimeZoneException)
+            {
+                return DateTime.UtcNow.AddHours(3);
+            }
         }
 
         public async Task<int> GetFlightTicketCountAsync(int flightId)
