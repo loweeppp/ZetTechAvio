@@ -216,8 +216,8 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess }) {
       return false;
     }
 
-    if (fullName.length > 19) {
-      setError('Неверный формат имени, не больше 19 символов');
+    if (fullName.length > 35) {
+      setError('Неверный формат имени, не больше 35 символов');
       return false;
     }
 
