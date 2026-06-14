@@ -1137,6 +1137,7 @@ namespace ZetTechAvio1._0.Tests
         public Task<Flight?> UpdateFlightAsync(int id, Flight updatedFlight, List<FareClassRequest>? fareClasses = null) => throw new NotImplementedException();
         public Task<DeleteFlightResult> DeleteFlightAsync(int id) => throw new NotImplementedException();
         public Task<Flight?> CancelFlightAsync(int id) => Task.FromResult<Flight?>(null);
+        public Task<int> MarkPastFlightsCompletedAsync() => Task.FromResult(0);
         public Task<List<Fare>> GetFlightFaresAsync(int flightId) => Task.FromResult(Fares.Where(f => f.FlightId == flightId).ToList());
         public Task<List<Airport>> GetAirportsAsync() => Task.FromResult(Airports);
         public Task<Airport?> GetAirportByIdAsync(int airportId) => Task.FromResult(Airports.FirstOrDefault(a => a.Id == airportId));

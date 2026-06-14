@@ -34,6 +34,7 @@ namespace ZetTechAvio1._0.Services
         Task<List<Aircraft>> GetAircraftsAsync();
         Task<int> GetFlightTicketCountAsync(int flightId);
         Task<List<FlightTicketResponse>> GetFlightTicketsAsync(int flightId);
+        Task<int> MarkPastFlightsCompletedAsync();
         Task<List<Flight>> CreateScheduledFlightsAsync(FlightScheduleRequest request);
     }
 
@@ -770,6 +771,27 @@ namespace ZetTechAvio1._0.Services
                 .Where(f => f.FlightId == flightId)
                 .ToListAsync();
             return fares;
+        }
+
+        public async Task<int> MarkPastFlightsCompletedAsync()
+        {
+            var now = DateTime.UtcNow;
+            var flightsToComplete = await _dbContext.Flights
+                .Where(f => f.Status != FlightStatus.Completed && f.Status != FlightStatus.Cancelled && f.ArrivalDt <= now)
+                .ToListAsync();
+
+            if (!flightsToComplete.Any())
+            {
+                return 0;
+            }
+
+            foreach (var flight in flightsToComplete)
+            {
+                flight.Status = FlightStatus.Completed;
+            }
+
+            await _dbContext.SaveChangesAsync();
+            return flightsToComplete.Count;
         }
 
         public async Task<int> GetFlightTicketCountAsync(int flightId)

@@ -45,26 +45,18 @@ namespace ZetTechAvio1._0.Services
         private async Task UpdateCompletedFlightsAsync(CancellationToken cancellationToken)
         {
             using var scope = _scopeFactory.CreateScope();
-            var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-            var now = DateTime.Now;
+            var flightsService = scope.ServiceProvider.GetRequiredService<IFlightsService>();
+            var now = DateTime.UtcNow;
 
-            var flightsToComplete = await dbContext.Flights
-                .Where(f => f.Status != FlightStatus.Completed && f.Status != FlightStatus.Cancelled && f.ArrivalDt <= now)
-                .ToListAsync(cancellationToken);
+            var updatedCount = await flightsService.MarkPastFlightsCompletedAsync();
 
-            if (!flightsToComplete.Any())
+            if (updatedCount == 0)
             {
-                _logger.LogDebug("Нет рейсов для обновления статуса на Completed.");
+                _logger.LogDebug("[{NowUtc}] Нет рейсов для обновления статуса на Completed.", now);
                 return;
             }
 
-            foreach (var flight in flightsToComplete)
-            {
-                flight.Status = FlightStatus.Completed;
-            }
-
-            await dbContext.SaveChangesAsync(cancellationToken);
-            _logger.LogInformation("Обновлено {Count} рейсов до статуса Completed.", flightsToComplete.Count);
+            _logger.LogInformation("[{NowUtc}] Обновлено {Count} рейсов до статуса Completed.", now, updatedCount);
         }
     }
 }

@@ -34,8 +34,8 @@ const FARE_CLASSES_BASE = [
 
 const MIN_FARE_PRICES = {
   economy: 4900,
-  business: 8500,
-  first: 12000
+  business: 5500,
+  first: 9000
 };
 
 const MAX_FARE_PRICES = {

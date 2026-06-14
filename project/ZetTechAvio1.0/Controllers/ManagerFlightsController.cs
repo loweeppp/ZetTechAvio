@@ -238,6 +238,20 @@ namespace ZetTechAvio1._0.Controllers
             }
         }
 
+        [HttpPost("complete-past")]
+        public async Task<IActionResult> CompletePastFlights()
+        {
+            try
+            {
+                var updatedCount = await _flightsService.MarkPastFlightsCompletedAsync();
+                return Ok(new { updated = updatedCount });
+            }
+            catch (Exception)
+            {
+                return StatusCode(500, new { message = "Ошибка обновления прошедших рейсов" });
+            }
+        }
+
         [HttpPost("schedule")]
         public async Task<IActionResult> ScheduleFlights([FromBody] FlightScheduleRequest request)
         {

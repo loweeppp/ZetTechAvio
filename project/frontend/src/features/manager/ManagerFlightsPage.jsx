@@ -240,6 +240,40 @@ export default function ManagerFlightsPage() {
     setIsScheduleModalOpen(false);
   };
 
+  const handleUpdatePastFlights = async () => {
+    if (!token) return;
+
+    if (!window.confirm('Обновить все прошедшие рейсы сейчас?')) return;
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      const response = await fetch(`${API_URL}/api/manager/flights/complete-past`, {
+        method: 'POST',
+        headers: managerHeaders()
+      });
+
+      if (!response.ok) {
+        const payload = await response.json().catch(() => null);
+        throw new Error(payload?.message || 'Ошибка обновления прошедших рейсов');
+      }
+
+      const payload = await response.json().catch(() => null);
+      if (payload?.updated != null) {
+        alert(`Обновлено ${payload.updated} рейсов.`);
+      } else if (payload?.message) {
+        alert(payload.message);
+      }
+
+      await loadFlights();
+    } catch (err) {
+      alert(err.message || 'Ошибка обновления прошедших рейсов');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleOpenTicketsModal = async (flight) => {
     if (!token) return;
 
@@ -533,6 +567,9 @@ export default function ManagerFlightsPage() {
           </button>
           <button className="admin-panel__btn" type="button" onClick={handleOpenScheduleModal}>
             Планировать рейсы
+          </button>
+          <button className="admin-panel__btn" type="button" onClick={handleUpdatePastFlights}>
+            Обновить прошедшие рейсы
           </button>
           <button
             className="admin-panel__toggle-filters"
