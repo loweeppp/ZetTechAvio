@@ -192,10 +192,10 @@ export default function UserProfile() {
     }
 
     return (
-        <div className="profile-page">
+        <div className="profile-page2">
             <div className="profile-shell">
                 <div className="profile-header">
-                    <button className="homev2res__back" onClick={() => navigate(-1)}>
+                    <button className="profile-back" onClick={() => navigate(-1)}>
                         <ArrowLeft className="profile-back-icon" />
                         Назад
                     </button>
@@ -266,7 +266,7 @@ export default function UserProfile() {
                         <div className="profile-card-header">
                             <Lock className="profile-card-icon" />
                             <div>
-                                <h2>Безопасность</h2>
+                                <h2>Настройки</h2>
                                 <p>Настройте доступ и защиту аккаунта.</p>
                             </div>
                         </div>
