@@ -435,8 +435,8 @@ export default function ManagerFlightModal({ isOpen, onClose, flight, onSave, ai
 
     if (formState.flightNumber) {
       const flightNumber = formState.flightNumber.trim();
-      if (!/^[A-Z0-9]{6}$/.test(flightNumber)) {
-        return 'Номер рейса должен содержать ровно 6 символов: только латинские буквы и цифры.';
+      if (!/^[A-Z0-9]{5}$/.test(flightNumber)) {
+        return 'Номер рейса должен содержать ровно 5 символов: только латинские буквы и цифры.';
       }
     }
 
