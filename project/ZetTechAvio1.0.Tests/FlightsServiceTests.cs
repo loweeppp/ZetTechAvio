@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
@@ -581,6 +582,119 @@ namespace ZetTechAvio1._0.Tests
             Assert.Equal("test@example.com", tickets[0].Email);
             Assert.Equal("TICK123456", tickets[0].TicketNumber);
             Assert.Equal("Иванов Иван", tickets[0].PassengerName);
+        }
+
+        [Fact]
+        public async Task UpdateFlightAsync_WhenFlightDetailsChange_NotifiesTicketHolders()
+        {
+            var options = new DbContextOptionsBuilder<ApplicationDbContext>()
+                .UseInMemoryDatabase(Guid.NewGuid().ToString())
+                .Options;
+
+            await using var context = new ApplicationDbContext(options);
+
+            var origin = new Airport { Id = 1, Iata = "DME", Name = "Домодедово", City = "Москва", Country = "Россия" };
+            var dest = new Airport { Id = 2, Iata = "JFK", Name = "Джон Ф. Кеннеди", City = "Нью-Йорк", Country = "США" };
+            var airline = new Airline { Id = 1, IataCode = "SU", Name = "Test Airline" };
+            var aircraft = new Aircraft { Id = 1, Manufacturer = "Boeing", Model = "737", TotalSeats = 180 };
+            var user = new User { Id = 1, Email = "test@example.com", PasswordHash = "hash", FullName = "Тест Тестов", Phone = "1234567890", Role = UserRole.User };
+            var booking = new Booking
+            {
+                UserId = user.Id,
+                User = user,
+                BookingReference = "REF1234567",
+                TotalAmount = 10000m,
+                Status = BookingStatus.Confirmed
+            };
+
+            var flight = new Flight
+            {
+                FlightNumber = "SU600",
+                AirlineId = airline.Id,
+                Airline = airline,
+                AircraftId = aircraft.Id,
+                Aircraft = aircraft,
+                OriginAirportId = origin.Id,
+                OriginAirport = origin,
+                DestAirportId = dest.Id,
+                DestAirport = dest,
+                DepartureDt = new DateTime(2026, 8, 1, 10, 0, 0, DateTimeKind.Utc),
+                ArrivalDt = new DateTime(2026, 8, 1, 14, 0, 0, DateTimeKind.Utc),
+                DurationMinutes = 240,
+                Status = FlightStatus.Scheduled
+            };
+
+            var fare = new Fare
+            {
+                Flight = flight,
+                Currency = "RUB",
+                Price = 10000m,
+                SeatsAvailable = 10,
+                BaggageIncluded = false,
+                BaggageWeightKg = 0,
+                Refundable = false,
+                Class = Fare.Fare_class.Economy
+            };
+
+            var ticket = new Ticket
+            {
+                Booking = booking,
+                Flight = flight,
+                Fare = fare,
+                TicketNumber = "TICK600001",
+                PassengerName = "Иванов Иван",
+                PassengerType = PassengerType.Adult,
+                Price = 10000m,
+                Status = TicketStatus.Active
+            };
+
+            context.Airports.AddRange(origin, dest);
+            context.Airlines.Add(airline);
+            context.Aircrafts.Add(aircraft);
+            context.Users.Add(user);
+            context.Flights.Add(flight);
+            context.Fares.Add(fare);
+            context.Bookings.Add(booking);
+            context.Tickets.Add(ticket);
+            await context.SaveChangesAsync();
+
+            var emailService = new FakeEmailService();
+            var flightsService = new FlightsService(context, emailService);
+
+            var updatedFlight = new Flight
+            {
+                FlightNumber = flight.FlightNumber,
+                AirlineId = flight.AirlineId,
+                AircraftId = flight.AircraftId,
+                OriginAirportId = flight.OriginAirportId,
+                DestAirportId = flight.DestAirportId,
+                DepartureDt = flight.DepartureDt.AddHours(2),
+                ArrivalDt = flight.ArrivalDt.AddHours(2),
+                DurationMinutes = flight.DurationMinutes,
+                Status = flight.Status
+            };
+
+            var result = await flightsService.UpdateFlightAsync(flight.Id, updatedFlight);
+
+            Assert.NotNull(result);
+            Assert.Equal(FlightStatus.Scheduled, result.Status);
+            Assert.Single(emailService.SentMessages);
+            var sentMessage = emailService.SentMessages.Single();
+            Assert.Equal("test@example.com", sentMessage.To);
+            Assert.Contains("Изменения в рейсе", sentMessage.Subject);
+            Assert.Contains("время вылета изменено", sentMessage.Body);
+            Assert.Contains("время прилёта изменено", sentMessage.Body);
+        }
+
+        private sealed class FakeEmailService : IEmailService
+        {
+            public List<(string To, string Subject, string Body, bool IsHtml)> SentMessages { get; } = new();
+
+            public Task<bool> SendEmailAsync(string to, string subject, string body, bool isHtml = true, IEnumerable<EmailAttachment>? attachments = null)
+            {
+                SentMessages.Add((to, subject, body, isHtml));
+                return Task.FromResult(true);
+            }
         }
     }
 }

@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using ZetTechAvio1._0.Data;
 using ZetTechAvio1._0.Models;
 
@@ -490,6 +491,7 @@ namespace ZetTechAvio1._0.Services
                 throw new ArgumentException(routeError);
 
             var previousStatus = existingFlight.Status;
+            var changeDescriptions = await GetFlightChangeDescriptionsAsync(existingFlight, updatedFlight);
 
             existingFlight.FlightNumber = updatedFlight.FlightNumber;
             existingFlight.AirlineId = updatedFlight.AirlineId;
@@ -626,17 +628,12 @@ namespace ZetTechAvio1._0.Services
 
                 await _dbContext.SaveChangesAsync();
             }
-            else if (previousStatus != updatedFlight.Status)
-            {
-                await _dbContext.SaveChangesAsync();
-            }
             else
             {
                 await _dbContext.SaveChangesAsync();
-                return existingFlight;
             }
 
-            if (previousStatus != updatedFlight.Status && updatedFlight.Status != FlightStatus.Completed)
+            if ((previousStatus != updatedFlight.Status || changeDescriptions.Any()) && updatedFlight.Status != FlightStatus.Completed)
             {
                 var recipientEmails = await _dbContext.Tickets
                     .Where(t => t.FlightId == id)
@@ -647,10 +644,63 @@ namespace ZetTechAvio1._0.Services
                     .Distinct()
                     .ToListAsync();
 
-                await NotifyTicketHoldersAsync(existingFlight, recipientEmails);
+                await NotifyTicketHoldersAsync(existingFlight, recipientEmails, changeDescriptions);
             }
 
             return existingFlight;
+        }
+
+        private async Task<List<string>> GetFlightChangeDescriptionsAsync(Flight existingFlight, Flight updatedFlight)
+        {
+            var descriptions = new List<string>();
+
+            if (!string.Equals(existingFlight.FlightNumber, updatedFlight.FlightNumber, StringComparison.Ordinal))
+            {
+                descriptions.Add($"номер рейса изменён с {existingFlight.FlightNumber} на {updatedFlight.FlightNumber}");
+            }
+
+            if (existingFlight.AirlineId != updatedFlight.AirlineId)
+            {
+                var oldAirline = await _dbContext.Airlines.FindAsync(existingFlight.AirlineId);
+                var newAirline = await _dbContext.Airlines.FindAsync(updatedFlight.AirlineId);
+                descriptions.Add($"авиакомпания изменена с {oldAirline?.Name ?? existingFlight.AirlineId.ToString()} на {newAirline?.Name ?? updatedFlight.AirlineId.ToString()}");
+            }
+
+            if (existingFlight.AircraftId != updatedFlight.AircraftId)
+            {
+                var oldAircraft = await _dbContext.Aircrafts.FindAsync(existingFlight.AircraftId);
+                var newAircraft = await _dbContext.Aircrafts.FindAsync(updatedFlight.AircraftId);
+                descriptions.Add($"самолёт изменён с {oldAircraft?.Model ?? existingFlight.AircraftId.ToString()} на {newAircraft?.Model ?? updatedFlight.AircraftId.ToString()}");
+            }
+
+            if (existingFlight.OriginAirportId != updatedFlight.OriginAirportId || existingFlight.DestAirportId != updatedFlight.DestAirportId)
+            {
+                var oldOrigin = await _dbContext.Airports.FindAsync(existingFlight.OriginAirportId);
+                var oldDest = await _dbContext.Airports.FindAsync(existingFlight.DestAirportId);
+                var newOrigin = await _dbContext.Airports.FindAsync(updatedFlight.OriginAirportId);
+                var newDest = await _dbContext.Airports.FindAsync(updatedFlight.DestAirportId);
+
+                var oldRoute = $"{oldOrigin?.Iata ?? existingFlight.OriginAirportId.ToString()} → {oldDest?.Iata ?? existingFlight.DestAirportId.ToString()}";
+                var newRoute = $"{newOrigin?.Iata ?? updatedFlight.OriginAirportId.ToString()} → {newDest?.Iata ?? updatedFlight.DestAirportId.ToString()}";
+                descriptions.Add($"маршрут изменён с {oldRoute} на {newRoute}");
+            }
+
+            if (existingFlight.DepartureDt != updatedFlight.DepartureDt)
+            {
+                descriptions.Add($"время вылета изменено с {existingFlight.DepartureDt:yyyy-MM-dd HH:mm} на {updatedFlight.DepartureDt:yyyy-MM-dd HH:mm}");
+            }
+
+            if (existingFlight.ArrivalDt != updatedFlight.ArrivalDt)
+            {
+                descriptions.Add($"время прилёта изменено с {existingFlight.ArrivalDt:yyyy-MM-dd HH:mm} на {updatedFlight.ArrivalDt:yyyy-MM-dd HH:mm}");
+            }
+
+            if (existingFlight.DurationMinutes != updatedFlight.DurationMinutes)
+            {
+                descriptions.Add($"длительность рейса изменена с {existingFlight.DurationMinutes} мин на {updatedFlight.DurationMinutes} мин");
+            }
+
+            return descriptions;
         }
 
         public async Task<DeleteFlightResult> DeleteFlightAsync(int id)
@@ -732,7 +782,7 @@ namespace ZetTechAvio1._0.Services
             return flight;
         }
 
-        private async Task NotifyTicketHoldersAsync(Flight flight, IEnumerable<string> recipientEmails)
+        private async Task NotifyTicketHoldersAsync(Flight flight, IEnumerable<string> recipientEmails, IReadOnlyCollection<string>? changeDescriptions = null)
         {
             if (_emailService == null)
                 return;
@@ -741,13 +791,33 @@ namespace ZetTechAvio1._0.Services
                 return;
 
             var statusDescription = flight.Status.ToString();
-            var subject = $"Статус рейса {flight.FlightNumber} изменён";
-            var body = $"<p>Здравствуйте!</p>"
-                     + $"<p>Статус вашего рейса <strong>{flight.FlightNumber}</strong> изменён на <strong>{statusDescription}</strong>.</p>"
-                     + $"<p>Дата вылета: {flight.DepartureDt:yyyy-MM-dd HH:mm}</p>"
-                     + $"<p>Дата прилёта: {flight.ArrivalDt:yyyy-MM-dd HH:mm}</p>"
-                     + $"<p>Пожалуйста, проверьте детали рейса в личном кабинете или свяжитесь с поддержкой при необходимости.</p>"
-                     + $"<p>С уважением,<br/>ZetTechAvio</p>";
+            var hasChanges = changeDescriptions != null && changeDescriptions.Any();
+            var subject = hasChanges
+                ? $"Изменения в рейсе {flight.FlightNumber}"
+                : $"Статус рейса {flight.FlightNumber} изменён";
+
+            var body = $"<p>Здравствуйте!</p>";
+
+            if (hasChanges)
+            {
+                body += "<p>Обратите внимание, что в вашем рейсе были изменены следующие детали:</p>";
+                body += "<ul>";
+                foreach (var description in changeDescriptions!)
+                {
+                    body += $"<li>{WebUtility.HtmlEncode(description)}</li>";
+                }
+                body += "</ul>";
+                body += $"<p>Текущий статус рейса: <strong>{WebUtility.HtmlEncode(statusDescription)}</strong>.</p>";
+            }
+            else
+            {
+                body += $"<p>Статус вашего рейса <strong>{flight.FlightNumber}</strong> изменён на <strong>{WebUtility.HtmlEncode(statusDescription)}</strong>.</p>";
+            }
+
+            body += $"<p>Дата вылета: {flight.DepartureDt:yyyy-MM-dd HH:mm}</p>";
+            body += $"<p>Дата прилёта: {flight.ArrivalDt:yyyy-MM-dd HH:mm}</p>";
+            body += "<p>Пожалуйста, проверьте детали рейса в личном кабинете или свяжитесь с поддержкой при необходимости.</p>";
+            body += "<p>С уважением,<br/>ZetTechAvio</p>";
 
             foreach (var email in recipientEmails.Distinct(StringComparer.OrdinalIgnoreCase))
             {

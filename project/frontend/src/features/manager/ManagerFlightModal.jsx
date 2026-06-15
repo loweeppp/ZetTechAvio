@@ -159,10 +159,18 @@ function FareClassesSection({ fareClasses = [], aircraftCapacity, onChange, onVa
     onChange(sanitizedFareClasses.map((item) => (item.id === fare.id ? { ...item, enabled: value } : item)));
   };
 
+  const sanitizeNumericValue = (field, value) => {
+    if (field === 'seats' || field === 'price') {
+      return value.replace(/\D/g, '');
+    }
+    return value;
+  };
+
   const updateFare = (id, field, value) => {
+    const sanitizedValue = sanitizeNumericValue(field, value);
     const fare = sanitizedFareClasses.find((item) => item.id === id);
     if (fare && field === 'seats' && fare.ticketCount > 0) {
-      const newSeats = value === '' ? NaN : Number(value);
+      const newSeats = sanitizedValue === '' ? NaN : Number(sanitizedValue);
       const soldSeats = Number(fare.ticketCount);
       if (!Number.isNaN(newSeats) && newSeats < soldSeats) {
         onValidationError?.(`Нельзя уменьшать количество мест в тарифе «${fare.name}» ниже числа проданных билетов (${soldSeats}).`);
@@ -170,7 +178,25 @@ function FareClassesSection({ fareClasses = [], aircraftCapacity, onChange, onVa
       }
     }
 
-    onChange(sanitizedFareClasses.map((fare) => (fare.id === id ? { ...fare, [field]: value } : fare)));
+    onChange(sanitizedFareClasses.map((fare) => (fare.id === id ? { ...fare, [field]: sanitizedValue } : fare)));
+  };
+
+  const handleNumericKeyDown = (event) => {
+    const allowedKeys = ['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Tab', 'Home', 'End'];
+    if (allowedKeys.includes(event.key)) {
+      return;
+    }
+
+    if (!/^[0-9]$/.test(event.key)) {
+      event.preventDefault();
+    }
+  };
+
+  const handlePasteNumeric = (event) => {
+    const pasted = event.clipboardData.getData('text');
+    if (!/^[0-9]*$/.test(pasted)) {
+      event.preventDefault();
+    }
   };
 
   const activeFares = sanitizedFareClasses.filter((fare) => fare.enabled);
@@ -234,14 +260,14 @@ function FareClassesSection({ fareClasses = [], aircraftCapacity, onChange, onVa
               </div>
 
               <input
-                type="number"
+                type="text"
                 value={fare.price}
                 onChange={(e) => updateFare(fare.id, 'price', e.target.value)}
+                onKeyDown={handleNumericKeyDown}
+                onPaste={handlePasteNumeric}
                 disabled={!fare.enabled}
                 className="fare-table__input"
                 placeholder="0"
-                min="0"
-                max={MAX_FARE_PRICES[fare.id]}
               />
 
               <div className="fare-table__sold-count">
@@ -249,13 +275,15 @@ function FareClassesSection({ fareClasses = [], aircraftCapacity, onChange, onVa
               </div>
 
               <input
-                type="number"
+                type="text"
+                inputMode="numeric"
                 value={fare.seats}
                 onChange={(e) => updateFare(fare.id, 'seats', e.target.value)}
+                onKeyDown={handleNumericKeyDown}
+                onPaste={handlePasteNumeric}
                 disabled={!fare.enabled}
                 className="fare-table__input"
                 placeholder="0"
-                min="5"
               />
 
               <select
@@ -581,8 +609,8 @@ export default function ManagerFlightModal({ isOpen, onClose, flight, onSave, ai
                       value={formState.flightNumber}
                       onChange={(e) => handleChange('flightNumber', e.target.value.toUpperCase())}
                       placeholder=" "
-                      maxLength={6}
-                      pattern="[A-Z0-9]{6}"
+                      maxLength={5}
+                      pattern="[A-Z0-9]{5}"
                     />
                     <label htmlFor="flight-number" className="floating-label">Номер рейса</label>
                     <div className="admin-modal__hint">Опционально. </div>
@@ -643,6 +671,7 @@ export default function ManagerFlightModal({ isOpen, onClose, flight, onSave, ai
                       value={formState.originAirportId}
                       onChange={(e) => handleChange('originAirportId', e.target.value)}
                       required
+                      disabled={!!flight}
                     >
                       <option value="">Выберите аэропорт отправления</option>
                       {airports.map((airport) => (
@@ -673,6 +702,7 @@ export default function ManagerFlightModal({ isOpen, onClose, flight, onSave, ai
                       value={formState.destAirportId}
                       onChange={(e) => handleChange('destAirportId', e.target.value)}
                       required
+                      disabled={!!flight}
                     >
                       <option value="">Выберите аэропорт прибытия</option>
                       {airports.map((airport) => (
