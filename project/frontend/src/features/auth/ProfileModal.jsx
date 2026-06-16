@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import './ProfileModal.css';
 
 const API_URL = process.env.REACT_APP_API_URL || 'https://api.zettechavio.ru';
@@ -166,6 +166,7 @@ export default function ProfileModal({ isOpen, onClose, user, onLogout, onChange
       }
       setResetStage('code');
       setResetCooldown(30);
+      setResetCode('');
     } catch (err) {
       setError('Ошибка подключения');
     } finally {
@@ -173,7 +174,7 @@ export default function ProfileModal({ isOpen, onClose, user, onLogout, onChange
     }
   };
 
-  const verifyResetCode = async (emailArg, codeArg) => {
+    const verifyResetCode = async (emailArg, codeArg) => {
     if (!emailArg || !codeArg) {
       setError('Введите email и код');
       return;
@@ -200,6 +201,19 @@ export default function ProfileModal({ isOpen, onClose, user, onLogout, onChange
       setError('Ошибка проверки кода');
     }
   };
+
+  const handleResetCodeChange = (value) => {
+    const digitsOnly = value.replace(/\D/g, '');
+    setResetCode(digitsOnly);
+  };
+
+  useEffect(() => {
+    if (resetStage !== 'code') return;
+    if (resetCode.length !== 6) return;
+    if (!resetEmail) return;
+
+    verifyResetCode(resetEmail, resetCode);
+  }, [resetCode, resetEmail, resetStage]);
 
   const handleResetPassword = async (e) => {
     e.preventDefault();
@@ -279,7 +293,7 @@ export default function ProfileModal({ isOpen, onClose, user, onLogout, onChange
                   label="Код из письма"
                   type="text"
                   value={resetCode}
-                  onChange={setResetCode}
+                  onChange={handleResetCodeChange}
                 />
               )}
               {resetStage !== 'verified' && (
